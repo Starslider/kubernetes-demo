@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kmcp
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kmcp-system
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/kagent-dev/kmcp.git
+      path: helm/kmcp-crds
+      targetRevision: HEAD
+    - repoURL: https://github.com/kagent-dev/kmcp.git
+      path: helm/kmcp
+      targetRevision: HEAD
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/kmcp
+      targetRevision: HEAD

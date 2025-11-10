@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: awx
+
+resources:
+- httproute-grant.yaml
+- github-pat.yaml
+- awx-access.yaml
+# - awxproject-worker-setup.yaml
+# - awxinventory-ubuntu-workers.yaml
+- awxinventory-control-plane.yaml
+# - awxcredential-kubeuser-credentials.yaml
+# - awxcredential-github-scm.yaml
+# - awxjobtemplate-setup-ubuntu-workers.yaml
+# - awxjobtemplate-get-join-command.yaml
+- awx-resource-operator/default
+#- awx-resource-operator/demo-job-1.yaml
+- control-plane-connection.yaml

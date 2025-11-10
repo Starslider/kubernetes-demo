@@ -1,0 +1,27 @@
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: awx-access
+spec:
+  data:
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: awx-access
+        metadataPolicy: None
+        property: token
+      secretKey: token
+    - remoteRef:
+        conversionStrategy: Default
+        decodingStrategy: None
+        key: awx-access
+        metadataPolicy: None
+        property: host
+      secretKey: host
+  refreshInterval: 1h0m0s
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: dhlabs
+  target:
+    creationPolicy: Owner
+    deletionPolicy: Retain

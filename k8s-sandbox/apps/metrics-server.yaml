@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: metrics-server
+spec:
+  project: default
+  source:
+    repoURL: https://kubernetes-sigs.github.io/metrics-server/
+    targetRevision: 3.13.0
+    helm:
+      parameters:
+        - name: apiService.create
+          value: 'false'
+        - name: defaultArgs[0]
+          value: '--cert-dir=/tmp'
+        - name: defaultArgs[1]
+          value: '--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname'
+        - name: defaultArgs[2]
+          value: '--kubelet-use-node-status-port'
+        - name: defaultArgs[3]
+          value: '--metric-resolution=15s'
+        - name: defaultArgs[4]
+          value: '--kubelet-insecure-tls'
+    chart: metrics-server
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system

@@ -1,0 +1,23 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: ingress-gateway
+spec:
+  gatewayClassName: cilium
+  listeners:
+    - name: https
+      hostname: "*.dhlabs.org"   
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - name: dhlabs-wildcard
+            namespace: ingress
+      allowedRoutes:
+        namespaces:
+          from: All
+  infrastructure:
+    annotations:
+      external-dns.alpha.kubernetes.io/hostname: '*.dhlabs.org, dhlabs.org'
+      external-dns.alpha.kubernetes.io/ttl: "60"

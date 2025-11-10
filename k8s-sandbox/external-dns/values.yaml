@@ -1,0 +1,16 @@
+provider:
+  name: cloudflare
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-key
+        key: apiKey
+extraArgs: 
+  - --txt-owner-id=dhlabs
+  - --zone-id-filter=e5a2828f1787094a47d5e4c1985c02bc
+logLevel: debug
+sources:
+ - service
+serviceMonitor:
+  enabled: true

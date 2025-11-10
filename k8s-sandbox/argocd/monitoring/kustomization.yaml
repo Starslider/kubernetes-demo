@@ -1,0 +1,11 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: argocd
+
+resources:
+- argocd-metrics.yaml
+- argocd-applicationset-controller-metrics.yaml
+- argocd-dex-server.yaml
+- argocd-repo-server-metrics.yaml
+- argocd-server-metrics.yaml

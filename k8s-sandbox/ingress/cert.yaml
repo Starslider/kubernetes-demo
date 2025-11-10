@@ -1,0 +1,13 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: dhlabs-wildcard
+spec:
+  secretName: dhlabs-wildcard
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+    group: cert-manager.io
+  commonName: "*.dhlabs.org"
+  dnsNames:
+    - "*.dhlabs.org"

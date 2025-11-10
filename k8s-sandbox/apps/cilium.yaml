@@ -1,0 +1,44 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cilium
+spec:
+  project: default
+  ignoreDifferences:
+    - group: ''
+      jsonPointers:
+        - /data
+      kind: Secret
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/cilium
+      targetRevision: HEAD
+
+    - repoURL: https://helm.cilium.io/
+      targetRevision: 1.18.2
+      chart: cilium
+      helm:
+        parameters:
+          - name: gatewayAPI.enabled
+            value: 'true'
+          - name: kubeProxyReplacement
+            value: 'true'
+          - name: nodePort.enabled
+            value: 'true'
+          - name: hubble.relay.enabled
+            value: 'true'
+          - name: hubble.ui.enabled
+            value: 'true'
+          - name: l2announcements.enabled
+            value: 'true'
+          - name: bgpControlPlane.enabled
+            value: 'true'
+          - name: prometheus.enabled
+            value: 'true'
+          - name: hubble.metrics.enableOpenMetrics
+            value: 'true'
+          - name: hubble.metrics.enabled
+            value: '{dns,drop,tcp,flow,port-distribution,icmp,httpV2:exemplars=true;labelsContext=source_ip\,source_namespace\,source_workload\,destination_ip\,destination_namespace\,destination_workload\,traffic_direction}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: kube-system

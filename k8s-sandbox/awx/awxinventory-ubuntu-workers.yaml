@@ -1,0 +1,15 @@
+apiVersion: awx.ansible.com/v1beta1
+kind: AWXInventory
+metadata:
+  name: ubuntu-workers
+spec:
+  organization: Default
+  variables: |
+    ansible_user: kubeuser
+  hosts:
+    - name: worker1
+      variables: { ansible_host: 192.168.1.38 }
+    - name: worker2
+      variables: { ansible_host: 192.168.1.39 }
+    - name: worker3
+      variables: { ansible_host: 192.168.1.40 }

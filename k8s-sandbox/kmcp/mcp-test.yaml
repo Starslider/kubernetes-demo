@@ -1,0 +1,22 @@
+apiVersion: kagent.dev/v1alpha1
+kind: MCPServer
+metadata:
+  name: mcp-test
+spec:
+  transportType: http
+  httpTransport:
+    targetPort: 8080
+  deployment:
+    image: ginnux/k8s-mcp-server:latest
+    port: 8080
+    volumeMounts:
+      - name: kube-config
+        mountPath: /home/appuser/.kube
+        readOnly: true
+    volumes:
+      - name: kube-config
+        secret:
+          secretName: kmcp-kubeconfig
+          items:
+            - key: config
+              path: config

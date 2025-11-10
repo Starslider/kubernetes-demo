@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:                                    
+  name: awx-backend
+  annotations:
+    link.argocd.argoproj.io/external-link: https://awx.dhlabs.org/
+spec:                        
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute              
+    namespace: ingress
+  - group: gateway.networking.k8s.io
+    kind: TCPRoute              
+    namespace: ingress
+  to:                     
+  - group: ""
+    kind: Service

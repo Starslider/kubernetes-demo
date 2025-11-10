@@ -1,0 +1,15 @@
+config:
+  existingSecret: cyberchef-oauth2-proxy-secrets 
+
+extraArgs:
+  provider: oidc
+  oidc-issuer-url: "https://authentik.dhlabs.org/application/o/cyberchef/"  
+  redirect-url: "https://cyberchef.dhlabs.org/oauth2/callback"
+  provider-display-name: "Authentik"
+  skip-provider-button: "true"
+  cookie-secure: "true"
+  email-domain: "*"
+  pass-access-token: "true"
+  set-xauthrequest: "true"
+  skip-auth-regex: "^/oauth2/.*"
+  upstream: "http://cyberchef-service"

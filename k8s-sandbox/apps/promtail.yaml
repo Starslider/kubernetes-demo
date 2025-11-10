@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: promtail
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 6.17.0
+    helm:
+      parameters:
+        - name: serviceMonitor.enabled
+          value: 'true'
+    chart: promtail
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: loki
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

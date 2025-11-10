@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: loki
+spec:
+  project: default
+  source:
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: 0.80.5
+    helm:
+      parameters:
+        - name: compactor.persistence.enabled
+          value: 'true'
+        - name: indexGateway.persistence.enabled
+          value: 'true'
+        - name: ingester.persistence.enabled
+          value: 'true'
+        - name: memcachedChunks.persistence.enabled
+          value: 'true'
+        - name: memcachedFrontend.persistence.enabled
+          value: 'true'
+        - name: memcachedIndexQueries.persistence.enabled
+          value: 'true'
+        - name: memcachedIndexWrites.persistence.enabled
+          value: 'true'
+        - name: querier.persistence.enabled
+          value: 'true'
+        - name: ruler.persistence.enabled
+          value: 'true'
+        - name: serviceMonitor.enabled
+          value: 'true'
+    chart: loki-distributed
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: loki
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

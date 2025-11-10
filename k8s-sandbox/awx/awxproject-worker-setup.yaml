@@ -1,0 +1,10 @@
+apiVersion: awx.ansible.com/v1beta1
+kind: AWXProject
+metadata:
+  name: worker-setup-project
+spec:
+  scm_type: git
+  scm_url: https://github.com/Starslider/kubernetes-demo.git
+  scm_branch: main
+  organization: Default
+  credential: github-scm

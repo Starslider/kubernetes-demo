@@ -1,0 +1,125 @@
+---
+- name: Prepare Ubuntu worker nodes for Kubernetes
+  hosts: ubuntu_workers
+  become: true
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+          - gnupg2
+          - lsb-release
+          - containerd
+        state: present
+
+    - name: Set hostname
+      hostname:
+        name: "{{ inventory_hostname }}"
+
+    - name: Load br_netfilter module
+      modprobe:
+        name: br_netfilter
+        state: present
+
+    - name: Ensure br_netfilter is loaded on boot
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: "br_netfilter\n"
+
+    - name: Set sysctl params for Kubernetes networking
+      sysctl:
+        name: "{{ item.key }}"
+        value: "{{ item.value }}"
+        state: present
+        reload: yes
+      loop:
+        - { key: 'net.bridge.bridge-nf-call-iptables', value: 1 }
+        - { key: 'net.ipv4.ip_forward', value: 1 }
+        - { key: 'net.bridge.bridge-nf-call-ip6tables', value: 1 }
+
+    - name: Add Kubernetes apt key
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes apt repository
+      apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+        state: present
+
+    - name: Install kubeadm, kubelet, kubectl
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: Hold kubelet, kubeadm, kubectl at current version
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+        allow_unauthenticated: yes
+        force: yes
+        autoremove: no
+        install_recommends: no
+        dpkg_options: "force-confdef,force-confold"
+      register: result
+      until: result is succeeded
+      retries: 3
+      delay: 10
+
+    - name: Configure containerd default config
+      command: >
+        containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Set SystemdCgroup in containerd config
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: '^\s*SystemdCgroup = false'
+        replace: '            SystemdCgroup = true'
+
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        enabled: yes
+        state: restarted
+
+    - name: Enable and start kubelet
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: started
+
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+      ignore_errors: true
+
+    - name: Remove swap from fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^.*\sswap\s.*$'
+        replace: ''
+      ignore_errors: true
+
+    # Optionally, add a task to join the cluster here using kubeadm join
+    # - name: Join the Kubernetes cluster
+    #   command: kubeadm join <control-plane-endpoint> --token <token> --discovery-token-ca-cert-hash sha256:<hash>
+    #   args:
+    #     creates: /etc/kubernetes/kubelet.conf
+    #   when: join_command is defined

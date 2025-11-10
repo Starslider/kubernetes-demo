@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cyberchef-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cyberchef
+  template:
+    metadata:
+      labels:
+        app: cyberchef
+    spec:
+      containers:
+      - name: cyberchef
+        image: ghcr.io/gchq/cyberchef:10.19.4
+        ports:
+        - containerPort: 80

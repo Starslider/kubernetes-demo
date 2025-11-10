@@ -1,0 +1,17 @@
+apiVersion: v1
+data:
+  dexserver.disable.tls: "true"
+  server.dex.server.strict.tls: "false"
+  server.dex.server.plaintext: "true"
+  server.insecure: "true"
+  dex.server: "http://argocd-dex-server:5556"
+  server.repo.server.timeout.seconds: "180"
+  controller.status.processors: "600"
+  controller.operation.processors: "300"
+  controller.repo.server.timeout.seconds: "180"
+  controller.kubectl.parallelism.limit: "100"
+  controller.sharding.algorithm: "round-robin"
+  reposerver.parallelism.limit: "100"
+kind: ConfigMap
+metadata:
+  name: argocd-cmd-params-cm

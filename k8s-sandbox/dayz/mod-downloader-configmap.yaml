@@ -1,0 +1,81 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dayz-mod-downloader
+  namespace: dayz
+data:
+  download-mods.sh: |
+    #!/bin/bash
+    set -e
+    
+    echo "=== DayZ Mod Installation Script ==="
+    echo "Following official Bohemia documentation"
+    
+    # Parse MODS env var (semicolon-separated list of IDs)
+    if [ -z "$MODS" ]; then
+      echo "No mods specified, skipping mod installation"
+      exit 0
+    fi
+    
+    # SteamCMD downloads to steamapps/workshop by default
+    WORKSHOP_DIR="/home/steam/dayz/steamapps/workshop"
+    mkdir -p "$WORKSHOP_DIR"
+    
+    IFS=';' read -ra MOD_ARRAY <<< "$MODS"
+    
+    for MOD_ID in "${MOD_ARRAY[@]}"; do
+      # Remove @ prefix if present
+      MOD_ID_CLEAN="${MOD_ID#@}"
+      
+      echo ""
+      echo "Processing mod: $MOD_ID_CLEAN"
+      
+      MOD_PATH="$WORKSHOP_DIR/content/221100/$MOD_ID_CLEAN"
+      
+      # Check if mod already exists
+      if [ -d "$MOD_PATH" ]; then
+        echo "  Mod already downloaded, skipping..."
+      else
+        echo "  Downloading from Steam Workshop..."
+        
+        # Download via SteamCMD to the mounted volume
+        steamcmd \
+          +force_install_dir /home/steam/dayz \
+          +login "$STEAMACCOUNT" "$STEAMPASSWORD" \
+          +workshop_download_item 221100 "$MOD_ID_CLEAN" validate \
+          +quit
+        
+        if [ ! -d "$MOD_PATH" ]; then
+          echo "  ❌ Download failed!"
+          continue
+        fi
+      fi
+      
+      # Create symbolic link in server root WITHOUT @ prefix (official docs)
+      # Symlinks must point to the actual path on the mounted volume
+      LINK_PATH="/home/steam/dayz/$MOD_ID_CLEAN"
+      
+      if [ -L "$LINK_PATH" ]; then
+        echo "  Symlink already exists"
+      else
+        echo "  Creating symlink: $LINK_PATH -> $MOD_PATH"
+        ln -s "$MOD_PATH" "$LINK_PATH"
+      fi
+      
+      # Copy mod keys to server keys directory BEFORE lowercase conversion
+      if [ -d "$MOD_PATH/Keys" ] || [ -d "$MOD_PATH/keys" ]; then
+        echo "  Copying mod signing keys..."
+        cp -f "$MOD_PATH"/[Kk]eys/*.bikey /home/steam/dayz/keys/ 2>/dev/null || true
+      fi
+      
+      # Lowercase all files in mod directory (Linux is case-sensitive)
+      echo "  Converting filenames to lowercase..."
+      find "$MOD_PATH" -depth -exec bash -c 'file="{}"; dir=$(dirname "$file"); base=$(basename "$file"); lower=$(echo "$base" | tr "[:upper:]" "[:lower:]"); [ "$base" != "$lower" ] && mv "$file" "$dir/$lower" 2>/dev/null || true' \;
+      
+      echo "  ✅ Mod $MOD_ID_CLEAN installed successfully"
+    done
+    
+    echo ""
+    echo "=== Mod Installation Complete ==="
+    echo "Installed mods will be loaded with: -mod=$MODS"

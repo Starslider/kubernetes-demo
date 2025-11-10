@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: crossplane
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/crossplane
+      targetRevision: HEAD
+      ref: values
+    - repoURL: https://charts.crossplane.io/stable
+      targetRevision: 2.0.2
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/crossplane/values.yaml
+      chart: crossplane
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: crossplane
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+
+

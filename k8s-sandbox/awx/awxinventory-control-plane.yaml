@@ -1,0 +1,15 @@
+apiVersion: tower.ansible.com/v1alpha1
+kind: AnsibleInventory
+metadata:
+  name: control-plane
+spec:
+  name: control-plane
+  description: "Kubernetes control plane inventory"
+  organization: Default
+  variables:
+    ansible_user: kubeuser
+  hosts:
+    - name: control-plane
+      variables:
+        ansible_host: 192.168.1.30
+  connection_secret: control-plane-connection

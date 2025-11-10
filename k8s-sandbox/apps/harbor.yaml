@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: harbor
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: harbor
+  syncPolicy:
+    automated:
+      selfHeal: true
+      enabled: true
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/harbor
+      targetRevision: HEAD
+
+    - repoURL: https://helm.goharbor.io
+      targetRevision: 1.18.0
+      helm:
+        parameters:
+          - name: expose.tls.enabled
+            value: 'false'
+          - name: expose.type
+            value: clusterIP
+          - name: expose.tls.auto.commonName
+            value: 'harbor.dhlabs.org'
+          - name: externalURL
+            value: 'https://harbor.dhlabs.org'
+      chart: harbor

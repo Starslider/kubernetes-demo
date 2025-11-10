@@ -1,0 +1,78 @@
+---
+apiVersion: v1
+data:
+  serverDZ.cfg: |
+      hostname="iDome Dayz";
+      passwordAdmin="dayz";
+      enableCfgGameplayFile=1
+      enableWhitelist=0;
+      steamQueryPort=27016;
+      maxPlayers=10;
+      verifySignatures=2;
+      serverTimeFromSystemTime=1;
+      forceSameBuild=1;
+      disableVoN=0;
+      vonCodecQuality=20;
+      disable3rdPerson=1;
+      disableCrosshair=0;
+      serverTime="SystemTime";
+      serverTimeAcceleration=2.5;
+      serverNightTimeAcceleration=20;
+      serverTimePersistent=1;
+      guaranteedUpdates=1;
+      loginQueueConcurrentPlayers=5;
+      loginQueueMaxPlayers=500;
+      instanceId=1;
+      storageAutoFix=1;
+      motd[]=
+      {
+      	"Under",
+      	"Construction"
+      };
+      motdInterval=1;
+      maxPing=100;
+      timeStampFormat="Short";
+      logAverageFps=1;
+      logMemory=1;
+      logPlayers=1;
+      logFile="server_console.log";
+      adminLogPlayerHitsOnly=0;
+      adminLogPlacement=0;
+      adminLogBuildActions=0;
+      adminLogPlayerList=0;
+      enableDebugMonitor=0;
+      allowFilePatching=1;
+      simulatedPlayersBatch=20;
+      multithreadedReplication=1;
+      networkRangeClose=20;
+      networkRangeNear=150;
+      networkRangeFar=1000;
+      networkRangeDistantEffect=4000;
+      defaultVisibility=1375;
+      defaultObjectViewDistance=1375;
+      lightingConfig=0;
+      disablePersonalLight=1;
+      disableBaseDamage=0;
+      disableContainerDamage=0;
+      class Missions
+      {
+          class DayZ
+          {
+              template="dayzOffline.chernarusplus";
+          };
+      };
+kind: ConfigMap
+metadata:
+  name: dayz-server-cfg
+  namespace: dayz
+---
+apiVersion: v1
+data:
+  BEServer_x64.cfg: |
+      RConPassword = "dayz";
+      RestrictRCon = 1;
+      RConPort = 2310;
+kind: ConfigMap
+metadata:
+  name: dayz-beserver-cfg
+  namespace: dayz

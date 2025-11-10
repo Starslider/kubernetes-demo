@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress
+spec:
+  project: default
+  source:
+      repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/ingress
+      targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+
+

@@ -1,0 +1,9 @@
+# Example allowlist for :latest image exceptions
+# Each line is a substring or regex that will be matched against the full 'image' line.
+# Lines matching any entry will be excluded from the :latest failure check.
+
+# Allow dayz dev images
+k8s-sandbox/dayz
+
+# Allow a specific org/image
+starslider/dayz

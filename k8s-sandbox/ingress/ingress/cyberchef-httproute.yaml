@@ -1,0 +1,18 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: cyberchef-backend
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: ingress-gateway
+      namespace: ingress
+  hostnames:
+    - "cyberchef.dhlabs.org"
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: cyberchef-oauth2-proxy
+          port: 80
+          namespace: cyberchef

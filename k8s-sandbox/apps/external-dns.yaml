@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: external-dns
+spec:
+  project: default
+  sources:
+    - repoURL: https://kubernetes-sigs.github.io/external-dns/
+      targetRevision: 1.19.0
+      chart: external-dns
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/external-dns/values.yaml
+
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/external-dns
+      targetRevision: HEAD
+      ref: values
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: external-dns
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

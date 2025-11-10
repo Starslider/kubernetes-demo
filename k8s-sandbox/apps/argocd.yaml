@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argocd #RNq-Ru1oSnVL20zu
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  sources:
+    -
+      repoURL: https://github.com/argoproj/argo-cd.git
+      path: manifests/cluster-install
+      targetRevision: HEAD
+    -
+      repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/argocd
+      targetRevision: HEAD

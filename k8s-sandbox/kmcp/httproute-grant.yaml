@@ -1,0 +1,15 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: kmcp-backend
+  namespace: kmcp-system
+  annotations:
+    link.argocd.argoproj.io/external-link: https://kmcp.dhlabs.org/
+spec:
+  from:
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: ingress
+  to:
+  - group: ""
+    kind: Service

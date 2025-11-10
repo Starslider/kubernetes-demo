@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: awx-operator
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: awx
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/awx
+      targetRevision: HEAD
+
+    # - repoURL: https://github.com/ansible/awx-resource-operator.git
+    #   path: config/default  
+    #   targetRevision: HEAD
+
+    - repoURL: https://ansible-community.github.io/awx-operator-helm/
+      targetRevision: 3.2.0
+      chart: awx-operator
+      helm:
+        parameters:
+          - name: AWX.enabled
+            value: 'true'

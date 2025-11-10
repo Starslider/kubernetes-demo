@@ -1,0 +1,11 @@
+apiVersion: awx.ansible.com/v1beta1
+kind: AWXJobTemplate
+metadata:
+  name: get-join-command
+spec:
+  job_type: run
+  inventory: control-plane
+  project: worker-setup-project
+  playbook: playbooks/get-join-command.yaml
+  credentials:
+    - kubeuser-password

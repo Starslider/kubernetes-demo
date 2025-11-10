@@ -1,0 +1,3 @@
+metrics:
+  # -- Enable Prometheus path, port and scrape annotations and expose port 8080 for both the Crossplane and RBAC Manager pods.
+  enabled: true

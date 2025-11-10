@@ -1,0 +1,56 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      enabled: true
+    syncOptions:
+      - RespectIgnoreDifferences=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+  ignoreDifferences:
+    - group: ""
+      kind: Secret
+      name: monitoring-victoria-metrics-operator-validation
+      namespace: monitoring
+      jsonPointers:
+        - /data
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: monitoring-victoria-metrics-operator-admission
+      jqPathExpressions:
+      - '.webhooks[]?.clientConfig.caBundle'
+  sources:
+    - repoURL: https://victoriametrics.github.io/helm-charts/
+      targetRevision: 0.61.8
+      chart: victoria-metrics-k8s-stack
+      helm:
+        parameters:
+          - name: grafana.persistence.enabled
+            value: 'true'
+          - name: grafana.envFromSecrets[0].name
+            value: grafana-oauth-secret
+          - name: grafana.envFromSecrets[0].optional
+            value: 'false'
+        valuesObject:
+          grafana:
+            env:
+              GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
+                valueFrom:
+                  secretKeyRef:
+                    name: grafana-oauth-secret
+                    key: client-id
+              GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+                valueFrom:
+                  secretKeyRef:
+                    name: grafana-oauth-secret
+                    key: client-secret
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/monitoring
+      targetRevision: HEAD

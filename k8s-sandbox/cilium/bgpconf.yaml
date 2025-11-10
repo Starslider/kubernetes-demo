@@ -1,0 +1,44 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPClusterConfig
+metadata:
+  name: tor
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: arch-kubernetes-control-plane
+  bgpInstances:
+  - name: "instance-65001"
+    localASN: 65001
+    peers:
+    - name: "peer-65000-tor"
+      peerASN: 65000
+      peerAddress: "172.0.0.1"
+      peerConfigRef:
+        name: "peer-config-generic"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPPeerConfig
+metadata:
+  name: peer-config-generic
+spec:
+  families:
+    - afi: ipv4
+      safi: unicast
+      advertisements:
+        matchLabels:
+          advertise: "generic"
+---
+apiVersion: cilium.io/v2
+kind: CiliumBGPAdvertisement
+metadata:
+  name: services
+  labels:
+    advertise: generic
+spec:
+  advertisements:
+    - advertisementType: "PodCIDR"
+    - advertisementType: "Service"
+      service:
+        addresses:
+          - LoadBalancerIP
