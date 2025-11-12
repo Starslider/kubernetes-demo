@@ -16,6 +16,12 @@ spec:
       receiver: 'null'
       group_wait: 10s
       repeat_interval: 1h
+    # Suppress InfoInhibitor - internal alert used to suppress info-level alerts
+    - matchers:
+      - "alertname=InfoInhibitor"
+      receiver: 'null'
+      group_wait: 10s
+      repeat_interval: 1h
     # Suppress TargetDown alerts for control-plane components with TLS cert issues
     - matchers:
       - "alertname=TargetDown"
