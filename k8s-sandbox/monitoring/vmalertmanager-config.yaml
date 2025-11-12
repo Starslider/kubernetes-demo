@@ -16,6 +16,13 @@ spec:
       receiver: 'null'
       group_wait: 10s
       repeat_interval: 1h
+    # Suppress TargetDown alerts for control-plane components with TLS cert issues
+    - matchers:
+      - "alertname=TargetDown"
+      - "job=~kube-scheduler|kube-controller-manager"
+      receiver: 'null'
+      group_wait: 10s
+      repeat_interval: 24h
     - matchers:
       - "severity=critical"
       receiver: 'discord-critical'
