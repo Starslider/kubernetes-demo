@@ -51,7 +51,7 @@ spec:
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         **Started:** <t:{{ .StartsAt.Unix }}:R>
-        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        {{ if ne .Status "resolved" }}{{ else }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
         {{ end }}
   - name: 'discord-critical'
     discord_configs:
@@ -72,7 +72,7 @@ spec:
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         **Started:** <t:{{ .StartsAt.Unix }}:R>
-        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        {{ if ne .Status "resolved" }}{{ else }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
         
         **Labels:**
         {{ range .Labels.SortedPairs }}- {{ .Name }}: `{{ .Value }}`
@@ -94,6 +94,6 @@ spec:
         **Cluster:** {{ with .CommonLabels.cluster }}{{ . }}{{ else }}kubernetes{{ end }}
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
-        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        {{ if ne .Status "resolved" }}{{ else }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
         {{ end }}
   - name: 'null'
