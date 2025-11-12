@@ -10,4 +10,4 @@ resources:
 - discord-webhook-external-secret.yaml
 - vmalertmanager-config.yaml
 - control-plane-monitoring.yaml
-- control-plane-metrics.yaml
+- etcd-metrics.yaml
