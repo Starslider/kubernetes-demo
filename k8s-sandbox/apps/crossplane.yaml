@@ -10,7 +10,7 @@ spec:
       targetRevision: HEAD
       ref: values
     - repoURL: https://charts.crossplane.io/stable
-      targetRevision: 2.0.2
+      targetRevision: 2.1.1
       helm:
         valueFiles:
           - $values/k8s-sandbox/crossplane/values.yaml

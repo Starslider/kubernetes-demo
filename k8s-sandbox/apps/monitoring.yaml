@@ -28,7 +28,7 @@ spec:
       - '.webhooks[]?.clientConfig.caBundle'
   sources:
     - repoURL: https://victoriametrics.github.io/helm-charts/
-      targetRevision: 0.61.8
+      targetRevision: 0.63.5
       chart: victoria-metrics-k8s-stack
       helm:
         parameters:
