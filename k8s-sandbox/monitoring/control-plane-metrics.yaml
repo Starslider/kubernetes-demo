@@ -9,26 +9,22 @@ spec:
   jobName: "control-plane-metrics"
   targetEndpoints:
   - targets:
-    - "127.0.0.1:10259"  # kube-scheduler HTTPS metrics via localhost
+    - "127.0.0.1:10251"  # kube-scheduler HTTP metrics via localhost
     labels:
       job: kube-scheduler
       component: kube-scheduler
       tier: control-plane
       instance: arch-kubernetes-control-plane
     path: /metrics
-    scheme: https
+    scheme: http
     interval: 30s
-    tlsConfig:
-      insecureSkipVerify: true
   - targets:
-    - "127.0.0.1:10257"  # kube-controller-manager HTTPS metrics via localhost
+    - "127.0.0.1:10252"  # kube-controller-manager HTTP metrics via localhost
     labels:
       job: kube-controller-manager
       component: kube-controller-manager
       tier: control-plane
       instance: arch-kubernetes-control-plane
     path: /metrics
-    scheme: https
+    scheme: http
     interval: 30s
-    tlsConfig:
-      insecureSkipVerify: true
