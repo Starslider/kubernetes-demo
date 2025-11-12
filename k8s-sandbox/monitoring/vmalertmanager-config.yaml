@@ -29,6 +29,18 @@ spec:
       receiver: 'null'
       group_wait: 10s
       repeat_interval: 24h
+    # Suppress all TargetDown alerts
+    - matchers:
+      - "alertname=TargetDown"
+      receiver: 'null'
+      group_wait: 10s
+      repeat_interval: 24h
+    # Suppress etcd alerts
+    - matchers:
+      - "alertname=~etcdMembersDown|etcdInsufficientMembers"
+      receiver: 'null'
+      group_wait: 10s
+      repeat_interval: 24h
     - matchers:
       - "severity=critical"
       receiver: 'discord-critical'
