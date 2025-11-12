@@ -27,8 +27,12 @@ spec:
         - source_labels: [__meta_kubernetes_pod_node_name]
           action: replace
           target_label: node
-  namespaceSelector: {} # You need to specify namespaceSelector here
-  selector: {} # You need to specify selector here
+  namespaceSelector: 
+    any: true
+  selector:
+    matchExpressions:
+    - key: prometheus.io/scrape
+      operator: Exists
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMServiceScrape
@@ -58,5 +62,9 @@ spec:
         - source_labels: [__meta_kubernetes_pod_node_name]
           action: replace
           target_label: node
-  namespaceSelector: {} # You need to specify namespaceSelector here
-  selector: {} # You need to specify selector here
+  namespaceSelector: 
+    any: true
+  selector:
+    matchExpressions:
+    - key: prometheus.io/scrape
+      operator: Exists
