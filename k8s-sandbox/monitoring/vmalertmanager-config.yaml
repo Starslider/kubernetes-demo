@@ -1,0 +1,86 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMAlertmanagerConfig
+metadata:
+  name: discord-alerts
+  namespace: monitoring
+spec:
+  route:
+    group_by: ['alertname', 'cluster', 'service']
+    group_wait: 10s
+    group_interval: 10s
+    repeat_interval: 1h
+    receiver: 'discord-webhook'
+    routes:
+    - matchers:
+      - "severity=critical"
+      receiver: 'discord-critical'
+      group_wait: 10s
+      repeat_interval: 5m
+    - matchers:
+      - "severity=warning"
+      receiver: 'discord-warning'
+      group_wait: 30s
+      repeat_interval: 15m
+  receivers:
+  - name: 'discord-webhook'
+    discord_configs:
+    - webhook_url_secret:
+        name: discord-webhook-secret
+        key: webhook-url
+      send_resolved: true
+      username: 'AlertManager'
+      avatar_url: 'https://avatars.githubusercontent.com/u/3380462'
+      title: '🚨 Kubernetes Alert'
+      message: |
+        **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+        **Status:** {{ .Status | toUpper }}
+        **Severity:** {{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toUpper }}{{ else }}UNKNOWN{{ end }}
+        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        
+        {{ range .Alerts }}**Description:** {{ .Annotations.description }}
+        **Started:** <t:{{ .StartsAt.Unix }}:R>
+        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        {{ end }}
+  - name: 'discord-critical'
+    discord_configs:
+    - webhook_url_secret:
+        name: discord-webhook-secret
+        key: webhook-url
+      send_resolved: true
+      username: 'AlertManager - CRITICAL'
+      avatar_url: 'https://avatars.githubusercontent.com/u/3380462'
+      title: '🔥 CRITICAL KUBERNETES ALERT 🔥'
+      message: |
+        @here **CRITICAL ALERT TRIGGERED!**
+        
+        **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+        **Status:** {{ .Status | toUpper }}
+        **Severity:** CRITICAL
+        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        
+        {{ range .Alerts }}**Description:** {{ .Annotations.description }}
+        **Started:** <t:{{ .StartsAt.Unix }}:R>
+        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        
+        **Labels:**
+        {{ range .Labels.SortedPairs }}- {{ .Name }}: `{{ .Value }}`
+        {{ end }}
+        {{ end }}
+  - name: 'discord-warning'
+    discord_configs:
+    - webhook_url_secret:
+        name: discord-webhook-secret
+        key: webhook-url
+      send_resolved: true
+      username: 'AlertManager - Warning'
+      avatar_url: 'https://avatars.githubusercontent.com/u/3380462'
+      title: '⚠️ Kubernetes Warning'
+      message: |
+        **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
+        **Status:** {{ .Status | toUpper }}
+        **Severity:** WARNING
+        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        
+        {{ range .Alerts }}**Description:** {{ .Annotations.description }}
+        {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
+        {{ end }}

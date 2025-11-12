@@ -8,3 +8,5 @@ resources:
 - monitoring-grafana.yaml
 - legacyscrape.yaml
 - grafana-oauth-external-secret.yaml
+- discord-webhook-external-secret.yaml
+- vmalertmanager-config.yaml
