@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ntp-configurator
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: ntp-configurator
+  template:
+    metadata:
+      labels:
+        name: ntp-configurator
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: ntp-configurator
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          set -e
+          echo "Configuring NTP on $(hostname)..."
+          
+          # Install timedatectl if available (systemd systems)
+          if chroot /host which systemctl > /dev/null 2>&1; then
+            echo "Systemd detected, configuring NTP..."
+            chroot /host systemctl enable systemd-timesyncd || true
+            chroot /host systemctl start systemd-timesyncd || true
+            chroot /host timedatectl set-ntp true || true
+            
+            # Configure NTP servers
+            cat > /host/etc/systemd/timesyncd.conf << EOF
+          [Time]
+          NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
+          FallbackNTP=time.cloudflare.com time.google.com
+          EOF
+            
+            chroot /host systemctl restart systemd-timesyncd || true
+            echo "NTP configuration completed"
+          else
+            echo "Non-systemd system detected, trying chrony/ntpd..."
+            # Try chrony first
+            if chroot /host which chronyd > /dev/null 2>&1; then
+              chroot /host systemctl enable chronyd || true
+              chroot /host systemctl start chronyd || true
+            elif chroot /host which ntpd > /dev/null 2>&1; then
+              chroot /host systemctl enable ntp || true
+              chroot /host systemctl start ntp || true
+            fi
+          fi
+          
+          # Keep container running to maintain the fix
+          sleep 30
+          echo "NTP configuration applied, monitoring..."
+          tail -f /dev/null
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ntp-fix-job
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        name: ntp-fix-job
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: ntp-fix
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          set -e
+          echo "One-time NTP fix for $(hostname)..."
+          
+          # Force time sync
+          if chroot /host which systemctl > /dev/null 2>&1; then
+            chroot /host systemctl stop systemd-timesyncd || true
+            sleep 2
+            chroot /host systemctl start systemd-timesyncd || true
+            sleep 5
+            chroot /host systemctl restart systemd-timesyncd || true
+            chroot /host timedatectl set-ntp true || true
+            
+            # Force immediate sync
+            chroot /host timedatectl timesync-status || true
+          fi
+          
+          echo "NTP fix job completed"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+      restartPolicy: OnFailure
