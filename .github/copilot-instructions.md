@@ -18,19 +18,22 @@ Conventions and patterns (repo-specific)
 - ArgoCD metadata: many manifests include `httproute-grant.yaml` or `link.argocd.argoproj.io/external-link` entries to connect Argo UI links — keep these when moving or splitting apps.
 Integration points & external dependencies
 - ArgoCD (v2.x) — configured in `k8s-sandbox/argocd/` and wired to manage `k8s-sandbox/apps`.
-- CNI: Weave-Net is used in the tutorial, but the repo also contains `cilium/` manifests and docs; follow the `k8s-sandbox/cilium/README.md` guidance if switching to Cilium.
-- Secrets: External Secrets and 1Password examples live under `k8s-sandbox/external-secrets/` (see `1password-store.yaml`).
+- CNI: Cilium (current) — see `k8s-sandbox/cilium/` for configuration including BGP and LoadBalancer integration
+- Secrets: External Secrets Operator with 1Password integration — see `k8s-sandbox/external-secrets/` (e.g., `1password-store.yaml`)
+- Monitoring: Victoria Metrics k8s-stack — see `k8s-sandbox/monitoring/` for VMAgent, VMAlert, VMAlertmanager configs with Discord webhook integration
 How Copilot should help (practical rules)
 - Prefer edits to the YAML under `k8s-sandbox/<component>/` and `k8s-sandbox/apps/*.yaml` rather than ad-hoc kubectl commands. The intended rollout path is: change -> PR -> merge -> ArgoCD sync.
 - When modifying cluster bootstrapping content, reference exact commands from `k8s-sandbox/README.md` (containerd config, kubeadm flags). Include the affected file path in the PR description.
 - Preserve ArgoCD application fields and kustomize overlays. If you propose splitting an app, update `k8s-sandbox/apps/kustomization.yaml` and corresponding `apps/*.yaml` entries.
 - Use examples from the repo when generating snippets (e.g., show `kubeadm` flags or `/etc/containerd/config.toml` pause replacement) rather than generic snippets.
 Reference files to inspect
-- `k8s-sandbox/README.md` — node bootstrap, containerd, kubeadm, weave-net examples
+- `k8s-sandbox/README.md` — node bootstrap, containerd, kubeadm examples
 - `k8s-sandbox/argocd/` — ArgoCD config and examples
 - `k8s-sandbox/apps/` — ArgoCD Application entries (source-of-truth for running workloads)
 - `k8s-sandbox/*/kustomization.yaml` — per-component overlays
 - `k8s-sandbox/external-secrets/1password-store.yaml` — secret-store example
+- `k8s-sandbox/monitoring/` — Victoria Metrics monitoring stack configs
+- `k8s-sandbox/cilium/` — Cilium CNI configuration including BGP and LoadBalancer
 If unsure, ask for runtime context
 - If a change depends on a running cluster (IP addresses, node names, ArgoCD URL), request the values from the author rather than guessing.
 Keep it short and actionable — prefer small, auditable PRs that update kustomize overlays and `apps/*.yaml` entries.
@@ -52,19 +55,20 @@ This repository contains a Kubernetes setup guide and configuration for deployin
   - Core Services: Same as control plane
 
 ### Network Architecture
-- Uses static IP addressing for nodes (e.g. control plane: 192.168.0.40, worker: 192.168.0.42)
-- Pod networking implemented via Weave-Net
+- Uses static IP addressing for nodes (control plane: 192.168.1.30, Arch worker: 192.168.1.35, Flatcar workers: 192.168.1.38-40)
+- Pod networking implemented via **Cilium CNI** (replaced Weave-Net)
 - DNS configuration using configurable nameservers (default: Google DNS 8.8.8.8, 8.8.4.4)
 
 ## Key Patterns & Conventions
 
 ### Node Configuration
-- Control plane node naming convention: `arch-kubernetes-control-plane`
-- Worker node naming convention: `arch-kubernetes-node0`, `arch-kubernetes-node1`, etc.
+- Control plane node naming: `arch-kubernetes-control-plane` (Arch Linux)
+- Worker nodes: `arch-kubernetes-node0` (Arch Linux), `flatcar-worker-01/02/03` (Flatcar Container Linux)
 - Services configured via systemd (networkd, containerd, kubelet)
+- Current cluster: 5 nodes (1 control-plane, 1 Arch worker, 3 Flatcar workers)
 
 ### Container Runtime
-- Uses `containerd` with systemd cgroups
+- Uses `containerd` v2.1.4 with systemd cgroups
 - Required pause image configuration: `registry.k8s.io/pause:3.9`
 - Config location: `/etc/containerd/config.toml`
 
@@ -88,8 +92,11 @@ kubectl get nodes
 # Generate new join token
 kubeadm token create --print-join-command
 
-# Deploy network solution
-kubectl apply -f "https://reweave.azurewebsites.net/k8s/$(kubectl version | base64 | tr -d '\n')/net.yaml"
+# Check ArgoCD application sync status
+kubectl get applications -n argocd
+
+# Check monitoring alerts
+kubectl get vmalerts -n monitoring
 ```
 
 ## Development Guidelines
