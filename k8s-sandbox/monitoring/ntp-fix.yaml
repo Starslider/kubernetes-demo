@@ -29,7 +29,7 @@ spec:
           echo "Configuring NTP on $(hostname)..."
           
           # Check if it's Flatcar (Container Linux) first
-          if chroot /host test -f /etc/flatcar-release; then
+          if chroot /host grep -q "ID=flatcar" /etc/os-release 2>/dev/null; then
             echo "Flatcar Container Linux detected, configuring NTP..."
             
             # Create systemd drop-in for timesyncd on Flatcar
@@ -143,7 +143,7 @@ spec:
           echo "One-time NTP fix for $(hostname)..."
           
           # Force time sync based on system type
-          if chroot /host test -f /etc/arch-release || chroot /host test -f /etc/flatcar-release; then
+          if chroot /host test -f /etc/arch-release || chroot /host grep -q "ID=flatcar" /etc/os-release 2>/dev/null; then
             echo "Forcing time synchronization..."
             chroot /host systemctl stop systemd-timesyncd 2>/dev/null || true
             sleep 2
