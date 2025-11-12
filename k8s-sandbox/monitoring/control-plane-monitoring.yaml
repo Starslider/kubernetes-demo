@@ -19,7 +19,7 @@ spec:
     matchLabels:
       control-plane: "true"
   remoteWrite:
-  - url: http://vmsingle-monitoring-victoria-metrics-k8s-stack:8429/api/v1/write
+  - url: http://vmsingle-monitoring-victoria-metrics-k8s-stack:8428/api/v1/write
   tolerations:
   - key: node-role.kubernetes.io/control-plane
     operator: Exists
