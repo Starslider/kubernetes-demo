@@ -1,0 +1,94 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: control-plane-fix
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        name: control-plane-fix
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      nodeSelector:
+        node-role.kubernetes.io/control-plane: ""
+      containers:
+      - name: control-plane-fix
+        image: alpine:latest
+        command: ["/bin/sh"]
+        args:
+        - -c
+        - |
+          set -e
+          echo "Fixing control plane component binding on $(hostname)..."
+          
+          # Backup original files
+          mkdir -p /host/etc/kubernetes/manifests-backup
+          
+          # Fix kube-scheduler
+          if [ -f /host/etc/kubernetes/manifests/kube-scheduler.yaml ]; then
+            echo "Backing up and fixing kube-scheduler..."
+            cp /host/etc/kubernetes/manifests/kube-scheduler.yaml /host/etc/kubernetes/manifests-backup/
+            
+            # Replace bind-address if it exists
+            sed -i 's/--bind-address=127\.0\.0\.1/--bind-address=0.0.0.0/g' /host/etc/kubernetes/manifests/kube-scheduler.yaml
+            
+            # Add bind-address if it doesn't exist
+            if ! grep -q "bind-address" /host/etc/kubernetes/manifests/kube-scheduler.yaml; then
+              sed -i '/--port=0/a\    - --bind-address=0.0.0.0' /host/etc/kubernetes/manifests/kube-scheduler.yaml
+            fi
+            
+            echo "kube-scheduler configuration updated"
+          fi
+          
+          # Fix kube-controller-manager
+          if [ -f /host/etc/kubernetes/manifests/kube-controller-manager.yaml ]; then
+            echo "Backing up and fixing kube-controller-manager..."
+            cp /host/etc/kubernetes/manifests/kube-controller-manager.yaml /host/etc/kubernetes/manifests-backup/
+            
+            # Replace bind-address if it exists
+            sed -i 's/--bind-address=127\.0\.0\.1/--bind-address=0.0.0.0/g' /host/etc/kubernetes/manifests/kube-controller-manager.yaml
+            
+            # Add bind-address if it doesn't exist
+            if ! grep -q "bind-address" /host/etc/kubernetes/manifests/kube-controller-manager.yaml; then
+              sed -i '/--port=0/a\    - --bind-address=0.0.0.0' /host/etc/kubernetes/manifests/kube-controller-manager.yaml
+            fi
+            
+            echo "kube-controller-manager configuration updated"
+          fi
+          
+          # Fix etcd
+          if [ -f /host/etc/kubernetes/manifests/etcd.yaml ]; then
+            echo "Backing up etcd manifest..."
+            cp /host/etc/kubernetes/manifests/etcd.yaml /host/etc/kubernetes/manifests-backup/
+            echo "etcd manifest backed up (monitoring via localhost is by design for security)"
+          fi
+          
+          echo "Control plane fix completed. Waiting for pods to restart..."
+          
+          # Wait a bit for kubelet to notice the changes
+          sleep 30
+          
+          echo "Control plane components should be restarting with new configuration"
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: host-root
+          mountPath: /host
+        resources:
+          requests:
+            cpu: 10m
+            memory: 32Mi
+          limits:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: host-root
+        hostPath:
+          path: /
+      restartPolicy: OnFailure

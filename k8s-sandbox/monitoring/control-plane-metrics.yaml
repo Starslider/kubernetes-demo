@@ -1,0 +1,30 @@
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: control-plane-metrics
+  namespace: monitoring
+  labels:
+    control-plane: "true"
+spec:
+  jobName: "control-plane-metrics"
+  targetEndpoints:
+  - targets:
+    - "192.168.1.30:10251"  # kube-scheduler metrics on control plane node
+    labels:
+      job: kube-scheduler
+      component: kube-scheduler
+      tier: control-plane
+      instance: arch-kubernetes-control-plane
+    path: /metrics
+    scheme: http
+    interval: 30s
+  - targets:
+    - "192.168.1.30:10252"  # kube-controller-manager metrics on control plane node
+    labels:
+      job: kube-controller-manager
+      component: kube-controller-manager
+      tier: control-plane
+      instance: arch-kubernetes-control-plane
+    path: /metrics
+    scheme: http
+    interval: 30s
