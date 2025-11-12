@@ -10,6 +10,9 @@ spec:
     - key: app.kubernetes.io/name
       operator: NotIn
       values: [victoria-metrics-k8s-stack]
+    - key: jobLabel
+      operator: NotIn
+      values: [kube-etcd]
   podScrapeSelector: {}
   staticScrapeSelector:
     matchLabels:
