@@ -26,3 +26,4 @@ resources:
   - dayz.yaml
   - crossplane.yaml
   - kmcp.yaml
+  - flatcar.yaml
