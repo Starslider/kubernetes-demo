@@ -9,7 +9,7 @@ spec:
   jobName: "control-plane-metrics"
   targetEndpoints:
   - targets:
-    - "192.168.1.30:10251"  # kube-scheduler metrics on control plane node
+    - "127.0.0.1:10251"  # kube-scheduler metrics via localhost (vmagent is on same node with hostNetwork)
     labels:
       job: kube-scheduler
       component: kube-scheduler
@@ -19,7 +19,7 @@ spec:
     scheme: http
     interval: 30s
   - targets:
-    - "192.168.1.30:10252"  # kube-controller-manager metrics on control plane node
+    - "127.0.0.1:10252"  # kube-controller-manager metrics via localhost (vmagent is on same node with hostNetwork)
     labels:
       job: kube-controller-manager
       component: kube-controller-manager

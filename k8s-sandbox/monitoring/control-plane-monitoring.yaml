@@ -29,32 +29,3 @@ spec:
     limits:
       memory: "128Mi"
       cpu: "100m"
----
-apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMStaticScrape
-metadata:
-  name: control-plane-localhost
-  namespace: monitoring
-  labels:
-    control-plane: "true"
-spec:
-  jobName: "control-plane-localhost"
-  targetEndpoints:
-  - targets:
-    - "127.0.0.1:10251"  # kube-scheduler health/ready endpoints
-    labels:
-      job: kube-scheduler-health
-      component: kube-scheduler
-      tier: control-plane
-    path: /healthz
-    scheme: http
-    interval: 30s
-  - targets:
-    - "127.0.0.1:10252"  # kube-controller-manager health endpoints  
-    labels:
-      job: kube-controller-manager-health
-      component: kube-controller-manager
-      tier: control-plane
-    path: /healthz
-    scheme: http
-    interval: 30s
