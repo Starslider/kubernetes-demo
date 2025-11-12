@@ -28,33 +28,71 @@ spec:
           set -e
           echo "Configuring NTP on $(hostname)..."
           
-          # Install timedatectl if available (systemd systems)
-          if chroot /host which systemctl > /dev/null 2>&1; then
-            echo "Systemd detected, configuring NTP..."
-            chroot /host systemctl enable systemd-timesyncd || true
-            chroot /host systemctl start systemd-timesyncd || true
-            chroot /host timedatectl set-ntp true || true
+          # Check if it's Flatcar (Container Linux) first
+          if chroot /host test -f /etc/flatcar-release; then
+            echo "Flatcar Container Linux detected, configuring NTP..."
+            
+            # Create systemd drop-in for timesyncd on Flatcar
+            mkdir -p /host/etc/systemd/timesyncd.conf.d
+            cat > /host/etc/systemd/timesyncd.conf.d/50-ntp.conf << EOF
+          [Time]
+          NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
+          FallbackNTP=time.cloudflare.com time.google.com
+          RootDistanceMaxSec=5
+          PollIntervalMinSec=32
+          PollIntervalMaxSec=2048
+          EOF
+            
+            chroot /host systemctl daemon-reload 2>/dev/null || true
+            chroot /host systemctl restart systemd-timesyncd 2>/dev/null || true
+            chroot /host timedatectl set-ntp true 2>/dev/null || true
+            
+            # Force time sync for Flatcar
+            sleep 3
+            chroot /host systemctl restart systemd-timesyncd 2>/dev/null || true
+            echo "Flatcar NTP configuration completed"
+            
+          # Check if it's Arch Linux or systemd-based system  
+          elif chroot /host test -f /etc/arch-release || chroot /host which systemctl > /dev/null 2>&1; then
+            echo "Arch Linux/Systemd detected, configuring NTP..."
             
             # Configure NTP servers
             cat > /host/etc/systemd/timesyncd.conf << EOF
           [Time]
           NTP=0.pool.ntp.org 1.pool.ntp.org 2.pool.ntp.org 3.pool.ntp.org
           FallbackNTP=time.cloudflare.com time.google.com
+          RootDistanceMaxSec=5
+          PollIntervalMinSec=32
+          PollIntervalMaxSec=2048
           EOF
             
-            chroot /host systemctl restart systemd-timesyncd || true
-            echo "NTP configuration completed"
+            chroot /host systemctl enable systemd-timesyncd 2>/dev/null || true
+            chroot /host systemctl restart systemd-timesyncd 2>/dev/null || true
+            chroot /host timedatectl set-ntp true 2>/dev/null || true
+            echo "Arch Linux NTP configuration completed"
+            
           else
-            echo "Non-systemd system detected, trying chrony/ntpd..."
+            echo "Unknown system, trying generic NTP setup..."
             # Try chrony first
             if chroot /host which chronyd > /dev/null 2>&1; then
-              chroot /host systemctl enable chronyd || true
-              chroot /host systemctl start chronyd || true
+              echo "Using chronyd..."
+              chroot /host systemctl enable chronyd 2>/dev/null || true
+              chroot /host systemctl restart chronyd 2>/dev/null || true
             elif chroot /host which ntpd > /dev/null 2>&1; then
-              chroot /host systemctl enable ntp || true
-              chroot /host systemctl start ntp || true
+              echo "Using ntpd..."
+              chroot /host systemctl enable ntp 2>/dev/null || true
+              chroot /host systemctl restart ntp 2>/dev/null || true
+            else
+              echo "No NTP daemon found, trying to install..."
+              if chroot /host which pacman > /dev/null 2>&1; then
+                chroot /host pacman -S --noconfirm ntp 2>/dev/null || true
+              fi
             fi
           fi
+          
+          # Check NTP status
+          echo "Checking NTP synchronization status..."
+          chroot /host timedatectl status 2>/dev/null || echo "timedatectl not available"
           
           # Keep container running to maintain the fix
           sleep 30
@@ -104,17 +142,23 @@ spec:
           set -e
           echo "One-time NTP fix for $(hostname)..."
           
-          # Force time sync
-          if chroot /host which systemctl > /dev/null 2>&1; then
-            chroot /host systemctl stop systemd-timesyncd || true
+          # Force time sync based on system type
+          if chroot /host test -f /etc/arch-release || chroot /host test -f /etc/flatcar-release; then
+            echo "Forcing time synchronization..."
+            chroot /host systemctl stop systemd-timesyncd 2>/dev/null || true
             sleep 2
-            chroot /host systemctl start systemd-timesyncd || true
+            chroot /host systemctl start systemd-timesyncd 2>/dev/null || true
             sleep 5
-            chroot /host systemctl restart systemd-timesyncd || true
-            chroot /host timedatectl set-ntp true || true
+            chroot /host systemctl restart systemd-timesyncd 2>/dev/null || true
+            chroot /host timedatectl set-ntp true 2>/dev/null || true
             
             # Force immediate sync
-            chroot /host timedatectl timesync-status || true
+            chroot /host timedatectl timesync-status 2>/dev/null || echo "Cannot get timesync status"
+            
+            # Show final status
+            chroot /host timedatectl status 2>/dev/null || echo "Cannot get time status"
+          else
+            echo "Unknown system type, cannot force sync"
           fi
           
           echo "NTP fix job completed"
