@@ -5,7 +5,11 @@ metadata:
   namespace: monitoring
 spec:
   selectAllByDefault: false
-  serviceScrapeSelector: {}
+  serviceScrapeSelector:
+    matchExpressions:
+    - key: app.kubernetes.io/name
+      operator: NotIn
+      values: [victoria-metrics-k8s-stack]
   podScrapeSelector: {}
   staticScrapeSelector:
     matchLabels:
@@ -24,8 +28,8 @@ spec:
   scrapeTimeout: "10s"
   resources:
     requests:
-      memory: "64Mi"
-      cpu: "10m"
-    limits:
       memory: "128Mi"
-      cpu: "100m"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
