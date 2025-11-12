@@ -4,6 +4,7 @@ metadata:
   name: control-plane-vmagent
   namespace: monitoring
 spec:
+  replicaCount: 1
   selectAllByDefault: false
   serviceScrapeSelector:
     matchExpressions:
