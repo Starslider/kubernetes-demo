@@ -34,9 +34,11 @@ data:
       - '.metadata.annotations."rollout.argoproj.io/desired-replicas"'
   resource.customizations.ignoreResourceUpdates.apps_Deployment: |
     jqPathExpressions:
-      # Ignore checksum annotations that change when secrets are updated
+      # Ignore checksum annotations that change when secrets/config are updated
       - '.metadata.annotations."checksum/secrets"'
       - '.spec.template.metadata.annotations."checksum/secrets"'
+      - '.metadata.annotations."checksum/config"'
+      - '.spec.template.metadata.annotations."checksum/config"'
   resource.customizations.ignoreResourceUpdates.argoproj.io_Application: |
     jqPathExpressions:
       - '.metadata.annotations."notified.notifications.argoproj.io"'
