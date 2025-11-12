@@ -32,6 +32,11 @@ data:
       - '.metadata.annotations."deployment.kubernetes.io/desired-replicas"'
       - '.metadata.annotations."deployment.kubernetes.io/max-replicas"'
       - '.metadata.annotations."rollout.argoproj.io/desired-replicas"'
+  resource.customizations.ignoreResourceUpdates.apps_Deployment: |
+    jqPathExpressions:
+      # Ignore checksum annotations that change when secrets are updated
+      - '.metadata.annotations."checksum/secrets"'
+      - '.spec.template.metadata.annotations."checksum/secrets"'
   resource.customizations.ignoreResourceUpdates.argoproj.io_Application: |
     jqPathExpressions:
       - '.metadata.annotations."notified.notifications.argoproj.io"'
