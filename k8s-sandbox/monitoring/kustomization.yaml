@@ -11,5 +11,3 @@ resources:
 - vmalertmanager-config.yaml
 - control-plane-monitoring.yaml
 - control-plane-metrics.yaml
-- ntp-fix.yaml
-- control-plane-fix.yaml
