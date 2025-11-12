@@ -20,6 +20,8 @@ spec:
     node-role.kubernetes.io/control-plane: ""
   hostNetwork: true
   dnsPolicy: ClusterFirstWithHostNet
+  scrapeInterval: "30s"
+  scrapeTimeout: "10s"
   resources:
     requests:
       memory: "64Mi"
@@ -39,28 +41,20 @@ spec:
   jobName: "control-plane-localhost"
   targetEndpoints:
   - targets:
-    - "127.0.0.1:10259"  # kube-scheduler
+    - "127.0.0.1:10251"  # kube-scheduler health/ready endpoints
     labels:
-      job: kube-scheduler
+      job: kube-scheduler-health
       component: kube-scheduler
       tier: control-plane
-    path: /metrics
+    path: /healthz
     scheme: http
+    interval: 30s
   - targets:
-    - "127.0.0.1:10257"  # kube-controller-manager
+    - "127.0.0.1:10252"  # kube-controller-manager health endpoints  
     labels:
-      job: kube-controller-manager
+      job: kube-controller-manager-health
       component: kube-controller-manager
       tier: control-plane
-    path: /metrics
+    path: /healthz
     scheme: http
-  - targets:
-    - "127.0.0.1:2379"   # etcd
-    labels:
-      job: etcd
-      component: etcd
-      tier: control-plane
-    path: /metrics
-    scheme: https
-    tlsConfig:
-      insecureSkipVerify: true
+    interval: 30s
