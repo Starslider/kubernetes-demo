@@ -12,6 +12,11 @@ spec:
     receiver: 'discord-webhook'
     routes:
     - matchers:
+      - "alertname=Watchdog"
+      receiver: 'null'
+      group_wait: 10s
+      repeat_interval: 1h
+    - matchers:
       - "severity=critical"
       receiver: 'discord-critical'
       group_wait: 10s
@@ -84,3 +89,4 @@ spec:
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
         {{ end }}
+  - name: 'null'
