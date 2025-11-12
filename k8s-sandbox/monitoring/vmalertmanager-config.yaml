@@ -34,8 +34,8 @@ spec:
       message: |
         **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
         **Status:** {{ .Status | toUpper }}
-        **Severity:** {{ if .CommonLabels.severity }}{{ .CommonLabels.severity | toUpper }}{{ else }}UNKNOWN{{ end }}
-        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        **Severity:** {{ with .CommonLabels.severity }}{{ . | toUpper }}{{ else }}UNKNOWN{{ end }}
+        **Cluster:** {{ with .CommonLabels.cluster }}{{ . }}{{ else }}kubernetes{{ end }}
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         **Started:** <t:{{ .StartsAt.Unix }}:R>
@@ -56,7 +56,7 @@ spec:
         **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
         **Status:** {{ .Status | toUpper }}
         **Severity:** CRITICAL
-        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        **Cluster:** {{ with .CommonLabels.cluster }}{{ . }}{{ else }}kubernetes{{ end }}
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         **Started:** <t:{{ .StartsAt.Unix }}:R>
@@ -79,7 +79,7 @@ spec:
         **Alert:** {{ range .Alerts }}{{ .Annotations.summary }}{{ end }}
         **Status:** {{ .Status | toUpper }}
         **Severity:** WARNING
-        **Cluster:** {{ if .CommonLabels.cluster }}{{ .CommonLabels.cluster }}{{ else }}kubernetes{{ end }}
+        **Cluster:** {{ with .CommonLabels.cluster }}{{ . }}{{ else }}kubernetes{{ end }}
         
         {{ range .Alerts }}**Description:** {{ .Annotations.description }}
         {{ if .EndsAt }}**Resolved:** <t:{{ .EndsAt.Unix }}:R>{{ end }}
