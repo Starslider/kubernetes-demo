@@ -25,3 +25,10 @@ spec:
     namespace: minio
     jsonPointers:
     - /data
+  - group: "apps"
+    kind: Deployment
+    name: minio
+    namespace: minio
+    jsonPointers:
+    - /spec/template/metadata/annotations/checksum~1secrets
+    - /spec/template/metadata/annotations/checksum~1config
