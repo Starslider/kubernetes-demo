@@ -14,3 +14,6 @@ spec:
     - repoURL: https://github.com/nekomeowww/ollama-operator.git
       path: config/default
       targetRevision: HEAD
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/ollama
+      targetRevision: HEAD
