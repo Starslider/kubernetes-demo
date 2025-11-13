@@ -4,8 +4,8 @@ metadata:
   name: kmcp
 
 resources:
-# - azure-devops-mcp.yaml  # Disabled: Microsoft MCP uses stdio, acuvity has strict validation
-# - azure-devops-secret.yaml
+- azure-devops-mcp.yaml
+- azure-devops-secret.yaml
 - httproute-grant.yaml
 - kubeconfig-secret.yaml
 - mcp-test.yaml
