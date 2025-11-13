@@ -4,4 +4,5 @@ metadata:
   name: ollama
 
 resources:
-- ollama-deepseek.yaml
+- ollama-model.yaml
+- model-warmup-cronjob.yaml
