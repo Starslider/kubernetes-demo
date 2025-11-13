@@ -5,9 +5,9 @@ metadata:
 spec:
   transportType: http
   httpTransport:
-    targetPort: 8000
+    targetPort: 3000
   deployment:
-    image: acuvity/mcp-server-azure-devops:latest
-    port: 8000
+    image: ghcr.io/starslider/kubernetes-demo/azure-devops-mcp:latest
+    port: 3000
     secretRefs:
       - name: azure-devops-credentials
