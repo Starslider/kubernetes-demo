@@ -9,6 +9,5 @@ spec:
   deployment:
     image: acuvity/mcp-server-azure-devops:latest
     port: 3000
-    envFrom:
-      - secretRef:
-          name: azure-devops-credentials
+    secretRefs:
+      - name: azure-devops-credentials
