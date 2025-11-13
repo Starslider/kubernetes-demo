@@ -9,6 +9,7 @@ spec:
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
+      backoffLimit: 2  # Retry twice on failure
       template:
         spec:
           containers:
