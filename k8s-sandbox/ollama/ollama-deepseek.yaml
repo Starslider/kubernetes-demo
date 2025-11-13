@@ -1,6 +1,6 @@
 apiVersion: ollama.ayaka.io/v1
 kind: Model
 metadata:
-  name: deepseek-coder
+  name: qwen2-5-coder
 spec:
-  image: deepseek-coder:6.7b
+  image: qwen2.5-coder:7b
