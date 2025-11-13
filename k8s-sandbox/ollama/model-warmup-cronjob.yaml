@@ -20,6 +20,6 @@ spec:
             - |
               curl -s -X POST http://ollama-models-store.ollama-operator-system:11434/api/generate \
                 -H "Content-Type: application/json" \
-                -d '{"model":"qwen2.5:3b","prompt":"ping","stream":false}' \
+                -d '{"model":"mistral:7b","prompt":"ping","stream":false}' \
                 --max-time 30 > /dev/null && echo "Model warmed up successfully"
           restartPolicy: OnFailure
