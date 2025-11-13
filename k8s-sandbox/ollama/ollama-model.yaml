@@ -1,6 +1,6 @@
 apiVersion: ollama.ayaka.io/v1
 kind: Model
 metadata:
-  name: mistral
+  name: qwen2-5
 spec:
-  image: mistral:7b
+  image: qwen2.5:3b
