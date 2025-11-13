@@ -7,7 +7,7 @@ spec:
   httpTransport:
     targetPort: 5050
   deployment:
-    image: ghcr.io/jordiag/azure-devops-mcp-server:latest
+    image: ghcr.io/starslider/kubernetes-demo/azure-devops-mcp-jordiag:latest
     port: 5050
     secretRefs:
       - name: azure-devops-credentials
