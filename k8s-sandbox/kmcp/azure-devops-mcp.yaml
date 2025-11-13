@@ -9,14 +9,6 @@ spec:
   deployment:
     image: acuvity/mcp-server-azure-devops:latest
     port: 3000
-    env:
-      - name: AZURE_DEVOPS_ORG
-        valueFrom:
-          secretKeyRef:
-            name: azure-devops-credentials
-            key: organization
-      - name: AZURE_DEVOPS_TOKEN
-        valueFrom:
-          secretKeyRef:
-            name: azure-devops-credentials
-            key: token
+    envFrom:
+      - secretRef:
+          name: azure-devops-credentials
