@@ -4,6 +4,8 @@ metadata:
   name: kmcp
 
 resources:
+- azure-devops-mcp.yaml
+- azure-devops-secret.yaml
 - httproute-grant.yaml
 - kubeconfig-secret.yaml
 - mcp-test.yaml
