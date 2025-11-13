@@ -27,3 +27,4 @@ resources:
   - crossplane.yaml
   - kmcp.yaml
   - flatcar.yaml
+  - ollama.yaml

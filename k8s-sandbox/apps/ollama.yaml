@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ollama-operator-system
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+  sources:
+    - repoURL: https://github.com/nekomeowww/ollama-operator.git
+      path: config/default
+      targetRevision: HEAD
