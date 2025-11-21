@@ -24,7 +24,7 @@ spec:
       ref: values
 
     - repoURL: https://charts.goauthentik.io
-      targetRevision: 2025.10.1
+      targetRevision: 2025.10.2
       helm:
         valueFiles:
           - $values/k8s-sandbox/authentik/values.yaml
