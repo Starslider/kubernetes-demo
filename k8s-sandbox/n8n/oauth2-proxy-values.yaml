@@ -13,3 +13,4 @@ extraArgs:
   set-xauthrequest: "true"
   skip-auth-regex: "^/oauth2/.*"
   upstream: "http://n8n:5678"
+  insecure-oidc-allow-unverified-email: "true"
