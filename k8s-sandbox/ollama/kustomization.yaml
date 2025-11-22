@@ -3,6 +3,6 @@ kind: Kustomization
 metadata:
   name: ollama
 
-resources:
-- ollama-model.yaml
-- model-warmup-cronjob.yaml
+# resources:
+# - ollama-model.yaml
+# - model-warmup-cronjob.yaml
