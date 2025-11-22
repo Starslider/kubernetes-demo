@@ -5,7 +5,7 @@ metadata:
 
 resources:
 - configmap.yaml
-- cronjob.yaml
+#- cronjob.yaml
 - deployment.yaml
 - mod-downloader-configmap.yaml
 - pvc.yaml
