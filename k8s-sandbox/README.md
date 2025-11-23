@@ -1271,6 +1271,8 @@ If all looks well, continue to [step #6](#step-6-a-round-of-high-fives).
 
 You've earned it.
 
+> 💡 **Easter Egg Hint:** Did you know that eggs come in containers too? Try looking in the scripts directory! 🥚
+
 &nbsp;
 
 ### Helpful links
