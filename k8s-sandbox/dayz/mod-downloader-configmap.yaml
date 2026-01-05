@@ -12,6 +12,10 @@ data:
     echo "=== DayZ Mod Installation Script ==="
     echo "Following official Bohemia documentation"
     
+    # Ensure keys directory exists
+    mkdir -p /home/steam/dayz/keys
+    chmod 755 /home/steam/dayz/keys 2>/dev/null || true
+    
     # Parse MODS env var (semicolon-separated list of IDs)
     if [ -z "$MODS" ]; then
       echo "No mods specified, skipping mod installation"
@@ -115,9 +119,28 @@ data:
       fi
       
       # Copy mod keys to server keys directory BEFORE lowercase conversion
+      # Look for keys in standard locations (Keys, keys directories)
       if [ -d "$MOD_PATH/Keys" ] || [ -d "$MOD_PATH/keys" ]; then
         echo "  Copying mod signing keys..."
         cp -f "$MOD_PATH"/[Kk]eys/*.bikey /home/steam/dayz/keys/ 2>/dev/null || true
+      fi
+      
+      # Also search for any .bikey files in the mod directory and copy them
+      # Some mods might have keys in non-standard locations
+      find "$MOD_PATH" -name "*.bikey" -type f | while read -r KEY_FILE; do
+        KEY_NAME=$(basename "$KEY_FILE")
+        if [ ! -f "/home/steam/dayz/keys/$KEY_NAME" ]; then
+          echo "  Found additional key file: $KEY_NAME"
+          cp -f "$KEY_FILE" /home/steam/dayz/keys/ 2>/dev/null || true
+        fi
+      done
+      
+      # Verify keys were copied
+      if [ -d "$MOD_PATH/Keys" ] || [ -d "$MOD_PATH/keys" ]; then
+        KEY_COUNT=$(find "$MOD_PATH"/[Kk]eys -name "*.bikey" 2>/dev/null | wc -l)
+        if [ "$KEY_COUNT" -gt 0 ]; then
+          echo "  ✅ Copied $KEY_COUNT key file(s) to server keys directory"
+        fi
       fi
       
       # Copy mission folders to mpmissions directory (required for custom maps)
