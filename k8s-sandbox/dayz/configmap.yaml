@@ -2,7 +2,7 @@
 apiVersion: v1
 data:
   serverDZ.cfg: |
-      hostname="iDome Dayz";
+      hostname="DeerIsle Experimental";
       passwordAdmin="dayz";
       enableCfgGameplayFile=1
       enableWhitelist=0;
