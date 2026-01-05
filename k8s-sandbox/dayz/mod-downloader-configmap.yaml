@@ -120,6 +120,30 @@ data:
         cp -f "$MOD_PATH"/[Kk]eys/*.bikey /home/steam/dayz/keys/ 2>/dev/null || true
       fi
       
+      # Copy mission folders to mpmissions directory (required for custom maps)
+      MPMISSIONS_DIR="/home/steam/dayz/mpmissions"
+      mkdir -p "$MPMISSIONS_DIR"
+      
+      # Look for mission folders in the mod directory
+      # Common mission folder names: empty.deerisle, dayzOffline.deerisle, etc.
+      for MISSION_DIR in "$MOD_PATH"/*; do
+        if [ -d "$MISSION_DIR" ]; then
+          MISSION_NAME=$(basename "$MISSION_DIR")
+          # Check if this looks like a mission folder (contains .c files, .pbo files, or init.c)
+          if [ -f "$MISSION_DIR/init.c" ] || \
+             find "$MISSION_DIR" -maxdepth 2 -type f -name "*.c" | grep -q . || \
+             find "$MISSION_DIR" -maxdepth 2 -type f -name "*.pbo" | grep -q .; then
+            TARGET_MISSION="$MPMISSIONS_DIR/$MISSION_NAME"
+            if [ ! -d "$TARGET_MISSION" ]; then
+              echo "  Copying mission folder: $MISSION_NAME -> mpmissions/"
+              cp -r "$MISSION_DIR" "$TARGET_MISSION"
+            else
+              echo "  Mission folder $MISSION_NAME already exists in mpmissions/"
+            fi
+          fi
+        fi
+      done
+      
       # Lowercase all files in mod directory (Linux is case-sensitive)
       echo "  Converting filenames to lowercase..."
       find "$MOD_PATH" -depth -exec bash -c 'file="{}"; dir=$(dirname "$file"); base=$(basename "$file"); lower=$(echo "$base" | tr "[:upper:]" "[:lower:]"); [ "$base" != "$lower" ] && mv "$file" "$dir/$lower" 2>/dev/null || true' \;
