@@ -168,14 +168,20 @@ data:
     echo "Fixing permissions for mission folders..."
     MPMISSIONS_DIR="/home/steam/dayz/mpmissions"
     if [ -d "$MPMISSIONS_DIR" ]; then
-      find "$MPMISSIONS_DIR" -type d -exec chmod 755 {} \; 2>/dev/null || true
-      find "$MPMISSIONS_DIR" -type f -exec chmod 644 {} \; 2>/dev/null || true
+      # Use permissive permissions since chown may not work on all volume types
+      find "$MPMISSIONS_DIR" -type d -exec chmod 777 {} \; 2>/dev/null || true
+      find "$MPMISSIONS_DIR" -type f -exec chmod 666 {} \; 2>/dev/null || true
       # Ensure empty.deerisle has write permissions for storage
       if [ -d "$MPMISSIONS_DIR/empty.deerisle" ]; then
-        chmod -R 755 "$MPMISSIONS_DIR/empty.deerisle" 2>/dev/null || true
+        chmod -R 777 "$MPMISSIONS_DIR/empty.deerisle" 2>/dev/null || true
         # Create storage directory structure if it doesn't exist
         mkdir -p "$MPMISSIONS_DIR/empty.deerisle/storage_1" 2>/dev/null || true
-        chmod 755 "$MPMISSIONS_DIR/empty.deerisle/storage_1" 2>/dev/null || true
+        chmod 777 "$MPMISSIONS_DIR/empty.deerisle/storage_1" 2>/dev/null || true
+        # Also create additional storage directories that might be needed
+        for i in {1..10}; do
+          mkdir -p "$MPMISSIONS_DIR/empty.deerisle/storage_$i" 2>/dev/null || true
+          chmod 777 "$MPMISSIONS_DIR/empty.deerisle/storage_$i" 2>/dev/null || true
+        done
       fi
     fi
     

@@ -73,8 +73,12 @@ spec:
                   echo "Copying mission folder to mpmissions..."
                   cp -r "Deerisle-6.0-Experimental-main/empty.deerisle" "$TARGET_MISSION"
                   # Fix permissions - ensure steam user can write (for storage directories)
-                  chown -R 1000:1000 "$TARGET_MISSION" || true
-                  chmod -R 755 "$TARGET_MISSION" || true
+                  # Note: chown may not work on all volume types, so we also set permissive permissions
+                  chown -R 1001:1001 "$TARGET_MISSION" 2>/dev/null || true
+                  chmod -R 777 "$TARGET_MISSION" || true
+                  # Create storage directory with proper permissions
+                  mkdir -p "$TARGET_MISSION/storage_1" || true
+                  chmod 777 "$TARGET_MISSION/storage_1" 2>/dev/null || true
                   echo "Mission folder downloaded successfully"
                 else
                   echo "Error: Mission folder not found in downloaded archive"
@@ -85,8 +89,11 @@ spec:
                 rm -rf "$TEMP_DIR"
               else
                 echo "Mission folder $MISSION_NAME already exists, fixing permissions..."
-                chown -R 1000:1000 "$TARGET_MISSION" || true
-                chmod -R 755 "$TARGET_MISSION" || true
+                chown -R 1001:1001 "$TARGET_MISSION" 2>/dev/null || true
+                chmod -R 777 "$TARGET_MISSION" || true
+                # Ensure storage directory exists with proper permissions
+                mkdir -p "$TARGET_MISSION/storage_1" || true
+                chmod 777 "$TARGET_MISSION/storage_1" 2>/dev/null || true
               fi
           volumeMounts:
             - name: dayz-data
