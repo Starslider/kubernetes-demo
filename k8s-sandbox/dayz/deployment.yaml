@@ -45,6 +45,47 @@ spec:
             name: dayz-mod-downloader
             defaultMode: 0755
       initContainers:
+        - name: mission-downloader
+          image: alpine:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              apk add --no-cache curl unzip >/dev/null 2>&1
+              MPMISSIONS_DIR="/dayz-data/mpmissions"
+              mkdir -p "$MPMISSIONS_DIR"
+              MISSION_NAME="empty.deerisle"
+              TARGET_MISSION="$MPMISSIONS_DIR/$MISSION_NAME"
+              
+              if [ ! -d "$TARGET_MISSION" ]; then
+                echo "Downloading DeerIsle mission folder from GitHub..."
+                TEMP_DIR=$(mktemp -d)
+                cd "$TEMP_DIR"
+                
+                # Download the repository as zip
+                curl -sL -o deerisle.zip "https://github.com/johnmclane666/Deerisle-6.0-Experimental/archive/refs/heads/main.zip"
+                
+                # Extract
+                unzip -q deerisle.zip
+                
+                # Copy the mission folder
+                if [ -d "Deerisle-6.0-Experimental-main/empty.deerisle" ]; then
+                  echo "Copying mission folder to mpmissions..."
+                  cp -r "Deerisle-6.0-Experimental-main/empty.deerisle" "$TARGET_MISSION"
+                  echo "Mission folder downloaded successfully"
+                else
+                  echo "Error: Mission folder not found in downloaded archive"
+                  ls -la "Deerisle-6.0-Experimental-main/" || true
+                  exit 1
+                fi
+                
+                rm -rf "$TEMP_DIR"
+              else
+                echo "Mission folder $MISSION_NAME already exists, skipping download"
+              fi
+          volumeMounts:
+            - name: dayz-data
+              mountPath: /dayz-data
         - name: mod-downloader
           image: ghcr.io/starslider/dayz-server:latest
           command: ["/bin/bash", "/scripts/download-mods.sh"]

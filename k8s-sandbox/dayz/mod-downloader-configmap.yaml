@@ -121,14 +121,14 @@ data:
       fi
       
       # Copy mission folders to mpmissions directory (required for custom maps)
+      # Note: DeerIsle mission folder is handled by a separate init container
       MPMISSIONS_DIR="/home/steam/dayz/mpmissions"
       mkdir -p "$MPMISSIONS_DIR"
       
-      # Look for mission folders - search recursively in the mod directory
-      # Mission folders typically contain init.c or have names like empty.deerisle, dayzOffline.*
+      # Look for mission folders in the mod directory (for mods that include missions)
       echo "  Searching for mission folders in mod..."
       
-      # First, try to find folders with common mission names (deerisle, etc.)
+      # First, try to find folders with common mission names
       find "$MOD_PATH" -type d \( -name "empty.deerisle" -o -name "dayzOffline.deerisle" -o -name "*.deerisle" \) | while read -r MISSION_DIR; do
         MISSION_NAME=$(basename "$MISSION_DIR")
         TARGET_MISSION="$MPMISSIONS_DIR/$MISSION_NAME"
