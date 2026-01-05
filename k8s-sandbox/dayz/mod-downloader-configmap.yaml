@@ -124,22 +124,34 @@ data:
       MPMISSIONS_DIR="/home/steam/dayz/mpmissions"
       mkdir -p "$MPMISSIONS_DIR"
       
-      # Look for mission folders in the mod directory
-      # Common mission folder names: empty.deerisle, dayzOffline.deerisle, etc.
-      for MISSION_DIR in "$MOD_PATH"/*; do
-        if [ -d "$MISSION_DIR" ]; then
-          MISSION_NAME=$(basename "$MISSION_DIR")
-          # Check if this looks like a mission folder (contains .c files, .pbo files, or init.c)
-          if [ -f "$MISSION_DIR/init.c" ] || \
-             find "$MISSION_DIR" -maxdepth 2 -type f -name "*.c" | grep -q . || \
-             find "$MISSION_DIR" -maxdepth 2 -type f -name "*.pbo" | grep -q .; then
-            TARGET_MISSION="$MPMISSIONS_DIR/$MISSION_NAME"
-            if [ ! -d "$TARGET_MISSION" ]; then
-              echo "  Copying mission folder: $MISSION_NAME -> mpmissions/"
-              cp -r "$MISSION_DIR" "$TARGET_MISSION"
-            else
-              echo "  Mission folder $MISSION_NAME already exists in mpmissions/"
-            fi
+      # Look for mission folders - search recursively in the mod directory
+      # Mission folders typically contain init.c or have names like empty.deerisle, dayzOffline.*
+      echo "  Searching for mission folders in mod..."
+      
+      # First, try to find folders with common mission names (deerisle, etc.)
+      find "$MOD_PATH" -type d \( -name "empty.deerisle" -o -name "dayzOffline.deerisle" -o -name "*.deerisle" \) | while read -r MISSION_DIR; do
+        MISSION_NAME=$(basename "$MISSION_DIR")
+        TARGET_MISSION="$MPMISSIONS_DIR/$MISSION_NAME"
+        if [ ! -d "$TARGET_MISSION" ]; then
+          echo "  Found mission folder: $MISSION_NAME"
+          echo "  Copying mission folder: $MISSION_NAME -> mpmissions/"
+          cp -r "$MISSION_DIR" "$TARGET_MISSION"
+        else
+          echo "  Mission folder $MISSION_NAME already exists in mpmissions/"
+        fi
+      done
+      
+      # Also check for any folders that contain init.c or mission.c files
+      find "$MOD_PATH" -type f \( -name "init.c" -o -name "mission.c" \) | while read -r MISSION_FILE; do
+        MISSION_DIR=$(dirname "$MISSION_FILE")
+        MISSION_NAME=$(basename "$MISSION_DIR")
+        # Skip if it's in the root or already copied, and name looks like a mission
+        if [ "$MISSION_DIR" != "$MOD_PATH" ] && [ ! -d "$MPMISSIONS_DIR/$MISSION_NAME" ]; then
+          # Check if directory name looks like a mission (contains dot or starts with dayzOffline)
+          if [[ "$MISSION_NAME" == *.* ]] || [[ "$MISSION_NAME" == dayzOffline* ]]; then
+            echo "  Found mission folder by init.c: $MISSION_NAME"
+            echo "  Copying mission folder: $MISSION_NAME -> mpmissions/"
+            cp -r "$MISSION_DIR" "$MPMISSIONS_DIR/$MISSION_NAME"
           fi
         fi
       done
