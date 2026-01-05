@@ -72,6 +72,9 @@ spec:
                 if [ -d "Deerisle-6.0-Experimental-main/empty.deerisle" ]; then
                   echo "Copying mission folder to mpmissions..."
                   cp -r "Deerisle-6.0-Experimental-main/empty.deerisle" "$TARGET_MISSION"
+                  # Fix permissions - ensure steam user can write (for storage directories)
+                  chown -R 1000:1000 "$TARGET_MISSION" || true
+                  chmod -R 755 "$TARGET_MISSION" || true
                   echo "Mission folder downloaded successfully"
                 else
                   echo "Error: Mission folder not found in downloaded archive"
@@ -81,7 +84,9 @@ spec:
                 
                 rm -rf "$TEMP_DIR"
               else
-                echo "Mission folder $MISSION_NAME already exists, skipping download"
+                echo "Mission folder $MISSION_NAME already exists, fixing permissions..."
+                chown -R 1000:1000 "$TARGET_MISSION" || true
+                chmod -R 755 "$TARGET_MISSION" || true
               fi
           volumeMounts:
             - name: dayz-data
