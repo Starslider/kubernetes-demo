@@ -58,7 +58,7 @@ data:
       {
           class DayZ
           {
-              template="dayzOffline.deerisle";
+              template="empty.deerisle";
           };
       };
 kind: ConfigMap
