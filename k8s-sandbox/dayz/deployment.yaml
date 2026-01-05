@@ -7,7 +7,7 @@ metadata:
   labels:
     app: dayz
 spec:
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       app: dayz
@@ -55,7 +55,7 @@ spec:
               mountPath: /scripts
           env:
             - name: MODS
-              value: "1559212036;1564026768"
+              value: "1559212036;1564026768;1750506510"
             - name: HOME
               value: /home/steam
             - name: STEAMACCOUNT
@@ -105,7 +105,7 @@ spec:
             - name: PORT
               value: "2302"
             - name: MODS
-              value: "1559212036;1564026768"
+              value: "1559212036;1564026768;1750506510"
         - name: openssh-server
           image: lscr.io/linuxserver/openssh-server:latest
           imagePullPolicy: Always
