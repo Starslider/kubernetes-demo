@@ -8,7 +8,7 @@ data:
       enableWhitelist=0;
       steamQueryPort=27016;
       maxPlayers=10;
-      verifySignatures=2;
+      verifySignatures=1;
       serverTimeFromSystemTime=1;
       forceSameBuild=1;
       disableVoN=0;
