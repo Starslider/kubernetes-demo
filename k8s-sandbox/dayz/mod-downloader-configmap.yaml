@@ -39,72 +39,87 @@ data:
       
       # Check if mod already exists
       if [ -d "$MOD_PATH" ]; then
-        echo "  Mod already downloaded, skipping..."
+        echo "  Mod already downloaded, checking for updates..."
       else
         echo "  Downloading from Steam Workshop..."
+      fi
+      
+      # Always run SteamCMD with validate to check for updates
+      # The validate flag ensures mods are up-to-date and verifies file integrity
+      MAX_RETRIES=5
+      RETRY_COUNT=0
+      DOWNLOAD_SUCCESS=false
+      
+      while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$DOWNLOAD_SUCCESS" = false ]; do
+        if [ $RETRY_COUNT -gt 0 ]; then
+          echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
+          echo "  Waiting 10 seconds before retry..."
+          sleep 10
+        fi
         
-        # Download via SteamCMD to the mounted volume with retry logic for large mods
-        # Large mods (13GB+) may need extended time on slower connections
-        MAX_RETRIES=5
-        RETRY_COUNT=0
-        DOWNLOAD_SUCCESS=false
-        
-        while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$DOWNLOAD_SUCCESS" = false ]; do
-          if [ $RETRY_COUNT -gt 0 ]; then
-            echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
-            echo "  Waiting 10 seconds before retry..."
-            sleep 10
-          fi
-          
+        if [ -d "$MOD_PATH" ]; then
+          echo "  Updating mod (this may take several minutes for large mods)..."
+        else
           echo "  Starting download (this may take several minutes for large mods)..."
-          
-          # Use timeout command with 2 hours (7200 seconds) for very large downloads
-          # SteamCMD will handle its own retries, but we wrap it to prevent premature termination
-          # Capture exit code properly despite pipe
-          set +e  # Temporarily disable exit on error for this section
-          timeout 7200 steamcmd \
-            +force_install_dir /home/steam/dayz \
-            +login "$STEAMACCOUNT" "$STEAMPASSWORD" \
-            +workshop_download_item 221100 "$MOD_ID_CLEAN" validate \
-            +quit 2>&1 | tee /tmp/steamcmd_output.log
-          STEAMCMD_EXIT=${PIPESTATUS[0]}
-          set -e  # Re-enable exit on error
-          
-          # Check if download was successful
-          if [ $STEAMCMD_EXIT -eq 0 ]; then
-            # Check if download was successful by verifying mod directory exists
-            if [ -d "$MOD_PATH" ]; then
-              DOWNLOAD_SUCCESS=true
-              echo "  ✅ Download completed successfully"
-            else
-              echo "  ⚠️  SteamCMD completed but mod directory not found"
-              echo "  Checking for partial download..."
-              # Wait a bit and check again (SteamCMD might still be finalizing)
-              sleep 5
-              if [ -d "$MOD_PATH" ]; then
-                DOWNLOAD_SUCCESS=true
-                echo "  ✅ Mod directory found after delay"
+        fi
+        
+        # Use timeout command with 2 hours (7200 seconds) for very large downloads
+        # SteamCMD will handle its own retries, but we wrap it to prevent premature termination
+        # The validate flag checks for updates and verifies file integrity
+        # Capture exit code properly despite pipe
+        set +e  # Temporarily disable exit on error for this section
+        timeout 7200 steamcmd \
+          +force_install_dir /home/steam/dayz \
+          +login "$STEAMACCOUNT" "$STEAMPASSWORD" \
+          +workshop_download_item 221100 "$MOD_ID_CLEAN" validate \
+          +quit 2>&1 | tee /tmp/steamcmd_output.log
+        STEAMCMD_EXIT=${PIPESTATUS[0]}
+        set -e  # Re-enable exit on error
+        
+        # Check if download/update was successful
+        if [ $STEAMCMD_EXIT -eq 0 ]; then
+          # Check if download was successful by verifying mod directory exists
+          if [ -d "$MOD_PATH" ]; then
+            DOWNLOAD_SUCCESS=true
+            if [ $RETRY_COUNT -eq 0 ] && [ -d "$MOD_PATH" ] 2>/dev/null; then
+              # Check if SteamCMD actually updated anything by looking at output
+              if grep -q "Success" /tmp/steamcmd_output.log 2>/dev/null || \
+                 grep -q "Update state" /tmp/steamcmd_output.log 2>/dev/null; then
+                echo "  ✅ Mod updated/verified successfully"
               else
-                echo "  Retrying download..."
-                RETRY_COUNT=$((RETRY_COUNT + 1))
+                echo "  ✅ Mod is up-to-date"
               fi
+            else
+              echo "  ✅ Download/update completed successfully"
             fi
           else
-            if [ $STEAMCMD_EXIT -eq 124 ]; then
-              echo "  ⚠️  Download timed out after 2 hours, retrying..."
+            echo "  ⚠️  SteamCMD completed but mod directory not found"
+            echo "  Checking for partial download..."
+            # Wait a bit and check again (SteamCMD might still be finalizing)
+            sleep 5
+            if [ -d "$MOD_PATH" ]; then
+              DOWNLOAD_SUCCESS=true
+              echo "  ✅ Mod directory found after delay"
             else
-              echo "  ⚠️  Download failed with exit code $STEAMCMD_EXIT, retrying..."
+              echo "  Retrying download..."
+              RETRY_COUNT=$((RETRY_COUNT + 1))
             fi
-            RETRY_COUNT=$((RETRY_COUNT + 1))
           fi
-        done
-        
-        if [ "$DOWNLOAD_SUCCESS" = false ]; then
-          echo "  ❌ Download failed after $MAX_RETRIES attempts!"
-          echo "  Last SteamCMD output:"
-          tail -20 /tmp/steamcmd_output.log 2>/dev/null || true
-          continue
+        else
+          if [ $STEAMCMD_EXIT -eq 124 ]; then
+            echo "  ⚠️  Download/update timed out after 2 hours, retrying..."
+          else
+            echo "  ⚠️  Download/update failed with exit code $STEAMCMD_EXIT, retrying..."
+          fi
+          RETRY_COUNT=$((RETRY_COUNT + 1))
         fi
+      done
+      
+      if [ "$DOWNLOAD_SUCCESS" = false ]; then
+        echo "  ❌ Download/update failed after $MAX_RETRIES attempts!"
+        echo "  Last SteamCMD output:"
+        tail -20 /tmp/steamcmd_output.log 2>/dev/null || true
+        continue
       fi
       
       # Create symbolic link in server root WITHOUT @ prefix (official docs)
