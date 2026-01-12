@@ -80,6 +80,18 @@ data:
       chmod +x /scripts/generate-steam-guard-code.py 2>/dev/null || true
     fi
     
+    # Try to install Python if not available (for containers that support it)
+    if ! command -v python3 &> /dev/null && ! command -v python &> /dev/null; then
+      echo "Python not found, attempting to install..."
+      if command -v apt-get &> /dev/null; then
+        apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq python3 >/dev/null 2>&1 || true
+      elif command -v apk &> /dev/null; then
+        apk add --no-cache python3 >/dev/null 2>&1 || true
+      elif command -v yum &> /dev/null; then
+        yum install -y -q python3 >/dev/null 2>&1 || true
+      fi
+    fi
+    
     # Ensure keys directory exists
     mkdir -p /home/steam/dayz/keys
     chmod 755 /home/steam/dayz/keys 2>/dev/null || true
@@ -101,20 +113,41 @@ data:
     # Priority 1: Generate from shared secret (recommended for automation)
     if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
       echo "Generating Steam Guard code from shared secret..."
+      echo "  DEBUG: STEAMGUARDSHAREDSECRET is set (length: ${#STEAMGUARDSHAREDSECRET})"
+      
       # Check if Python is available
       if command -v python3 &> /dev/null || command -v python &> /dev/null; then
         PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
+        echo "  DEBUG: Python found at: $PYTHON_CMD"
+        
         # Generate code using the Python script
         if [ -f "/scripts/generate-steam-guard-code.py" ]; then
-          STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
-          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
-            echo "✅ Generated Steam Guard code from shared secret"
+          echo "  DEBUG: Python script found at /scripts/generate-steam-guard-code.py"
+          # Don't suppress errors - we need to see what's happening
+          STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>&1)
+          PYTHON_EXIT=$?
+          
+          if [ $PYTHON_EXIT -eq 0 ] && [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
+            echo "✅ Generated Steam Guard code from shared secret: $STEAM_GUARD_CODE"
           else
-            echo "⚠️  Failed to generate code from shared secret, falling back to manual code if available"
+            echo "⚠️  Failed to generate code from shared secret (exit: $PYTHON_EXIT)"
+            echo "  DEBUG: Output was: $STEAM_GUARD_CODE"
             STEAM_GUARD_CODE=""
           fi
+        else
+          echo "⚠️  Python script not found at /scripts/generate-steam-guard-code.py"
+          echo "  DEBUG: Checking /scripts directory contents:"
+          ls -la /scripts/ 2>&1 || true
         fi
+      else
+        echo "⚠️  Python not available in container"
+        echo "  DEBUG: Checking for Python:"
+        which python3 python 2>&1 || true
       fi
+    else
+      echo "⚠️  STEAMGUARDSHAREDSECRET environment variable is not set"
+      echo "  DEBUG: Available environment variables containing STEAM:"
+      env | grep -i steam || true
     fi
     
     # Priority 2: Use provided Steam Guard code (temporary solution)
@@ -196,9 +229,14 @@ data:
         
         # Add Steam Guard code to command if we have one
         if [ -n "$STEAM_GUARD_CODE" ]; then
+          echo "  DEBUG: Using Steam Guard code: $STEAM_GUARD_CODE"
           STEAMCMD_CMD="$STEAMCMD_CMD +set_steam_guard_code $STEAM_GUARD_CODE"
+        else
+          echo "  ⚠️  WARNING: No Steam Guard code available! SteamCMD will prompt for manual entry."
+          echo "  DEBUG: STEAM_GUARD_CODE is empty"
         fi
         
+        echo "  DEBUG: SteamCMD command: $STEAMCMD_CMD +login [REDACTED] [REDACTED] +workshop_download_item ..."
         STEAMCMD_CMD="$STEAMCMD_CMD +login $STEAMACCOUNT $STEAMPASSWORD"
         STEAMCMD_CMD="$STEAMCMD_CMD +workshop_download_item 221100 $MOD_ID_CLEAN validate"
         STEAMCMD_CMD="$STEAMCMD_CMD +quit"
