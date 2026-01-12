@@ -94,14 +94,60 @@ data:
     WORKSHOP_DIR="/home/steam/dayz/steamapps/workshop"
     mkdir -p "$WORKSHOP_DIR"
     
-    IFS=';' read -ra MOD_ARRAY <<< "$MODS"
+    # Generate Steam Guard code once at the beginning (to avoid rate limits)
+    STEAM_GUARD_CODE=""
+    PYTHON_CMD=""  # Initialize for later use in retry logic
     
+    # Priority 1: Generate from shared secret (recommended for automation)
+    if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
+      echo "Generating Steam Guard code from shared secret..."
+      # Check if Python is available
+      if command -v python3 &> /dev/null || command -v python &> /dev/null; then
+        PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
+        # Generate code using the Python script
+        if [ -f "/scripts/generate-steam-guard-code.py" ]; then
+          STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
+          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
+            echo "✅ Generated Steam Guard code from shared secret"
+          else
+            echo "⚠️  Failed to generate code from shared secret, falling back to manual code if available"
+            STEAM_GUARD_CODE=""
+          fi
+        fi
+      fi
+    fi
+    
+    # Priority 2: Use provided Steam Guard code (temporary solution)
+    if [ -z "$STEAM_GUARD_CODE" ] && [ -n "$STEAMGUARD" ]; then
+      echo "Using provided Steam Guard code for automated authentication..."
+      STEAM_GUARD_CODE="$STEAMGUARD"
+    fi
+    
+    # Add initial delay to avoid hitting rate limits on startup
+    echo "Waiting 5 seconds before starting downloads to avoid rate limits..."
+    sleep 5
+    
+    # Parse mods and prepare download list
+    IFS=';' read -ra MOD_ARRAY <<< "$MODS"
+    MOD_COUNT=${#MOD_ARRAY[@]}
+    echo "Found $MOD_COUNT mod(s) to process"
+    
+    # Process each mod with delays to avoid rate limits
+      MOD_INDEX=0
     for MOD_ID in "${MOD_ARRAY[@]}"; do
       # Remove @ prefix if present
       MOD_ID_CLEAN="${MOD_ID#@}"
+      MOD_INDEX=$((MOD_INDEX + 1))
       
       echo ""
-      echo "Processing mod: $MOD_ID_CLEAN"
+      echo "Processing mod $MOD_INDEX/$MOD_COUNT: $MOD_ID_CLEAN"
+      
+      # Add delay between mods to avoid rate limits (except for first mod)
+      if [ $MOD_INDEX -gt 1 ]; then
+        DELAY=$((5 + MOD_INDEX))  # Increasing delay: 6s, 7s, 8s, etc.
+        echo "  Waiting ${DELAY}s before processing to avoid rate limits..."
+        sleep $DELAY
+      fi
       
       MOD_PATH="$WORKSHOP_DIR/content/221100/$MOD_ID_CLEAN"
       
@@ -120,9 +166,17 @@ data:
       
       while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$DOWNLOAD_SUCCESS" = false ]; do
         if [ $RETRY_COUNT -gt 0 ]; then
+          # Exponential backoff for retries, with longer delays for rate limit errors
+          BACKOFF_DELAY=$((10 * (2 ** RETRY_COUNT)))  # 20s, 40s, 80s, 160s
           echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
-          echo "  Waiting 10 seconds before retry..."
-          sleep 10
+          echo "  Waiting ${BACKOFF_DELAY} seconds before retry (exponential backoff)..."
+          sleep $BACKOFF_DELAY
+          
+          # Regenerate Steam Guard code if using shared secret (codes expire every 30s)
+          if [ -n "$STEAMGUARDSHAREDSECRET" ] && [ -n "$PYTHON_CMD" ] && [ -f "/scripts/generate-steam-guard-code.py" ]; then
+            echo "  Regenerating Steam Guard code for retry..."
+            STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
+          fi
         fi
         
         if [ -d "$MOD_PATH" ]; then
@@ -140,38 +194,6 @@ data:
         # Build SteamCMD command with optional Steam Guard code
         STEAMCMD_CMD="+force_install_dir /home/steam/dayz"
         
-        # Generate or use Steam Guard code for automated authentication
-        STEAM_GUARD_CODE=""
-        
-        # Priority 1: Generate from shared secret (recommended for automation)
-        if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
-          echo "  Using Steam Guard shared secret for automated authentication..."
-          # Check if Python is available
-          if command -v python3 &> /dev/null || command -v python &> /dev/null; then
-            PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
-            # Generate code using the Python script
-            if [ -f "/scripts/generate-steam-guard-code.py" ]; then
-              STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
-              if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
-                echo "  Generated Steam Guard code from shared secret"
-              else
-                echo "  ⚠️  Failed to generate code from shared secret, falling back to manual code if available"
-                STEAM_GUARD_CODE=""
-              fi
-            else
-              echo "  ⚠️  Python script not found, falling back to manual code if available"
-            fi
-          else
-            echo "  ⚠️  Python not available, falling back to manual code if available"
-          fi
-        fi
-        
-        # Priority 2: Use provided Steam Guard code (temporary solution)
-        if [ -z "$STEAM_GUARD_CODE" ] && [ -n "$STEAMGUARD" ]; then
-          echo "  Using provided Steam Guard code for automated authentication..."
-          STEAM_GUARD_CODE="$STEAMGUARD"
-        fi
-        
         # Add Steam Guard code to command if we have one
         if [ -n "$STEAM_GUARD_CODE" ]; then
           STEAMCMD_CMD="$STEAMCMD_CMD +set_steam_guard_code $STEAM_GUARD_CODE"
@@ -185,8 +207,15 @@ data:
         STEAMCMD_EXIT=${PIPESTATUS[0]}
         set -e  # Re-enable exit on error
         
+        # Check for rate limit errors in output
+        RATE_LIMIT_ERROR=false
+        if grep -qi "rate limit\|too many requests\|429\|RATE LIMIT" /tmp/steamcmd_output.log 2>/dev/null; then
+          RATE_LIMIT_ERROR=true
+          echo "  ⚠️  Rate limit detected in SteamCMD output"
+        fi
+        
         # Check if download/update was successful
-        if [ $STEAMCMD_EXIT -eq 0 ]; then
+        if [ $STEAMCMD_EXIT -eq 0 ] && [ "$RATE_LIMIT_ERROR" = false ]; then
           # Check if download was successful by verifying mod directory exists
           if [ -d "$MOD_PATH" ]; then
             DOWNLOAD_SUCCESS=true
@@ -215,12 +244,17 @@ data:
             fi
           fi
         else
-          if [ $STEAMCMD_EXIT -eq 124 ]; then
+          if [ "$RATE_LIMIT_ERROR" = true ]; then
+            echo "  ⚠️  Rate limit exceeded! Waiting longer before retry..."
+            # Extra long wait for rate limit errors
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+          elif [ $STEAMCMD_EXIT -eq 124 ]; then
             echo "  ⚠️  Download/update timed out after 2 hours, retrying..."
+            RETRY_COUNT=$((RETRY_COUNT + 1))
           else
             echo "  ⚠️  Download/update failed with exit code $STEAMCMD_EXIT, retrying..."
+            RETRY_COUNT=$((RETRY_COUNT + 1))
           fi
-          RETRY_COUNT=$((RETRY_COUNT + 1))
         fi
       done
       

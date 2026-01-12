@@ -146,3 +146,39 @@ If neither is provided, SteamCMD will prompt for manual authentication.
    ```
 
 You should see: `Using Steam Guard shared secret for automated authentication...` without any manual prompts.
+
+## Rate Limit Handling
+
+The mod downloader includes built-in rate limit protection:
+
+### Automatic Rate Limit Protection
+
+- **Initial delay**: 5-second delay before starting downloads
+- **Inter-mod delays**: Increasing delays between mod downloads (6s, 7s, 8s, etc.)
+- **Exponential backoff**: Automatic retry with increasing delays (20s, 40s, 80s, 160s)
+- **Rate limit detection**: Automatically detects rate limit errors and waits longer
+- **Steam Guard code regeneration**: Automatically regenerates codes on retry if using shared secret
+
+### If You Still Get Rate Limit Errors
+
+1. **Wait and retry**: The script will automatically retry with exponential backoff
+2. **Reduce mod count**: If you have many mods, consider reducing the number temporarily
+3. **Check Steam status**: Steam may be experiencing issues - check https://steamstat.us
+4. **Spread out updates**: If possible, update mods during off-peak hours
+5. **Manual intervention**: If rate limits persist, you may need to wait 15-30 minutes before retrying
+
+### Rate Limit Error Messages
+
+If you see errors like:
+- `RATE LIMIT EXCEEDED`
+- `Too many requests`
+- `429` errors
+
+The script will automatically:
+- Wait progressively longer between retries
+- Regenerate Steam Guard codes if needed
+- Continue processing remaining mods after delays
+
+**Note**: Steam's rate limits are typically:
+- Login attempts: ~5-10 per hour
+- Workshop downloads: Varies based on mod size and Steam's current load
