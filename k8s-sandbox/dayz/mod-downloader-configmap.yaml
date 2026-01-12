@@ -105,33 +105,33 @@ data:
       
       # Generate code using bash/openssl
       echo "  DEBUG: Generating code using bash/openssl"
-        if command -v openssl &> /dev/null; then
-          # Use a temp file to avoid command substitution null byte warnings
-          local temp_file=$(mktemp)
-          generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
-          local bash_output=$(cat "$temp_file" 2>/dev/null)
-          rm -f "$temp_file" 2>/dev/null
-          
-          # Extract only the 5-character code - Steam codes are exactly 5 uppercase alphanumeric
-          # Try multiple extraction methods
-          STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
-          
-          # If that didn't work, try getting the last line and checking if it's 5 chars
-          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-            local last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
-            if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
-              STEAM_GUARD_CODE="$last_line"
-            fi
+      if command -v openssl &> /dev/null; then
+        # Use a temp file to avoid command substitution null byte warnings
+        temp_file=$(mktemp)
+        generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
+        bash_output=$(cat "$temp_file" 2>/dev/null)
+        rm -f "$temp_file" 2>/dev/null
+        
+        # Extract only the 5-character code - Steam codes are exactly 5 uppercase alphanumeric
+        # Try multiple extraction methods
+        STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
+        
+        # If that didn't work, try getting the last line and checking if it's 5 chars
+        if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+          last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
+          if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
+            STEAM_GUARD_CODE="$last_line"
           fi
-          
-          # Final check - if still empty, try to extract any 5-char sequence
-          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-            # Remove all non-alphanumeric, then take first 5 chars if it matches pattern
-            local cleaned=$(echo "$bash_output" | tr -cd 'A-Z0-9')
-            if [ ${#cleaned} -ge 5 ]; then
-              STEAM_GUARD_CODE="${cleaned:0:5}"
-            fi
+        fi
+        
+        # Final check - if still empty, try to extract any 5-char sequence
+        if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+          # Remove all non-alphanumeric, then take first 5 chars if it matches pattern
+          cleaned=$(echo "$bash_output" | tr -cd 'A-Z0-9')
+          if [ ${#cleaned} -ge 5 ]; then
+            STEAM_GUARD_CODE="${cleaned:0:5}"
           fi
+        fi
           
           if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ] && [[ "$STEAM_GUARD_CODE" =~ ^[A-Z0-9]{5}$ ]]; then
             echo "✅ Generated Steam Guard code from shared secret (bash/openssl): $STEAM_GUARD_CODE"
@@ -209,13 +209,13 @@ data:
           # Regenerate Steam Guard code if using shared secret (codes expire every 30s)
           if [ -n "$STEAMGUARDSHAREDSECRET" ] && command -v openssl &> /dev/null; then
             echo "  Regenerating Steam Guard code for retry..."
-            local temp_file=$(mktemp)
+            temp_file=$(mktemp)
             generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
-            local bash_output=$(cat "$temp_file" 2>/dev/null)
+            bash_output=$(cat "$temp_file" 2>/dev/null)
             rm -f "$temp_file" 2>/dev/null
             STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
             if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-              local last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
+              last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
               if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
                 STEAM_GUARD_CODE="$last_line"
               fi
