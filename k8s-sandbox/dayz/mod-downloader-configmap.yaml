@@ -5,12 +5,80 @@ metadata:
   name: dayz-mod-downloader
   namespace: dayz
 data:
+  generate-steam-guard-code.py: |
+    #!/usr/bin/env python3
+    """
+    Generate Steam Guard code from shared secret.
+    Implements Steam's TOTP algorithm for generating authentication codes.
+    """
+    import hmac
+    import hashlib
+    import base64
+    import time
+    import sys
+    
+    def generate_steam_guard_code(shared_secret):
+        """
+        Generate a Steam Guard code from a shared secret.
+        
+        Args:
+            shared_secret: Base64-encoded shared secret string
+            
+        Returns:
+            A 5-character Steam Guard code
+        """
+        try:
+            # Decode the base64 shared secret
+            secret = base64.b64decode(shared_secret)
+            
+            # Get current time in 30-second intervals
+            timestamp = int(time.time())
+            time_buffer = timestamp // 30
+            
+            # Convert to bytes (big-endian)
+            time_buffer_bytes = time_buffer.to_bytes(8, byteorder='big')
+            
+            # Generate HMAC-SHA1
+            hmac_digest = hmac.new(secret, time_buffer_bytes, hashlib.sha1).digest()
+            
+            # Steam uses a specific code generation algorithm
+            # Extract the last 4 bits to determine the starting position
+            start = hmac_digest[19] & 0x0F
+            code_point = int.from_bytes(hmac_digest[start:start+4], byteorder='big') & 0x7FFFFFFF
+            
+            # Steam's character set
+            chars = '23456789BCDFGHJKMNPQRTVWXY'
+            code = ''
+            
+            # Generate 5-character code
+            for _ in range(5):
+                code += chars[code_point % len(chars)]
+                code_point //= len(chars)
+            
+            return code
+        except Exception as e:
+            print(f"Error generating code: {e}", file=sys.stderr)
+            sys.exit(1)
+    
+    if __name__ == '__main__':
+        if len(sys.argv) != 2:
+            print("Usage: generate-steam-guard-code.py <shared_secret>", file=sys.stderr)
+            sys.exit(1)
+        
+        shared_secret = sys.argv[1]
+        code = generate_steam_guard_code(shared_secret)
+        print(code)
   download-mods.sh: |
     #!/bin/bash
     set -e
     
     echo "=== DayZ Mod Installation Script ==="
     echo "Following official Bohemia documentation"
+    
+    # Ensure Python script is executable
+    if [ -f "/scripts/generate-steam-guard-code.py" ]; then
+      chmod +x /scripts/generate-steam-guard-code.py 2>/dev/null || true
+    fi
     
     # Ensure keys directory exists
     mkdir -p /home/steam/dayz/keys
@@ -68,11 +136,52 @@ data:
         # The validate flag checks for updates and verifies file integrity
         # Capture exit code properly despite pipe
         set +e  # Temporarily disable exit on error for this section
-        timeout 7200 steamcmd \
-          +force_install_dir /home/steam/dayz \
-          +login "$STEAMACCOUNT" "$STEAMPASSWORD" \
-          +workshop_download_item 221100 "$MOD_ID_CLEAN" validate \
-          +quit 2>&1 | tee /tmp/steamcmd_output.log
+        
+        # Build SteamCMD command with optional Steam Guard code
+        STEAMCMD_CMD="+force_install_dir /home/steam/dayz"
+        
+        # Generate or use Steam Guard code for automated authentication
+        STEAM_GUARD_CODE=""
+        
+        # Priority 1: Generate from shared secret (recommended for automation)
+        if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
+          echo "  Using Steam Guard shared secret for automated authentication..."
+          # Check if Python is available
+          if command -v python3 &> /dev/null || command -v python &> /dev/null; then
+            PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
+            # Generate code using the Python script
+            if [ -f "/scripts/generate-steam-guard-code.py" ]; then
+              STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
+              if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
+                echo "  Generated Steam Guard code from shared secret"
+              else
+                echo "  ⚠️  Failed to generate code from shared secret, falling back to manual code if available"
+                STEAM_GUARD_CODE=""
+              fi
+            else
+              echo "  ⚠️  Python script not found, falling back to manual code if available"
+            fi
+          else
+            echo "  ⚠️  Python not available, falling back to manual code if available"
+          fi
+        fi
+        
+        # Priority 2: Use provided Steam Guard code (temporary solution)
+        if [ -z "$STEAM_GUARD_CODE" ] && [ -n "$STEAMGUARD" ]; then
+          echo "  Using provided Steam Guard code for automated authentication..."
+          STEAM_GUARD_CODE="$STEAMGUARD"
+        fi
+        
+        # Add Steam Guard code to command if we have one
+        if [ -n "$STEAM_GUARD_CODE" ]; then
+          STEAMCMD_CMD="$STEAMCMD_CMD +set_steam_guard_code $STEAM_GUARD_CODE"
+        fi
+        
+        STEAMCMD_CMD="$STEAMCMD_CMD +login $STEAMACCOUNT $STEAMPASSWORD"
+        STEAMCMD_CMD="$STEAMCMD_CMD +workshop_download_item 221100 $MOD_ID_CLEAN validate"
+        STEAMCMD_CMD="$STEAMCMD_CMD +quit"
+        
+        timeout 7200 steamcmd $STEAMCMD_CMD 2>&1 | tee /tmp/steamcmd_output.log
         STEAMCMD_EXIT=${PIPESTATUS[0]}
         set -e  # Re-enable exit on error
         

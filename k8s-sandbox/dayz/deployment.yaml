@@ -121,6 +121,18 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
+            - name: STEAMGUARD
+              valueFrom:
+                secretKeyRef:
+                  name: steamaccount
+                  key: STEAMGUARD
+                  optional: true
+            - name: STEAMGUARDSHAREDSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: steamaccount
+                  key: STEAMGUARDSHAREDSECRET
+                  optional: true
       containers:
         - name: dayz
           image: ghcr.io/starslider/dayz-server:latest
@@ -153,12 +165,18 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
+            - name: STEAMGUARD
+              valueFrom:
+                secretKeyRef:
+                  name: steamaccount
+                  key: STEAMGUARD
+                  optional: true
             - name: CPUCOUNT
               value: "4"
             - name: PORT
               value: "2302"
             - name: MODS
-              value: "1559212036;1564026768;1750506510"
+              value: "1828439124;1750506510;1559212036"
         - name: openssh-server
           image: lscr.io/linuxserver/openssh-server:latest
           imagePullPolicy: Always
