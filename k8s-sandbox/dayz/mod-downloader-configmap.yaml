@@ -132,18 +132,18 @@ data:
             STEAM_GUARD_CODE="${cleaned:0:5}"
           fi
         fi
-          
-          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ] && [[ "$STEAM_GUARD_CODE" =~ ^[A-Z0-9]{5}$ ]]; then
-            echo "✅ Generated Steam Guard code from shared secret (bash/openssl): $STEAM_GUARD_CODE"
-          else
-            echo "⚠️  Bash/openssl method failed to generate valid code"
-            echo "  DEBUG: Raw output: '$bash_output'"
-            echo "  DEBUG: Extracted: '$STEAM_GUARD_CODE' (length: ${#STEAM_GUARD_CODE})"
-            STEAM_GUARD_CODE=""
-          fi
+        
+        # Validate the generated code
+        if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ] && [[ "$STEAM_GUARD_CODE" =~ ^[A-Z0-9]{5}$ ]]; then
+          echo "✅ Generated Steam Guard code from shared secret (bash/openssl): $STEAM_GUARD_CODE"
         else
-          echo "⚠️  openssl not available for code generation"
+          echo "⚠️  Bash/openssl method failed to generate valid code"
+          echo "  DEBUG: Raw output: '$bash_output'"
+          echo "  DEBUG: Extracted: '$STEAM_GUARD_CODE' (length: ${#STEAM_GUARD_CODE})"
+          STEAM_GUARD_CODE=""
         fi
+      else
+        echo "⚠️  openssl not available for code generation"
       fi
     else
       echo "⚠️  STEAMGUARDSHAREDSECRET environment variable is not set"
