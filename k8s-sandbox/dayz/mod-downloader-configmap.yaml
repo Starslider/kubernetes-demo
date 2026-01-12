@@ -63,10 +63,29 @@ data:
       done
       
       # Compute HMAC-SHA1 using openssl
+      # Use hex encoding for both key and data (most reliable method)
       local hmac_result
       if command -v openssl &> /dev/null; then
-        # Suppress null byte warnings by redirecting stderr
-        hmac_result=$(printf "%s" "$time_bin" | openssl dgst -sha1 -hmac "$secret_bin" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
+        # Convert secret and time to hex
+        local secret_hex=$(printf "%s" "$secret_bin" | od -An -tx1 | tr -d ' \n')
+        local time_hex=$(printf "%s" "$time_bin" | od -An -tx1 | tr -d ' \n')
+        
+        # Use openssl with hex key (most reliable for binary data)
+        # Convert hex time back to binary for input, use hex key
+        if command -v xxd &> /dev/null; then
+          # xxd available - use it to convert hex to binary
+          hmac_result=$(printf "%s" "$time_hex" | xxd -r -p 2>/dev/null | openssl dgst -sha1 -mac HMAC -macopt hexkey:"$secret_hex" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
+        else
+          # No xxd - use printf with escaped hex
+          # Build binary string from hex manually
+          local time_bin_hex=$(echo "$time_hex" | sed 's/\(..\)/\\x\1/g')
+          hmac_result=$(printf "$time_bin_hex" 2>/dev/null | openssl dgst -sha1 -mac HMAC -macopt hexkey:"$secret_hex" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
+        fi
+        
+        # Fallback: try direct binary method if hex method failed
+        if [ -z "$hmac_result" ] || [ ${#hmac_result} -lt 40 ]; then
+          hmac_result=$(printf "%s" "$time_bin" | openssl dgst -sha1 -hmac "$secret_bin" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
+        fi
       else
         echo "ERROR: openssl not available" >&2
         return 1
