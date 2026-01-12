@@ -108,7 +108,7 @@ spec:
               mountPath: /scripts
           env:
             - name: MODS
-              value: "1559212036;1564026768;1750506510"
+              value: "1828439124;1750506510;1559212036"
             - name: HOME
               value: /home/steam
             - name: STEAMACCOUNT
