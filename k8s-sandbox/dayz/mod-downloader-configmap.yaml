@@ -180,12 +180,14 @@ data:
       echo "⚠️  STEAMGUARDSHAREDSECRET environment variable is not set"
       echo "  DEBUG: Available environment variables containing STEAM:"
       env | grep -i steam || true
+      echo "  ERROR: Steam Guard shared secret is required for automated authentication"
+      exit 1
     fi
     
-    # Priority 2: Use provided Steam Guard code (temporary solution)
-    if [ -z "$STEAM_GUARD_CODE" ] && [ -n "$STEAMGUARD" ]; then
-      echo "Using provided Steam Guard code for automated authentication..."
-      STEAM_GUARD_CODE="$STEAMGUARD"
+    # Verify we have a valid code before proceeding
+    if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+      echo "  ERROR: Failed to generate Steam Guard code from shared secret"
+      exit 1
     fi
     
     # Add initial delay to avoid hitting rate limits on startup

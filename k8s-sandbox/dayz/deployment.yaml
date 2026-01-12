@@ -121,12 +121,6 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
-            - name: STEAMGUARD
-              valueFrom:
-                secretKeyRef:
-                  name: steamaccount
-                  key: STEAMGUARD
-                  optional: true
             - name: STEAMGUARDSHAREDSECRET
               valueFrom:
                 secretKeyRef:
@@ -165,12 +159,6 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
-            - name: STEAMGUARD
-              valueFrom:
-                secretKeyRef:
-                  name: steamaccount
-                  key: STEAMGUARD
-                  optional: true
             - name: CPUCOUNT
               value: "4"
             - name: PORT

@@ -33,16 +33,11 @@ kubectl apply -k .
 
 ## Steam Guard Authentication
 
-To prevent manual Steam login prompts on pod startup, you need to configure a Steam Guard code in your secrets.
+To prevent manual Steam login prompts on pod startup, you need to configure a Steam Guard shared secret in your secrets.
 
-### Option 1: Steam Guard Code (Temporary)
-1. Get a Steam Guard code from your mobile authenticator app or email
-2. Add `STEAMGUARD` to your `steamaccount` secret in your secret store with the current code
-3. **Note**: Steam Guard codes expire, so you'll need to update this periodically
+### Steam Guard Shared Secret (Required)
 
-### Option 2: Steam Guard Shared Secret (Recommended for Automation)
-
-Using a shared secret allows you to generate Steam Guard codes programmatically, eliminating the need for manual intervention. This is the recommended approach for automated deployments.
+The deployment uses a Steam Guard shared secret to generate authentication codes programmatically, eliminating the need for manual intervention. This is required for automated deployments.
 
 #### Step 1: Extract Your Steam Guard Shared Secret
 
@@ -97,10 +92,10 @@ The deployment is already configured to support shared secrets. The mod-download
 
 #### How It Works
 
-The system uses a Python-based TOTP (Time-based One-Time Password) generator that implements Steam's specific algorithm:
-- Codes are generated on-demand when needed
+The system uses a bash/openssl-based TOTP (Time-based One-Time Password) generator that implements Steam's specific algorithm:
+- Codes are generated on-demand when needed using the shared secret
 - Each code is valid for 30 seconds
-- Codes are automatically refreshed if they expire during download
+- Codes are automatically regenerated if they expire during download retries
 
 #### Verification
 
@@ -121,12 +116,9 @@ After setting up the shared secret:
 The `steamaccount` ExternalSecret should include:
 - `STEAMACCOUNT`: Your Steam username
 - `STEAMPASSWORD`: Your Steam password
-- `STEAMGUARD`: (Optional) Steam Guard code for automated authentication (temporary, expires)
-- `STEAMGUARDSHAREDSECRET`: (Optional) Steam Guard shared secret for permanent automated authentication (recommended)
+- `STEAMGUARDSHAREDSECRET`: (Required) Steam Guard shared secret for automated authentication
 
-**Priority**: If both `STEAMGUARDSHAREDSECRET` and `STEAMGUARD` are provided, the shared secret will be used to generate codes automatically.
-
-If neither is provided, SteamCMD will prompt for manual authentication.
+If `STEAMGUARDSHAREDSECRET` is not provided, the script will exit with an error.
 
 ### Quick Start: Setting Up Shared Secret
 
