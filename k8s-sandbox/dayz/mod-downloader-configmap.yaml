@@ -5,92 +5,12 @@ metadata:
   name: dayz-mod-downloader
   namespace: dayz
 data:
-  generate-steam-guard-code.py: |
-    #!/usr/bin/env python3
-    """
-    Generate Steam Guard code from shared secret.
-    Implements Steam's TOTP algorithm for generating authentication codes.
-    """
-    import hmac
-    import hashlib
-    import base64
-    import time
-    import sys
-    
-    def generate_steam_guard_code(shared_secret):
-        """
-        Generate a Steam Guard code from a shared secret.
-        
-        Args:
-            shared_secret: Base64-encoded shared secret string
-            
-        Returns:
-            A 5-character Steam Guard code
-        """
-        try:
-            # Decode the base64 shared secret
-            secret = base64.b64decode(shared_secret)
-            
-            # Get current time in 30-second intervals
-            timestamp = int(time.time())
-            time_buffer = timestamp // 30
-            
-            # Convert to bytes (big-endian)
-            time_buffer_bytes = time_buffer.to_bytes(8, byteorder='big')
-            
-            # Generate HMAC-SHA1
-            hmac_digest = hmac.new(secret, time_buffer_bytes, hashlib.sha1).digest()
-            
-            # Steam uses a specific code generation algorithm
-            # Extract the last 4 bits to determine the starting position
-            start = hmac_digest[19] & 0x0F
-            code_point = int.from_bytes(hmac_digest[start:start+4], byteorder='big') & 0x7FFFFFFF
-            
-            # Steam's character set
-            chars = '23456789BCDFGHJKMNPQRTVWXY'
-            code = ''
-            
-            # Generate 5-character code
-            for _ in range(5):
-                code += chars[code_point % len(chars)]
-                code_point //= len(chars)
-            
-            return code
-        except Exception as e:
-            print(f"Error generating code: {e}", file=sys.stderr)
-            sys.exit(1)
-    
-    if __name__ == '__main__':
-        if len(sys.argv) != 2:
-            print("Usage: generate-steam-guard-code.py <shared_secret>", file=sys.stderr)
-            sys.exit(1)
-        
-        shared_secret = sys.argv[1]
-        code = generate_steam_guard_code(shared_secret)
-        print(code)
   download-mods.sh: |
     #!/bin/bash
     set -e
     
     echo "=== DayZ Mod Installation Script ==="
     echo "Following official Bohemia documentation"
-    
-    # Ensure Python script is executable
-    if [ -f "/scripts/generate-steam-guard-code.py" ]; then
-      chmod +x /scripts/generate-steam-guard-code.py 2>/dev/null || true
-    fi
-    
-    # Try to install Python if not available (for containers that support it)
-    if ! command -v python3 &> /dev/null && ! command -v python &> /dev/null; then
-      echo "Python not found, attempting to install..."
-      if command -v apt-get &> /dev/null; then
-        apt-get update -qq >/dev/null 2>&1 && apt-get install -y -qq python3 >/dev/null 2>&1 || true
-      elif command -v apk &> /dev/null; then
-        apk add --no-cache python3 >/dev/null 2>&1 || true
-      elif command -v yum &> /dev/null; then
-        yum install -y -q python3 >/dev/null 2>&1 || true
-      fi
-    fi
     
     # Ensure keys directory exists
     mkdir -p /home/steam/dayz/keys
@@ -108,9 +28,8 @@ data:
     
     # Generate Steam Guard code once at the beginning (to avoid rate limits)
     STEAM_GUARD_CODE=""
-    PYTHON_CMD=""  # Initialize for later use in retry logic
     
-    # Function to generate Steam Guard code using bash/openssl (fallback when Python unavailable)
+    # Function to generate Steam Guard code using bash/openssl
     generate_steam_guard_code_bash() {
       local shared_secret="$1"
       local chars="23456789BCDFGHJKMNPQRTVWXY"
@@ -135,17 +54,19 @@ data:
       local timestamp=$(date +%s)
       local time_buffer=$((timestamp / 30))
       
-      # Convert time_buffer to 8-byte big-endian binary
+      # Convert time_buffer to 8-byte big-endian binary using printf
       local time_bin=""
       for i in {7..0}; do
         local byte=$((time_buffer >> (i * 8) & 0xFF))
-        time_bin="${time_bin}$(printf "\\$(printf "%03o" "$byte")")"
+        # Use printf with octal escape to avoid null byte warnings
+        time_bin="${time_bin}$(printf "\\$(printf "%03o" "$byte")" 2>/dev/null)"
       done
       
       # Compute HMAC-SHA1 using openssl
       local hmac_result
       if command -v openssl &> /dev/null; then
-        hmac_result=$(echo -n "$time_bin" | openssl dgst -sha1 -hmac "$secret_bin" -binary 2>/dev/null | od -An -tx1 | tr -d ' \n')
+        # Suppress null byte warnings by redirecting stderr
+        hmac_result=$(printf "%s" "$time_bin" | openssl dgst -sha1 -hmac "$secret_bin" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
       else
         echo "ERROR: openssl not available" >&2
         return 1
@@ -173,48 +94,55 @@ data:
         temp_point=$((temp_point / ${#chars}))
       done
       
-      echo "$code"
+      # Output only the code to stdout, any errors go to stderr
+      printf "%s\n" "$code" 2>/dev/null
     }
     
-    # Priority 1: Generate from shared secret (recommended for automation)
+    # Generate Steam Guard code from shared secret (recommended for automation)
     if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
       echo "Generating Steam Guard code from shared secret..."
       echo "  DEBUG: STEAMGUARDSHAREDSECRET is set (length: ${#STEAMGUARDSHAREDSECRET})"
       
-      # Try Python first (more reliable)
-      if command -v python3 &> /dev/null || command -v python &> /dev/null; then
-        PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null)
-        echo "  DEBUG: Python found at: $PYTHON_CMD"
-        
-        # Generate code using the Python script
-        if [ -f "/scripts/generate-steam-guard-code.py" ]; then
-          echo "  DEBUG: Using Python script to generate code"
-          STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>&1)
-          PYTHON_EXIT=$?
-          
-          if [ $PYTHON_EXIT -eq 0 ] && [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
-            echo "✅ Generated Steam Guard code from shared secret (Python): $STEAM_GUARD_CODE"
-          else
-            echo "⚠️  Python script failed, trying bash fallback..."
-            STEAM_GUARD_CODE=""
-          fi
-        fi
-      fi
-      
-      # Fallback to bash/openssl if Python failed or unavailable
-      if [ -z "$STEAM_GUARD_CODE" ]; then
-        echo "  DEBUG: Attempting to generate code using bash/openssl"
+      # Generate code using bash/openssl
+      echo "  DEBUG: Generating code using bash/openssl"
         if command -v openssl &> /dev/null; then
-          STEAM_GUARD_CODE=$(generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" 2>&1)
-          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
+          # Use a temp file to avoid command substitution null byte warnings
+          local temp_file=$(mktemp)
+          generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
+          local bash_output=$(cat "$temp_file" 2>/dev/null)
+          rm -f "$temp_file" 2>/dev/null
+          
+          # Extract only the 5-character code - Steam codes are exactly 5 uppercase alphanumeric
+          # Try multiple extraction methods
+          STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
+          
+          # If that didn't work, try getting the last line and checking if it's 5 chars
+          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+            local last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
+            if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
+              STEAM_GUARD_CODE="$last_line"
+            fi
+          fi
+          
+          # Final check - if still empty, try to extract any 5-char sequence
+          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+            # Remove all non-alphanumeric, then take first 5 chars if it matches pattern
+            local cleaned=$(echo "$bash_output" | tr -cd 'A-Z0-9')
+            if [ ${#cleaned} -ge 5 ]; then
+              STEAM_GUARD_CODE="${cleaned:0:5}"
+            fi
+          fi
+          
+          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ] && [[ "$STEAM_GUARD_CODE" =~ ^[A-Z0-9]{5}$ ]]; then
             echo "✅ Generated Steam Guard code from shared secret (bash/openssl): $STEAM_GUARD_CODE"
           else
-            echo "⚠️  Bash/openssl method failed"
-            echo "  DEBUG: Output was: $STEAM_GUARD_CODE"
+            echo "⚠️  Bash/openssl method failed to generate valid code"
+            echo "  DEBUG: Raw output: '$bash_output'"
+            echo "  DEBUG: Extracted: '$STEAM_GUARD_CODE' (length: ${#STEAM_GUARD_CODE})"
             STEAM_GUARD_CODE=""
           fi
         else
-          echo "⚠️  Neither Python nor openssl available for code generation"
+          echo "⚠️  openssl not available for code generation"
         fi
       fi
     else
@@ -279,9 +207,19 @@ data:
           sleep $BACKOFF_DELAY
           
           # Regenerate Steam Guard code if using shared secret (codes expire every 30s)
-          if [ -n "$STEAMGUARDSHAREDSECRET" ] && [ -n "$PYTHON_CMD" ] && [ -f "/scripts/generate-steam-guard-code.py" ]; then
+          if [ -n "$STEAMGUARDSHAREDSECRET" ] && command -v openssl &> /dev/null; then
             echo "  Regenerating Steam Guard code for retry..."
-            STEAM_GUARD_CODE=$($PYTHON_CMD /scripts/generate-steam-guard-code.py "$STEAMGUARDSHAREDSECRET" 2>/dev/null)
+            local temp_file=$(mktemp)
+            generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
+            local bash_output=$(cat "$temp_file" 2>/dev/null)
+            rm -f "$temp_file" 2>/dev/null
+            STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
+            if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+              local last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
+              if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
+                STEAM_GUARD_CODE="$last_line"
+              fi
+            fi
           fi
         fi
         
