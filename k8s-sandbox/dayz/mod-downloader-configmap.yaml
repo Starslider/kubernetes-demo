@@ -12,6 +12,21 @@ data:
     echo "=== DayZ Mod Installation Script ==="
     echo "Following official Bohemia documentation"
     
+    # Sync container time with NTP to ensure accurate Steam Guard code generation
+    echo "=== Time Synchronization ==="
+    if command -v ntpdate &> /dev/null; then
+      echo "Syncing time with NTP servers..."
+      ntpdate -q pool.ntp.org 2>/dev/null || ntpdate -q time.nist.gov 2>/dev/null || echo "  ⚠️  NTP sync failed, using container time"
+    elif command -v chronyd &> /dev/null; then
+      echo "Syncing time with chronyd..."
+      chronyd -q 2>/dev/null || echo "  ⚠️  Chronyd sync failed, using container time"
+    else
+      echo "  ⚠️  No NTP client available, using container time"
+    fi
+    echo "Container UTC time: $(date -u)"
+    echo "Container UTC timestamp: $(date -u +%s)"
+    echo ""
+    
     # Ensure keys directory exists
     mkdir -p /home/steam/dayz/keys
     chmod 755 /home/steam/dayz/keys 2>/dev/null || true
@@ -26,170 +41,10 @@ data:
     WORKSHOP_DIR="/home/steam/dayz/steamapps/workshop"
     mkdir -p "$WORKSHOP_DIR"
     
-    # Generate Steam Guard code once at the beginning (to avoid rate limits)
-    STEAM_GUARD_CODE=""
-    
-    # Function to generate Steam Guard code using bash/openssl
-    generate_steam_guard_code_bash() {
-      local shared_secret="$1"
-      local chars="23456789BCDFGHJKMNPQRTVWXY"
-      
-      # Decode base64 shared secret to binary
-      local secret_bin
-      if command -v base64 &> /dev/null; then
-        secret_bin=$(echo -n "$shared_secret" | base64 -d 2>/dev/null)
-      elif command -v openssl &> /dev/null; then
-        secret_bin=$(echo -n "$shared_secret" | openssl base64 -d -A 2>/dev/null)
-      else
-        echo "ERROR: Neither base64 nor openssl available" >&2
-        return 1
-      fi
-      
-      if [ -z "$secret_bin" ]; then
-        echo "ERROR: Failed to decode shared secret" >&2
-        return 1
-      fi
-      
-      # Get current time in 30-second intervals
-      local timestamp=$(date +%s)
-      local time_buffer=$((timestamp / 30))
-      
-      # Convert time_buffer to 8-byte big-endian hex string (more reliable than binary)
-      local time_hex=""
-      for i in {7..0}; do
-        local byte=$((time_buffer >> (i * 8) & 0xFF))
-        time_hex=$(printf "%s%02x" "$time_hex" "$byte")
-      done
-      
-      # Convert secret to hex as well
-      local secret_hex=$(printf "%s" "$secret_bin" | od -An -tx1 | tr -d ' \n')
-      
-      # Compute HMAC-SHA1 using openssl with hex-encoded key and data
-      # Note: openssl -mac HMAC -macopt hexkey:KEY format (no quotes around KEY)
-      local hmac_result
-      if command -v openssl &> /dev/null; then
-        # Method 1: Use xxd to convert hex to binary, then HMAC with hex key (no quotes in hexkey)
-        if command -v xxd &> /dev/null; then
-          hmac_result=$(printf "%s" "$time_hex" | xxd -r -p 2>/dev/null | openssl dgst -sha1 -mac HMAC -macopt "hexkey:$secret_hex" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
-        fi
-        
-        # Method 2: If xxd not available or method 1 failed, use printf with hex escapes
-        if [ -z "$hmac_result" ] || [ ${#hmac_result} -lt 40 ]; then
-          # Build printf format string from hex
-          local time_printf=$(echo "$time_hex" | sed 's/\(..\)/\\x\1/g')
-          hmac_result=$(printf "$time_printf" 2>/dev/null | openssl dgst -sha1 -mac HMAC -macopt "hexkey:$secret_hex" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
-        fi
-        
-        # Method 3: Fallback - use direct binary method (may not work with null bytes)
-        if [ -z "$hmac_result" ] || [ ${#hmac_result} -lt 40 ]; then
-          # Reconstruct time_bin from hex for direct binary method
-          local time_bin=""
-          for i in {0..7}; do
-            local byte_hex="${time_hex:$((i * 2)):2}"
-            local byte=$((0x$byte_hex))
-            # Build binary string byte by byte
-            if [ $byte -eq 0 ]; then
-              # Handle null byte specially
-              time_bin="${time_bin}$(printf '\0')"
-            else
-              time_bin="${time_bin}$(printf "\\$(printf "%03o" "$byte")" 2>/dev/null)"
-            fi
-          done
-          # Try direct binary HMAC (may fail if secret_bin has null bytes)
-          hmac_result=$(printf "%s" "$time_bin" | openssl dgst -sha1 -hmac "$secret_bin" -binary 2>/dev/null | od -An -tx1 2>/dev/null | tr -d ' \n')
-        fi
-      else
-        echo "ERROR: openssl not available" >&2
-        return 1
-      fi
-      
-      if [ -z "$hmac_result" ] || [ ${#hmac_result} -lt 40 ]; then
-        echo "ERROR: HMAC computation failed" >&2
-        return 1
-      fi
-      
-      # Extract last 4 bits to determine start position (from byte 19, which is index 38-39 in hex)
-      local last_byte_hex="${hmac_result:38:2}"
-      local start=$((0x$last_byte_hex & 0x0F))
-      
-      # Extract 4 bytes starting at position 'start' (each byte is 2 hex chars)
-      local code_bytes_hex="${hmac_result:$((start * 2)):8}"
-      local code_point=$((0x$code_bytes_hex & 0x7FFFFFFF))
-      
-      # Generate 5-character code using Steam's character set
-      # Note: Append characters (not prepend) to match Steam's algorithm
-      local code=""
-      local temp_point=$code_point
-      for i in {1..5}; do
-        local idx=$((temp_point % ${#chars}))
-        code="$code${chars:$idx:1}"
-        temp_point=$((temp_point / ${#chars}))
-      done
-      
-      # Output only the code to stdout, any errors go to stderr
-      printf "%s\n" "$code" 2>/dev/null
-    }
-    
-    # Generate Steam Guard code from shared secret (recommended for automation)
-    if [ -n "$STEAMGUARDSHAREDSECRET" ]; then
-      echo "Generating Steam Guard code from shared secret..."
-      echo "  DEBUG: STEAMGUARDSHAREDSECRET is set (length: ${#STEAMGUARDSHAREDSECRET})"
-      
-      # Generate code using bash/openssl
-      echo "  DEBUG: Generating code using bash/openssl"
-      if command -v openssl &> /dev/null; then
-        # Use a temp file to avoid command substitution null byte warnings
-        temp_file=$(mktemp)
-        generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
-        bash_output=$(cat "$temp_file" 2>/dev/null)
-        rm -f "$temp_file" 2>/dev/null
-        
-        # Extract only the 5-character code - Steam codes are exactly 5 uppercase alphanumeric
-        # Try multiple extraction methods
-        STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
-        
-        # If that didn't work, try getting the last line and checking if it's 5 chars
-        if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-          last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
-          if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
-            STEAM_GUARD_CODE="$last_line"
-          fi
-        fi
-        
-        # Final check - if still empty, try to extract any 5-char sequence
-        if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-          # Remove all non-alphanumeric, then take first 5 chars if it matches pattern
-          cleaned=$(echo "$bash_output" | tr -cd 'A-Z0-9')
-          if [ ${#cleaned} -ge 5 ]; then
-            STEAM_GUARD_CODE="${cleaned:0:5}"
-          fi
-        fi
-        
-        # Validate the generated code
-        if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ] && [[ "$STEAM_GUARD_CODE" =~ ^[A-Z0-9]{5}$ ]]; then
-          echo "✅ Generated Steam Guard code from shared secret (bash/openssl): $STEAM_GUARD_CODE"
-        else
-          echo "⚠️  Bash/openssl method failed to generate valid code"
-          echo "  DEBUG: Raw output: '$bash_output'"
-          echo "  DEBUG: Extracted: '$STEAM_GUARD_CODE' (length: ${#STEAM_GUARD_CODE})"
-          STEAM_GUARD_CODE=""
-        fi
-      else
-        echo "⚠️  openssl not available for code generation"
-      fi
-    else
-      echo "⚠️  STEAMGUARDSHAREDSECRET environment variable is not set"
-      echo "  DEBUG: Available environment variables containing STEAM:"
-      env | grep -i steam || true
-      echo "  ERROR: Steam Guard shared secret is required for automated authentication"
-      exit 1
-    fi
-    
-    # Verify we have a valid code before proceeding
-    if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-      echo "  ERROR: Failed to generate Steam Guard code from shared secret"
-      exit 1
-    fi
+    # Steam Guard codes will be entered manually via iOS app when SteamCMD prompts
+    echo "Steam Guard authentication will be handled manually via iOS app"
+    echo "When SteamCMD prompts for a Steam Guard code, enter it from your iOS app"
+    echo ""
     
     # Add initial delay to avoid hitting rate limits on startup
     echo "Waiting 5 seconds before starting downloads to avoid rate limits..."
@@ -231,30 +86,22 @@ data:
       MAX_RETRIES=5
       RETRY_COUNT=0
       DOWNLOAD_SUCCESS=false
+      RATE_LIMIT_ERROR=false  # Initialize rate limit flag before retry loop
       
       while [ $RETRY_COUNT -lt $MAX_RETRIES ] && [ "$DOWNLOAD_SUCCESS" = false ]; do
         if [ $RETRY_COUNT -gt 0 ]; then
-          # Exponential backoff for retries, with longer delays for rate limit errors
-          BACKOFF_DELAY=$((10 * (2 ** RETRY_COUNT)))  # 20s, 40s, 80s, 160s
-          echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
-          echo "  Waiting ${BACKOFF_DELAY} seconds before retry (exponential backoff)..."
-          sleep $BACKOFF_DELAY
-          
-          # Regenerate Steam Guard code if using shared secret (codes expire every 30s)
-          if [ -n "$STEAMGUARDSHAREDSECRET" ] && command -v openssl &> /dev/null; then
-            echo "  Regenerating Steam Guard code for retry..."
-            temp_file=$(mktemp)
-            generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
-            bash_output=$(cat "$temp_file" 2>/dev/null)
-            rm -f "$temp_file" 2>/dev/null
-            STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
-            if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-              last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
-              if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
-                STEAM_GUARD_CODE="$last_line"
-              fi
-            fi
+          # Use 30-minute wait for rate limit errors, otherwise exponential backoff
+          if [ "$RATE_LIMIT_ERROR" = true ]; then
+            BACKOFF_DELAY=1800  # 30 minutes for rate limit errors
+            echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
+            echo "  Waiting ${BACKOFF_DELAY} seconds (30 minutes) before retry due to rate limit..."
+          else
+            # Exponential backoff for other errors: 20s, 40s, 80s, 160s
+            BACKOFF_DELAY=$((10 * (2 ** RETRY_COUNT)))
+            echo "  Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
+            echo "  Waiting ${BACKOFF_DELAY} seconds before retry (exponential backoff)..."
           fi
+          sleep $BACKOFF_DELAY
         fi
         
         if [ -d "$MOD_PATH" ]; then
@@ -269,54 +116,25 @@ data:
         # Capture exit code properly despite pipe
         set +e  # Temporarily disable exit on error for this section
         
-        # Regenerate Steam Guard code RIGHT BEFORE use to ensure it's fresh (codes expire every 30s)
-        # This is critical because SteamCMD startup can take time, and codes are time-sensitive
-        if [ -n "$STEAMGUARDSHAREDSECRET" ] && command -v openssl &> /dev/null; then
-          echo "  Regenerating fresh Steam Guard code right before SteamCMD call..."
-          temp_file=$(mktemp)
-          generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
-          bash_output=$(cat "$temp_file" 2>/dev/null)
-          rm -f "$temp_file" 2>/dev/null
-          STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
-          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
-            last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
-            if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
-              STEAM_GUARD_CODE="$last_line"
-            fi
-          fi
-          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
-            echo "  DEBUG: Fresh code generated: $STEAM_GUARD_CODE"
-          else
-            echo "  ⚠️  WARNING: Failed to regenerate code, using previous code"
-          fi
-        fi
-        
-        # Build SteamCMD command with optional Steam Guard code
+        # Build SteamCMD command - Steam Guard code will be entered manually when prompted
         STEAMCMD_CMD="+force_install_dir /home/steam/dayz"
-        
-        # Add Steam Guard code to command if we have one
-        if [ -n "$STEAM_GUARD_CODE" ]; then
-          echo "  DEBUG: Using Steam Guard code: $STEAM_GUARD_CODE"
-          STEAMCMD_CMD="$STEAMCMD_CMD +set_steam_guard_code $STEAM_GUARD_CODE"
-        else
-          echo "  ⚠️  WARNING: No Steam Guard code available! SteamCMD will prompt for manual entry."
-          echo "  DEBUG: STEAM_GUARD_CODE is empty"
-        fi
-        
-        echo "  DEBUG: SteamCMD command: $STEAMCMD_CMD +login [REDACTED] [REDACTED] +workshop_download_item ..."
         STEAMCMD_CMD="$STEAMCMD_CMD +login $STEAMACCOUNT $STEAMPASSWORD"
         STEAMCMD_CMD="$STEAMCMD_CMD +workshop_download_item 221100 $MOD_ID_CLEAN validate"
         STEAMCMD_CMD="$STEAMCMD_CMD +quit"
+        
+        echo "  Executing SteamCMD (will prompt for Steam Guard code from iOS app if needed)..."
         
         timeout 7200 steamcmd $STEAMCMD_CMD 2>&1 | tee /tmp/steamcmd_output.log
         STEAMCMD_EXIT=${PIPESTATUS[0]}
         set -e  # Re-enable exit on error
         
-        # Check for rate limit errors in output
-        RATE_LIMIT_ERROR=false
+        # Check for rate limit errors in output (don't reset if already set from previous retry)
         if grep -qi "rate limit\|too many requests\|429\|RATE LIMIT" /tmp/steamcmd_output.log 2>/dev/null; then
           RATE_LIMIT_ERROR=true
           echo "  ⚠️  Rate limit detected in SteamCMD output"
+        elif [ "$DOWNLOAD_SUCCESS" = true ]; then
+          # Only reset rate limit flag on successful download
+          RATE_LIMIT_ERROR=false
         fi
         
         # Check if download/update was successful
@@ -350,8 +168,8 @@ data:
           fi
         else
           if [ "$RATE_LIMIT_ERROR" = true ]; then
-            echo "  ⚠️  Rate limit exceeded! Waiting longer before retry..."
-            # Extra long wait for rate limit errors
+            echo "  ⚠️  Rate limit exceeded! Will wait 30 minutes before retry..."
+            # Will wait 30 minutes (1800 seconds) for rate limit errors as per Steam's rate limit policy
             RETRY_COUNT=$((RETRY_COUNT + 1))
           elif [ $STEAMCMD_EXIT -eq 124 ]; then
             echo "  ⚠️  Download/update timed out after 2 hours, retrying..."
