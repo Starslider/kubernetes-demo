@@ -154,6 +154,27 @@ If you're experiencing "Two-factor code mismatch" errors, you can test the code 
    - Try regenerating the code right before use
    - Check if Steam has additional rate limiting
 
+**Advanced Debugging:**
+
+For more detailed diagnostics, use the comprehensive debug script:
+```powershell
+.\test-steam-guard-debug.ps1 -SharedSecret "YOUR_SHARED_SECRET"
+```
+
+This will show:
+- Shared secret format validation
+- Time synchronization status
+- Step-by-step algorithm execution
+- Codes for future time windows
+- Detailed troubleshooting checklist
+
+To compare with a reference Python implementation:
+```powershell
+.\test-steam-guard-compare.ps1 -SharedSecret "YOUR_SHARED_SECRET"
+```
+
+This compares the PowerShell implementation with a known-working Python version to identify algorithm issues.
+
 ### Setting up the Secret
 
 The `steamaccount` ExternalSecret should include:

@@ -269,6 +269,28 @@ data:
         # Capture exit code properly despite pipe
         set +e  # Temporarily disable exit on error for this section
         
+        # Regenerate Steam Guard code RIGHT BEFORE use to ensure it's fresh (codes expire every 30s)
+        # This is critical because SteamCMD startup can take time, and codes are time-sensitive
+        if [ -n "$STEAMGUARDSHAREDSECRET" ] && command -v openssl &> /dev/null; then
+          echo "  Regenerating fresh Steam Guard code right before SteamCMD call..."
+          temp_file=$(mktemp)
+          generate_steam_guard_code_bash "$STEAMGUARDSHAREDSECRET" > "$temp_file" 2>/dev/null
+          bash_output=$(cat "$temp_file" 2>/dev/null)
+          rm -f "$temp_file" 2>/dev/null
+          STEAM_GUARD_CODE=$(echo "$bash_output" | grep -oE '[A-Z0-9]{5}' | head -1)
+          if [ -z "$STEAM_GUARD_CODE" ] || [ ${#STEAM_GUARD_CODE} -ne 5 ]; then
+            last_line=$(echo "$bash_output" | tail -1 | tr -d '\n\r\t ')
+            if [ ${#last_line} -eq 5 ] && [[ "$last_line" =~ ^[A-Z0-9]{5}$ ]]; then
+              STEAM_GUARD_CODE="$last_line"
+            fi
+          fi
+          if [ -n "$STEAM_GUARD_CODE" ] && [ ${#STEAM_GUARD_CODE} -eq 5 ]; then
+            echo "  DEBUG: Fresh code generated: $STEAM_GUARD_CODE"
+          else
+            echo "  ⚠️  WARNING: Failed to regenerate code, using previous code"
+          fi
+        fi
+        
         # Build SteamCMD command with optional Steam Guard code
         STEAMCMD_CMD="+force_install_dir /home/steam/dayz"
         
