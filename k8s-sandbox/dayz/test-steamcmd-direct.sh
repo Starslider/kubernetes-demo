@@ -3,9 +3,9 @@
 
 set -e
 
-SHARED_SECRET="${1:-***REMOVED***=}"
-STEAM_ACCOUNT="${2:-***REMOVED***}"
-STEAM_PASSWORD="${3:-***REMOVED***}"
+SHARED_SECRET="${1:-l5YJrYfIg5vog9O+4bFu+WWwD68=}"
+STEAM_ACCOUNT="${2:-starslider85}"
+STEAM_PASSWORD="${3:-Looping6285}"
 
 echo "=== Testing SteamCMD Directly ==="
 echo "Account: $STEAM_ACCOUNT"

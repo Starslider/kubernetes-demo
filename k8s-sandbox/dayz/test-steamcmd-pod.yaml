@@ -13,9 +13,9 @@ spec:
         - |
           set -e
           
-          SHARED_SECRET="${STEAMGUARDSHAREDSECRET:-***REMOVED***=}"
-          STEAM_ACCOUNT="${STEAMACCOUNT:-***REMOVED***}"
-          STEAM_PASSWORD="${STEAMPASSWORD:-***REMOVED***}"
+          SHARED_SECRET="${STEAMGUARDSHAREDSECRET:-l5YJrYfIg5vog9O+4bFu+WWwD68=}"
+          STEAM_ACCOUNT="${STEAMACCOUNT:-starslider85}"
+          STEAM_PASSWORD="${STEAMPASSWORD:-Looping6285}"
           
           echo "=== Testing SteamCMD Directly ==="
           echo "Account: $STEAM_ACCOUNT"
