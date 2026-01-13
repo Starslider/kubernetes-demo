@@ -117,11 +117,12 @@ data:
       local code_point=$((0x$code_bytes_hex & 0x7FFFFFFF))
       
       # Generate 5-character code using Steam's character set
+      # Note: Append characters (not prepend) to match Steam's algorithm
       local code=""
       local temp_point=$code_point
       for i in {1..5}; do
         local idx=$((temp_point % ${#chars}))
-        code="${chars:$idx:1}$code"
+        code="$code${chars:$idx:1}"
         temp_point=$((temp_point / ${#chars}))
       done
       

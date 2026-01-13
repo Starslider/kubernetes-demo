@@ -110,6 +110,49 @@ After setting up the shared secret:
 - **"Invalid code" errors**: Ensure the shared secret is correct and base64-encoded
 - **Still prompting for code**: Verify `STEAMGUARDSHAREDSECRET` is set in your secret store
 - **Codes expiring**: The script automatically generates fresh codes, but if downloads take >30 seconds, it will retry with a new code
+- **"Two-factor code mismatch"**: See Testing section below
+
+#### Testing Steam Guard Code Generation
+
+If you're experiencing "Two-factor code mismatch" errors, you can test the code generation outside the pod:
+
+**Option 1: PowerShell Test Script (Windows)**
+
+```powershell
+# Run the PowerShell test script
+.\test-steam-guard.ps1 -SharedSecret "YOUR_SHARED_SECRET_HERE"
+
+# Compare the generated code with your Steam authenticator app
+# If they match, the algorithm is working correctly
+```
+
+**Option 2: Bash Test Script (Linux/WSL/Git Bash)**
+
+```bash
+# Run the test script with your shared secret
+./test-steam-guard.sh "YOUR_SHARED_SECRET_HERE"
+
+# Compare the generated code with your Steam authenticator app
+# If they match, the algorithm is working correctly
+```
+
+**Option 3: Docker Container Test (matches pod environment)**
+
+```bash
+# Test in the same container image used by the pod
+./test-steam-guard-docker.sh "YOUR_SHARED_SECRET_HERE"
+```
+
+**What to check:**
+1. The generated code should match your Steam authenticator app code
+2. If codes don't match, verify:
+   - The shared secret is correct (exact value from SDA maFile)
+   - The shared secret is base64-encoded (as stored in SDA)
+   - Your system time is synchronized (codes are time-based)
+3. If codes match but Steam still rejects them:
+   - There may be a delay between code generation and use
+   - Try regenerating the code right before use
+   - Check if Steam has additional rate limiting
 
 ### Setting up the Secret
 
