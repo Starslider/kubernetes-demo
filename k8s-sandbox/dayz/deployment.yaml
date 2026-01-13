@@ -121,12 +121,6 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
-            - name: STEAMGUARDSHAREDSECRET
-              valueFrom:
-                secretKeyRef:
-                  name: steamaccount
-                  key: STEAMGUARDSHAREDSECRET
-                  optional: true
       containers:
         - name: dayz
           image: ghcr.io/starslider/dayz-server:latest
