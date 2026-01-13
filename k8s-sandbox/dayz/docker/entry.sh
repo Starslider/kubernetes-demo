@@ -8,61 +8,62 @@ function updateGame() {
     fi
     
     echo "=== Updating DayZ server via SteamCMD ==="
-    echo "Attempting automated update..."
     
-    # Try automated update first
-    steamcmd \
-	+force_install_dir ${HOME}/${GAME} \
-        +login ${STEAMACCOUNT} ${STEAMPASSWORD} \
-        +app_update ${APPID} \
-        +quit 2>&1 | tee /tmp/steamcmd_update.log
+    MAX_RETRIES=10
+    RETRY_COUNT=0
+    AUTH_NEEDED=false
     
-    UPDATE_EXIT=${PIPESTATUS[0]}
-    
-    # Check if update was successful
-    if [ $UPDATE_EXIT -eq 0 ] && [ -f ${HOME}/${GAME}/DayZServer ]; then
-        echo "✅ DayZ server updated successfully!"
-        return 0
-    fi
-    
-    # Check if authentication is needed
-    if grep -qi "two-factor\|two factor\|Steam Guard\|code mismatch\|Invalid Password" /tmp/steamcmd_update.log 2>/dev/null; then
-        echo ""
-        echo "⚠️  SteamCMD requires Steam Guard authentication"
-        echo ""
-        echo "To authenticate manually, exec into the container and run:"
-        echo "  kubectl exec -it -n dayz deployment/dayz -c dayz -- /bin/bash"
-        echo ""
-        echo "Then run SteamCMD interactively:"
-        echo "  steamcmd +force_install_dir /home/steam/dayz +login ${STEAMACCOUNT} ${STEAMPASSWORD} +app_update ${APPID} +quit"
-        echo ""
-        echo "When prompted, enter the Steam Guard code from your iOS app."
-        echo "After successful authentication, SteamCMD will cache the session."
-        echo ""
-        echo "Waiting 60 seconds for manual authentication..."
-        echo "If you've already authenticated, the server will continue automatically."
-        sleep 60
+    while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+        if [ $RETRY_COUNT -gt 0 ]; then
+            echo ""
+            echo "Retry attempt $RETRY_COUNT of $MAX_RETRIES..."
+            if [ "$AUTH_NEEDED" = true ]; then
+                echo "Waiting 30 seconds for manual authentication..."
+                echo "To authenticate, exec into the container:"
+                echo "  kubectl exec -it -n dayz deployment/dayz -c dayz -- /bin/bash"
+                echo "Then run: steamcmd +force_install_dir /home/steam/dayz +login [USERNAME] [PASSWORD] +app_update ${APPID} +quit"
+                sleep 30
+            else
+                sleep 10
+            fi
+        fi
         
-        # Retry after waiting (in case user authenticated in another session)
-        echo ""
-        echo "Retrying update after manual authentication window..."
+        echo "Attempting update (attempt $((RETRY_COUNT + 1))/$MAX_RETRIES)..."
+        
+        # Run SteamCMD and sanitize password from logs
         steamcmd \
 	    +force_install_dir ${HOME}/${GAME} \
             +login ${STEAMACCOUNT} ${STEAMPASSWORD} \
             +app_update ${APPID} \
-            +quit 2>&1 | tee /tmp/steamcmd_update_retry.log
+            +quit 2>&1 | sed "s/${STEAMPASSWORD}/[REDACTED]/g" | tee /tmp/steamcmd_update.log
         
         UPDATE_EXIT=${PIPESTATUS[0]}
-    fi
+        
+        # Check if update was successful
+        if [ $UPDATE_EXIT -eq 0 ] && [ -f ${HOME}/${GAME}/DayZServer ]; then
+            echo "✅ DayZ server updated successfully!"
+            return 0
+        fi
+        
+        # Check if authentication is needed
+        if grep -qi "two-factor\|two factor\|Steam Guard\|code mismatch\|Invalid Password\|need two-factor" /tmp/steamcmd_update.log 2>/dev/null; then
+            AUTH_NEEDED=true
+            echo "⚠️  Steam Guard authentication required"
+        else
+            AUTH_NEEDED=false
+            echo "⚠️  Update failed (exit code: $UPDATE_EXIT)"
+        fi
+        
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+    done
     
     # Final check
     if [ -f ${HOME}/${GAME}/DayZServer ]; then
         echo "✅ DayZServer binary found, continuing..."
         return 0
     else
-        echo "❌ DayZServer binary not found after update attempt"
+        echo "❌ DayZServer binary not found after $MAX_RETRIES attempts"
         echo "Please authenticate manually by exec'ing into the container"
-        echo "See instructions above for manual authentication steps"
         return 1
     fi
 }
