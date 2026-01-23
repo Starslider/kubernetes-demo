@@ -34,6 +34,7 @@ var (
 	s3Bucket         string
 	s3Prefix         string
 	syncInterval     time.Duration
+	maxFileSize      int64 // Maximum file size in bytes (0 = no limit)
 	processedFiles   map[string]bool
 	processedFilesMu sync.RWMutex
 )
@@ -64,6 +65,7 @@ func main() {
 	wonderfulAPIKey = getEnv("WONDERFUL_API_KEY", "")
 	intervalSeconds := getEnv("SYNC_INTERVAL_SECONDS", "")
 	intervalMinutes := getEnv("SYNC_INTERVAL_MINUTES", "") // Fallback for backward compatibility
+	maxFileSizeMB := getEnv("MAX_FILE_SIZE_MB", "0") // 0 = no limit
 	port := getEnv("PORT", "8080")
 
 	logger.Info("=== Wonderful RAG S3 Sync Service Starting ===")
@@ -102,6 +104,22 @@ func main() {
 		logger.Warnf("No sync interval specified, using default: %v", interval)
 	}
 	syncInterval = interval
+
+	// Parse max file size
+	if maxFileSizeMB != "0" && maxFileSizeMB != "" {
+		var maxMB int64
+		_, err := fmt.Sscanf(maxFileSizeMB, "%d", &maxMB)
+		if err == nil && maxMB > 0 {
+			maxFileSize = maxMB * 1024 * 1024 // Convert MB to bytes
+			logger.Infof("Maximum file size limit: %d MB (%s)", maxMB, formatFileSize(maxFileSize))
+		} else {
+			logger.Warnf("Invalid MAX_FILE_SIZE_MB value '%s', ignoring limit", maxFileSizeMB)
+			maxFileSize = 0
+		}
+	} else {
+		maxFileSize = 0
+		logger.Info("No file size limit configured (MAX_FILE_SIZE_MB not set or 0)")
+	}
 
 	// Initialize AWS session
 	logger.Info("=== Initializing AWS Session ===")
@@ -302,7 +320,9 @@ func syncS3ToWonderful() {
 			size := *obj.Size
 			totalFilesFound++
 
-			logger.Debugf("Found file: %s (size: %d bytes, modified: %v)", key, size, obj.LastModified)
+			// Format file size for logging
+			sizeStr := formatFileSize(size)
+			logger.Debugf("Found file: %s (size: %s, modified: %v)", key, sizeStr, obj.LastModified)
 
 			// Skip if already processed
 			processedFilesMu.RLock()
@@ -314,7 +334,19 @@ func syncS3ToWonderful() {
 			}
 			processedFilesMu.RUnlock()
 
-			logger.Infof("📄 Processing file: %s (size: %d bytes)", key, size)
+			// Check file size limit
+			if maxFileSize > 0 && size > maxFileSize {
+				logger.Warnf("⚠️  Skipping file %s: size %s exceeds maximum allowed size %s", key, sizeStr, formatFileSize(maxFileSize))
+				errorCount++
+				errors = append(errors, fmt.Sprintf("%s: file too large (%s > %s)", key, sizeStr, formatFileSize(maxFileSize)))
+				// Mark as processed to avoid retrying
+				processedFilesMu.Lock()
+				processedFiles[key] = true
+				processedFilesMu.Unlock()
+				continue
+			}
+
+			logger.Infof("📄 Processing file: %s (size: %s)", key, sizeStr)
 
 			// Download file from S3
 			logger.Debugf("  → Downloading from S3: s3://%s/%s", s3Bucket, key)
@@ -467,8 +499,13 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	}
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		logger.Errorf("    ✗ API returned error status %d: %s", resp.StatusCode, string(respBody))
-		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, string(respBody))
+		errorMsg := string(respBody)
+		if resp.StatusCode == http.StatusRequestEntityTooLarge {
+			logger.Errorf("    ✗ File too large (413 Request Entity Too Large): %s", errorMsg)
+			return "", fmt.Errorf("file too large for API (413): file size may exceed server limits")
+		}
+		logger.Errorf("    ✗ API returned error status %d: %s", resp.StatusCode, errorMsg)
+		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, errorMsg)
 	}
 
 	logger.Debugf("    ✓ Upload successful, parsing response...")
@@ -515,5 +552,18 @@ func max(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func formatFileSize(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.2f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
 }
 

@@ -9,4 +9,5 @@ data:
   s3_prefix: ""
   wonderful_api_url: "https://swiss-german.app.sb.wonderful.ai"
   sync_interval_seconds: "20"
+  max_file_size_mb: "10"
 
