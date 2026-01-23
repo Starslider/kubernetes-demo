@@ -474,7 +474,7 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 		return "", fmt.Errorf("failed to create storage request: %w", err)
 	}
 	
-	req.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
+	req.Header.Set("x-api-key", wonderfulAPIKey)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	
@@ -596,7 +596,7 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	}
 
 	attachReq.Header.Set("Content-Type", "application/json")
-	attachReq.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
+	attachReq.Header.Set("x-api-key", wonderfulAPIKey)
 	logger.Debugf("    ✓ Attachment request created with Content-Type: application/json")
 
 	// Execute attachment request
