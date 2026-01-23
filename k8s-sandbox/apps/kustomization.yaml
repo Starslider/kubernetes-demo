@@ -29,3 +29,4 @@ resources:
   - flatcar.yaml
   - ollama.yaml
   - elasticsearch-rag.yaml
+  - wonderful-rag.yaml

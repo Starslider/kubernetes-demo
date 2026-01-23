@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wonderful-rag-config
+  namespace: wonderful-rag
+data:
+  aws_region: "us-east-1"
+  s3_bucket: "starsliderragdemo"
+  s3_prefix: "/"
+  wonderful_api_url: "https://swiss-german.app.sb.wonderful.ai"
+  sync_interval_minutes: "30"
+
