@@ -564,16 +564,10 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	
 	logger.Infof("    ✓ File uploaded to S3 successfully (Step 2 complete)")
 	
-	// If we don't have file_id yet, try to get it from storage response after upload
+	// fileID should already be set from storage response data.id
 	if fileID == "" {
-		// Some APIs return file_id after upload, check if it's in the response
-		if id, ok := storageResult["file_id"].(string); ok && id != "" {
-			fileID = id
-		} else {
-			// Use a generated identifier
-			fileID = s3Key
-			logger.Warnf("    ⚠ No file_id in storage response, using S3 key as identifier")
-		}
+		logger.Warnf("    ⚠ No file_id from storage response, using S3 key as fallback")
+		fileID = s3Key
 	}
 
 	// Step 3: Attach file to RAG using file_ids
