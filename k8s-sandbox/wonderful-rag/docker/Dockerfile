@@ -9,11 +9,14 @@ RUN apk add --no-cache git
 # Copy go mod files first for better caching
 COPY go.mod ./
 
-# Download dependencies and generate go.sum (this layer will be cached if go.mod doesn't change)
-RUN go mod download && go mod tidy
+# Download dependencies (this layer will be cached if go.mod doesn't change)
+RUN go mod download
 
 # Copy source code
 COPY *.go ./
+
+# Generate go.sum based on actual imports (needed for go build)
+RUN go mod tidy
 
 # Build arguments for multi-platform support
 ARG TARGETOS=linux
