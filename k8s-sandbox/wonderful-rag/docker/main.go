@@ -499,36 +499,36 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	}
 	
 	// Parse response to get pre-signed URL and file_id
+	// Response format: {"data": {"id": "...", "url": "..."}, "status": 200}
 	var storageResult map[string]interface{}
 	if err := json.Unmarshal(respBody, &storageResult); err != nil {
 		logger.Errorf("    ✗ Failed to parse storage response: %v", err)
 		return "", fmt.Errorf("failed to parse storage response: %w", err)
 	}
 	
-	presignedURL, ok := storageResult["url"].(string)
+	// Extract data object
+	dataObj, ok := storageResult["data"].(map[string]interface{})
 	if !ok {
-		// Try alternative field names
-		if url, ok := storageResult["presigned_url"].(string); ok {
-			presignedURL = url
-		} else if url, ok := storageResult["upload_url"].(string); ok {
-			presignedURL = url
-		} else {
-			logger.Errorf("    ✗ No pre-signed URL found in response: %s", string(respBody))
-			return "", fmt.Errorf("no pre-signed URL in storage response")
-		}
+		logger.Errorf("    ✗ No 'data' field in storage response: %s", string(respBody))
+		return "", fmt.Errorf("no 'data' field in storage response")
 	}
 	
-	fileID, _ := storageResult["file_id"].(string)
-	if fileID == "" {
-		if id, ok := storageResult["id"].(string); ok {
-			fileID = id
-		}
+	// Get pre-signed URL from data.url
+	presignedURL, ok := dataObj["url"].(string)
+	if !ok || presignedURL == "" {
+		logger.Errorf("    ✗ No 'url' in data object: %s", string(respBody))
+		return "", fmt.Errorf("no 'url' in storage response data")
 	}
 	
-	logger.Debugf("    ✓ Got pre-signed URL: %s", presignedURL)
-	if fileID != "" {
-		logger.Debugf("    ✓ Got file_id: %s", fileID)
+	// Get file ID from data.id
+	fileID, ok := dataObj["id"].(string)
+	if !ok || fileID == "" {
+		logger.Errorf("    ✗ No 'id' in data object: %s", string(respBody))
+		return "", fmt.Errorf("no 'id' in storage response data")
 	}
+	
+	logger.Debugf("    ✓ Got file_id: %s", fileID)
+	logger.Debugf("    ✓ Got pre-signed URL (length: %d)", len(presignedURL))
 
 	// Step 2: Upload file directly to S3 using pre-signed URL
 	logger.Infof("    Step 2: Uploading file to S3 using pre-signed URL...")
