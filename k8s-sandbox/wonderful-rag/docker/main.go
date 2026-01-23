@@ -373,24 +373,29 @@ func syncS3ToWonderful() {
 				fileName = key[lastSlash+1:]
 			}
 
-			logger.Debugf("  → Uploading to Wonderful API: %s/api/v1/rags/%s/files", wonderfulAPIURL, wonderfulRAGID)
+			logger.Infof("  → Starting upload and attach process for: %s", key)
 			uploadStart := time.Now()
+			
+			// uploadToWonderful performs both:
+			// 1. Upload request (get pre-signed URL and upload to S3)
+			// 2. Attach request (attach uploaded file to RAG)
 			fileID, err := uploadToWonderful(fileName, fileContent, key)
 			uploadDuration := time.Since(uploadStart)
 
 			if err != nil {
-				logger.Errorf("  ✗ Failed to upload %s to Wonderful API: %v", key, err)
+				logger.Errorf("  ✗ Failed to process %s (upload or attach failed): %v", key, err)
 				errorCount++
-				errors = append(errors, fmt.Sprintf("%s: upload failed - %v", key, err))
+				errors = append(errors, fmt.Sprintf("%s: processing failed - %v", key, err))
+				// Do NOT mark as processed if upload or attach failed
 				continue
 			}
 
-			// Mark as processed
+			// Only mark as processed after BOTH upload and attach succeeded
 			processedFilesMu.Lock()
 			processedFiles[key] = true
 			processedFilesMu.Unlock()
 
-			logger.Infof("  ✓ Successfully processed %s (Wonderful file ID: %s, upload took %v)", key, fileID, uploadDuration)
+			logger.Infof("  ✓ Successfully processed %s (uploaded and attached to RAG, file ID: %s, took %v)", key, fileID, uploadDuration)
 			successCount++
 		}
 		
@@ -425,113 +430,215 @@ func syncS3ToWonderful() {
 
 func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (string, error) {
 	logger.Debugf("    Preparing upload to Wonderful API...")
-	
-	// First, upload the file to get a file_id
-	uploadURL := fmt.Sprintf("%s/api/v1/rags/%s/files", wonderfulAPIURL, wonderfulRAGID)
-	logger.Debugf("    Upload URL: %s", uploadURL)
 	logger.Debugf("    File name: %s, Size: %d bytes", fileName, len(fileContent))
-
-	// Create multipart form
-	logger.Debugf("    Creating multipart form data...")
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	// Add file
-	part, err := writer.CreateFormFile("file", fileName)
-	if err != nil {
-		logger.Errorf("    ✗ Failed to create form file: %v", err)
-		return "", fmt.Errorf("failed to create form file: %w", err)
-	}
-
-	_, err = part.Write(fileContent)
-	if err != nil {
-		logger.Errorf("    ✗ Failed to write file content: %v", err)
-		return "", fmt.Errorf("failed to write file content: %w", err)
-	}
-	logger.Debugf("    ✓ File content written to form")
-
-	// Add metadata
-	logger.Debugf("    Adding metadata fields...")
-	writer.WriteField("source", "s3")
-	writer.WriteField("s3_key", s3Key)
-	writer.WriteField("s3_bucket", s3Bucket)
-	logger.Debugf("    ✓ Metadata added: source=s3, s3_key=%s, s3_bucket=%s", s3Key, s3Bucket)
-
-	err = writer.Close()
-	if err != nil {
-		logger.Errorf("    ✗ Failed to close multipart writer: %v", err)
-		return "", fmt.Errorf("failed to close multipart writer: %w", err)
-	}
-
-	// Create request
-	logger.Debugf("    Creating HTTP request...")
-	req, err := http.NewRequest("POST", uploadURL, body)
-	if err != nil {
-		logger.Errorf("    ✗ Failed to create request: %v", err)
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	contentType := writer.FormDataContentType()
-	req.Header.Set("Content-Type", contentType)
-	req.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
-	logger.Debugf("    ✓ Request created with Content-Type: %s", contentType)
-	logger.Debugf("    ✓ Authorization header set (API key length: %d)", len(wonderfulAPIKey))
-
-	// Execute request
-	logger.Debugf("    Sending request to Wonderful API...")
+	
 	client := &http.Client{
 		Timeout: 30 * time.Second,
 	}
 
+	// Step 1: Get pre-signed S3 URL from Wonderful API
+	storageURL := fmt.Sprintf("%s/api/v1/storage", wonderfulAPIURL)
+	logger.Debugf("    Step 1: Requesting pre-signed S3 URL from: %s", storageURL)
+	
+	// Determine content type from file extension
+	contentType := "application/octet-stream"
+	if strings.HasSuffix(strings.ToLower(fileName), ".json") {
+		contentType = "application/json"
+	} else if strings.HasSuffix(strings.ToLower(fileName), ".jpg") || strings.HasSuffix(strings.ToLower(fileName), ".jpeg") {
+		contentType = "image/jpeg"
+	} else if strings.HasSuffix(strings.ToLower(fileName), ".png") {
+		contentType = "image/png"
+	} else if strings.HasSuffix(strings.ToLower(fileName), ".pdf") {
+		contentType = "application/pdf"
+	} else if strings.HasSuffix(strings.ToLower(fileName), ".txt") {
+		contentType = "text/plain"
+	}
+	
+	// Create JSON payload for storage request
+	storagePayload := map[string]interface{}{
+		"contentType": contentType,
+		"filename":    fileName,
+	}
+	
+	storageBody, err := json.Marshal(storagePayload)
+	if err != nil {
+		logger.Errorf("    ✗ Failed to marshal storage request: %v", err)
+		return "", fmt.Errorf("failed to marshal storage request: %w", err)
+	}
+	
+	logger.Debugf("    ✓ Storage request payload: %s", string(storageBody))
+	
+	req, err := http.NewRequest("POST", storageURL, bytes.NewBuffer(storageBody))
+	if err != nil {
+		logger.Errorf("    ✗ Failed to create storage request: %v", err)
+		return "", fmt.Errorf("failed to create storage request: %w", err)
+	}
+	
+	req.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
+	req.Header.Set("Content-Type", "application/json")
+	
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.Errorf("    ✗ Request failed: %v", err)
-		return "", fmt.Errorf("failed to execute request: %w", err)
+		logger.Errorf("    ✗ Storage request failed: %v", err)
+		return "", fmt.Errorf("failed to get pre-signed URL: %w", err)
 	}
 	defer resp.Body.Close()
-
-	logger.Debugf("    ✓ Received response: Status %d %s", resp.StatusCode, resp.Status)
+	
+	logger.Debugf("    ✓ Received storage response: Status %d %s", resp.StatusCode, resp.Status)
 	
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Errorf("    ✗ Failed to read response body: %v", err)
-		return "", fmt.Errorf("failed to read response: %w", err)
+		logger.Errorf("    ✗ Failed to read storage response: %v", err)
+		return "", fmt.Errorf("failed to read storage response: %w", err)
+	}
+	
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		logger.Errorf("    ✗ Storage API returned error status %d: %s", resp.StatusCode, string(respBody))
+		return "", fmt.Errorf("storage API returned status %d: %s", resp.StatusCode, string(respBody))
+	}
+	
+	// Parse response to get pre-signed URL and file_id
+	var storageResult map[string]interface{}
+	if err := json.Unmarshal(respBody, &storageResult); err != nil {
+		logger.Errorf("    ✗ Failed to parse storage response: %v", err)
+		return "", fmt.Errorf("failed to parse storage response: %w", err)
+	}
+	
+	presignedURL, ok := storageResult["url"].(string)
+	if !ok {
+		// Try alternative field names
+		if url, ok := storageResult["presigned_url"].(string); ok {
+			presignedURL = url
+		} else if url, ok := storageResult["upload_url"].(string); ok {
+			presignedURL = url
+		} else {
+			logger.Errorf("    ✗ No pre-signed URL found in response: %s", string(respBody))
+			return "", fmt.Errorf("no pre-signed URL in storage response")
+		}
+	}
+	
+	fileID, _ := storageResult["file_id"].(string)
+	if fileID == "" {
+		if id, ok := storageResult["id"].(string); ok {
+			fileID = id
+		}
+	}
+	
+	logger.Debugf("    ✓ Got pre-signed URL: %s", presignedURL)
+	if fileID != "" {
+		logger.Debugf("    ✓ Got file_id: %s", fileID)
 	}
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		errorMsg := string(respBody)
-		if resp.StatusCode == http.StatusRequestEntityTooLarge {
+	// Step 2: Upload file directly to S3 using pre-signed URL
+	logger.Infof("    Step 2: Uploading file to S3 using pre-signed URL...")
+	
+	uploadReq, err := http.NewRequest("PUT", presignedURL, bytes.NewReader(fileContent))
+	if err != nil {
+		logger.Errorf("    ✗ Failed to create S3 upload request: %v", err)
+		return "", fmt.Errorf("failed to create S3 upload request: %w", err)
+	}
+	
+	// Use the content type we determined earlier (or from storage response if provided)
+	uploadContentType := contentType
+	if respContentType, ok := storageResult["content_type"].(string); ok && respContentType != "" {
+		uploadContentType = respContentType
+	}
+	uploadReq.Header.Set("Content-Type", uploadContentType)
+	logger.Debugf("    ✓ Using Content-Type for S3 upload: %s", uploadContentType)
+	
+	uploadResp, err := http.DefaultClient.Do(uploadReq)
+	if err != nil {
+		logger.Errorf("    ✗ S3 upload failed: %v", err)
+		return "", fmt.Errorf("failed to upload to S3: %w", err)
+	}
+	defer uploadResp.Body.Close()
+	
+	logger.Debugf("    ✓ S3 upload response: Status %d %s", uploadResp.StatusCode, uploadResp.Status)
+	
+	if uploadResp.StatusCode != http.StatusOK && uploadResp.StatusCode != http.StatusNoContent {
+		uploadRespBody, _ := io.ReadAll(uploadResp.Body)
+		logger.Errorf("    ✗ S3 upload returned error status %d: %s", uploadResp.StatusCode, string(uploadRespBody))
+		return "", fmt.Errorf("S3 upload returned status %d", uploadResp.StatusCode)
+	}
+	
+	logger.Infof("    ✓ File uploaded to S3 successfully (Step 2 complete)")
+	
+	// If we don't have file_id yet, try to get it from storage response after upload
+	if fileID == "" {
+		// Some APIs return file_id after upload, check if it's in the response
+		if id, ok := storageResult["file_id"].(string); ok && id != "" {
+			fileID = id
+		} else {
+			// Use a generated identifier
+			fileID = s3Key
+			logger.Warnf("    ⚠ No file_id in storage response, using S3 key as identifier")
+		}
+	}
+
+	// Step 3: Attach file to RAG using file_ids
+	// IMPORTANT: This step must complete successfully for the file to be considered processed
+	attachURL := fmt.Sprintf("%s/api/v1/rags/%s/files", wonderfulAPIURL, wonderfulRAGID)
+	logger.Infof("    Step 3: Attaching uploaded file to RAG: %s", attachURL)
+	
+	// Create JSON request body with file_ids
+	requestBody := map[string]interface{}{
+		"file_ids": []string{fileID},
+	}
+	
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		logger.Errorf("    ✗ Failed to marshal JSON: %v", err)
+		return "", fmt.Errorf("failed to marshal request: %w", err)
+	}
+	
+	logger.Debugf("    ✓ JSON request body: %s", string(jsonBody))
+
+	// Create attachment request
+	attachReq, err := http.NewRequest("POST", attachURL, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		logger.Errorf("    ✗ Failed to create attachment request: %v", err)
+		return "", fmt.Errorf("failed to create attachment request: %w", err)
+	}
+
+	attachReq.Header.Set("Content-Type", "application/json")
+	attachReq.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
+	logger.Debugf("    ✓ Attachment request created with Content-Type: application/json")
+
+	// Execute attachment request
+	attachResp, err := client.Do(attachReq)
+	if err != nil {
+		logger.Errorf("    ✗ Attachment request failed: %v", err)
+		return "", fmt.Errorf("failed to execute attachment request: %w", err)
+	}
+	defer attachResp.Body.Close()
+
+	logger.Debugf("    ✓ Received attachment response: Status %d %s", attachResp.StatusCode, attachResp.Status)
+	
+	attachRespBody, err := io.ReadAll(attachResp.Body)
+	if err != nil {
+		logger.Errorf("    ✗ Failed to read attachment response body: %v", err)
+		return "", fmt.Errorf("failed to read attachment response: %w", err)
+	}
+
+	if attachResp.StatusCode != http.StatusOK && attachResp.StatusCode != http.StatusCreated {
+		errorMsg := string(attachRespBody)
+		if attachResp.StatusCode == http.StatusRequestEntityTooLarge {
 			logger.Errorf("    ✗ File too large (413 Request Entity Too Large): %s", errorMsg)
 			return "", fmt.Errorf("file too large for API (413): file size may exceed server limits")
 		}
-		logger.Errorf("    ✗ API returned error status %d: %s", resp.StatusCode, errorMsg)
-		return "", fmt.Errorf("API returned status %d: %s", resp.StatusCode, errorMsg)
+		logger.Errorf("    ✗ API returned error status %d: %s", attachResp.StatusCode, errorMsg)
+		return "", fmt.Errorf("API returned status %d: %s", attachResp.StatusCode, errorMsg)
 	}
 
-	logger.Debugf("    ✓ Upload successful, parsing response...")
-
-	// Parse response to get file_id
-	var result map[string]interface{}
-	if err := json.Unmarshal(respBody, &result); err != nil {
-		logger.Debugf("    Response is not JSON, using S3 key as identifier")
-		// If response doesn't have JSON, return the S3 key as identifier
-		return s3Key, nil
-	}
-
-	if fileID, ok := result["file_id"].(string); ok {
-		logger.Debugf("    ✓ File ID from response: %s", fileID)
-		return fileID, nil
-	}
-
-	if id, ok := result["id"].(string); ok {
-		logger.Debugf("    ✓ ID from response: %s", id)
-		return id, nil
-	}
-
-	logger.Debugf("    No file_id or id in response, using S3 key as fallback")
-	// Fallback to S3 key
-	return s3Key, nil
+	logger.Infof("    ✓ File attached to RAG successfully (Step 3 complete)")
+	logger.Debugf("    Attachment response: %s", string(attachRespBody))
+	
+	// Both upload (Step 2) and attach (Step 3) completed successfully
+	logger.Infof("    ✓ Complete: File uploaded and attached to RAG (file_id: %s)", fileID)
+	
+	return fileID, nil
 }
+
 
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
