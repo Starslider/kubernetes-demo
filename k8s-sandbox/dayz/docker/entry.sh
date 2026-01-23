@@ -7,6 +7,13 @@ function updateGame() {
         return 0
     fi
     
+    # Clean up any stuck downloads from previous failed attempts
+    if [ -d "${HOME}/${GAME}/steamapps/downloading" ]; then
+        echo "⚠️  Found stuck downloads from previous attempt, cleaning up..."
+        rm -rf "${HOME}/${GAME}/steamapps/downloading" 2>/dev/null || true
+        echo "   Cleanup complete"
+    fi
+    
     echo "=== Updating DayZ server via SteamCMD ==="
     
     MAX_RETRIES=10
@@ -46,12 +53,21 @@ function updateGame() {
         fi
         
         # Check if authentication is needed
-        if grep -qi "two-factor\|two factor\|Steam Guard\|code mismatch\|Invalid Password\|need two-factor" /tmp/steamcmd_update.log 2>/dev/null; then
+        # Error 0x602 typically indicates authentication/session issues
+        if grep -qi "two-factor\|two factor\|Steam Guard\|code mismatch\|Invalid Password\|need two-factor\|0x602\|state is 0x602" /tmp/steamcmd_update.log 2>/dev/null; then
             AUTH_NEEDED=true
             echo "⚠️  Steam Guard authentication required"
+            if grep -qi "0x602" /tmp/steamcmd_update.log 2>/dev/null; then
+                echo "   Error 0x602 detected - SteamCMD session expired or authentication needed"
+            fi
         else
             AUTH_NEEDED=false
             echo "⚠️  Update failed (exit code: $UPDATE_EXIT)"
+            # Check for other common errors
+            if grep -qi "0x602" /tmp/steamcmd_update.log 2>/dev/null; then
+                echo "   Error 0x602: Authentication or session issue - will retry with authentication"
+                AUTH_NEEDED=true
+            fi
         fi
         
         RETRY_COUNT=$((RETRY_COUNT + 1))
