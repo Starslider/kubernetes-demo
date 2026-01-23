@@ -59,7 +59,7 @@ func main() {
 	} else {
 		logger.Debugf("S3 prefix normalized: '%s' -> '%s'", s3PrefixRaw, s3Prefix)
 	}
-	wonderfulAPIURL = getEnv("WONDERFUL_API_URL", "https://swiss-german.app.sb.wonderful.ai")
+	wonderfulAPIURL = getEnv("WONDERFUL_API_URL", "https://swiss-german.api.sb.wonderful.ai")
 	wonderfulRAGID = getEnv("WONDERFUL_RAG_ID", "")
 	wonderfulAPIKey = getEnv("WONDERFUL_API_KEY", "")
 	intervalSeconds := getEnv("SYNC_INTERVAL_SECONDS", "")

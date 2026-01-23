@@ -7,7 +7,7 @@ data:
   aws_region: "us-east-1"
   s3_bucket: "starsliderragdemo"
   s3_prefix: ""
-  wonderful_api_url: "https://swiss-german.app.sb.wonderful.ai"
+  wonderful_api_url: "https://swiss-german.api.sb.wonderful.ai"
   sync_interval_seconds: "20"
   max_file_size_mb: "10"
 
