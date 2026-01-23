@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: elasticsearch-rag
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: elasticsearch-rag
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+    automated:
+      prune: true
+      selfHeal: true
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/elasticsearch-rag
+      targetRevision: HEAD
+

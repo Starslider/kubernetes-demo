@@ -28,3 +28,4 @@ resources:
   - kmcp.yaml
   - flatcar.yaml
   - ollama.yaml
+  - elasticsearch-rag.yaml

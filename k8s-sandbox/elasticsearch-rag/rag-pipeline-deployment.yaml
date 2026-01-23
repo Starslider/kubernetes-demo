@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rag-pipeline
+  namespace: elasticsearch-rag
+  labels:
+    app: rag-pipeline
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rag-pipeline
+  template:
+    metadata:
+      labels:
+        app: rag-pipeline
+    spec:
+      containers:
+      - name: rag-pipeline
+        image: python:3.11-slim
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          pip install --no-cache-dir elasticsearch sentence-transformers flask requests && \
+          python /app/rag_pipeline.py
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        env:
+        - name: ELASTICSEARCH_HOST
+          value: "elasticsearch.elasticsearch-rag.svc.cluster.local"
+        - name: ELASTICSEARCH_PORT
+          value: "9200"
+        - name: ELASTICSEARCH_INDEX
+          valueFrom:
+            configMapKeyRef:
+              name: rag-pipeline-config
+              key: elasticsearch_index
+        - name: EMBEDDING_MODEL
+          valueFrom:
+            configMapKeyRef:
+              name: rag-pipeline-config
+              key: embedding_model
+        - name: PORT
+          value: "8080"
+        volumeMounts:
+        - name: rag-pipeline-code
+          mountPath: /app
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+      volumes:
+      - name: rag-pipeline-code
+        configMap:
+          name: rag-pipeline-code
+          defaultMode: 0755
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rag-pipeline
+  namespace: elasticsearch-rag
+  labels:
+    app: rag-pipeline
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: rag-pipeline
+
