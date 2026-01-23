@@ -18,6 +18,21 @@ A Kubernetes deployment of Elasticsearch with a RAG (Retrieval-Augmented Generat
 └─────────────────────┘
 ```
 
+## Folder Structure
+
+```
+elasticsearch-rag/
+├── docker/                    # Docker build files
+│   ├── Dockerfile            # Container image definition
+│   ├── requirements.txt      # Python dependencies
+│   ├── rag_pipeline.py       # Application code
+│   ├── .dockerignore         # Docker ignore rules
+│   └── BUILD.md              # Build instructions
+├── *.yaml                    # Kubernetes manifests
+├── kustomization.yaml        # Kustomize configuration
+└── README.md                 # This file
+```
+
 ## Components
 
 ### Elasticsearch
@@ -29,7 +44,7 @@ A Kubernetes deployment of Elasticsearch with a RAG (Retrieval-Augmented Generat
 
 ### RAG Pipeline Service
 - **Type**: Deployment
-- **Image**: `python:3.11-slim`
+- **Image**: `ghcr.io/starslider/kubernetes-demo/rag-pipeline:latest`
 - **Features**:
   - Document indexing with embeddings
   - Semantic search using vector similarity
@@ -117,7 +132,30 @@ Edit `configmap.yaml` to change:
 - Index name
 - Embedding model (must match dimensions in code)
 
+## Building the Docker Image
+
+The RAG pipeline uses a pre-built Docker image to significantly reduce startup time. The image is **automatically built and pushed to GHCR** via GitHub Actions when changes are made.
+
+**Pre-built image**: `ghcr.io/starslider/kubernetes-demo/rag-pipeline:latest`
+
+For manual builds or more details, see `docker/BUILD.md`.
+
 ## Deployment
+
+### Image Pull Secrets (if image is private)
+
+If the GHCR image is private, create a secret and add it to the deployment:
+
+```bash
+kubectl create secret docker-registry ghcr-secret \
+  --docker-server=ghcr.io \
+  --docker-username=YOUR_GITHUB_USERNAME \
+  --docker-password=YOUR_GITHUB_TOKEN \
+  --docker-email=YOUR_EMAIL \
+  -n elasticsearch-rag
+```
+
+Then uncomment the `imagePullSecrets` section in `rag-pipeline-deployment.yaml`.
 
 ### Using kubectl
 ```bash

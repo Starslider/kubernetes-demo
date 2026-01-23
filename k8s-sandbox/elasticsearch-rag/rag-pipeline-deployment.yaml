@@ -15,15 +15,13 @@ spec:
       labels:
         app: rag-pipeline
     spec:
+      # Uncomment if using a private image registry
+      # imagePullSecrets:
+      #   - name: ghcr-secret
       containers:
       - name: rag-pipeline
-        image: python:3.11-slim
-        imagePullPolicy: IfNotPresent
-        command: ["/bin/sh", "-c"]
-        args:
-        - |
-          pip install --no-cache-dir elasticsearch sentence-transformers flask requests && \
-          python /app/rag_pipeline.py
+        image: ghcr.io/starslider/kubernetes-demo/rag-pipeline:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http
@@ -45,9 +43,6 @@ spec:
               key: embedding_model
         - name: PORT
           value: "8080"
-        volumeMounts:
-        - name: rag-pipeline-code
-          mountPath: /app
         resources:
           requests:
             memory: "512Mi"
@@ -59,10 +54,10 @@ spec:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 30
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 12
         livenessProbe:
           httpGet:
             path: /health
@@ -75,15 +70,10 @@ spec:
           httpGet:
             path: /health
             port: 8080
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          timeoutSeconds: 5
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
           failureThreshold: 3
-      volumes:
-      - name: rag-pipeline-code
-        configMap:
-          name: rag-pipeline-code
-          defaultMode: 0755
 ---
 apiVersion: v1
 kind: Service

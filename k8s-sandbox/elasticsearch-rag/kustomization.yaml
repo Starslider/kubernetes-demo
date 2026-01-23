@@ -9,6 +9,5 @@ resources:
   - namespace.yaml
   - elasticsearch-statefulset.yaml
   - rag-pipeline-deployment.yaml
-  - rag-pipeline-code-configmap.yaml
   - configmap.yaml
 
