@@ -436,7 +436,8 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	}
 
 	// Step 1: Get pre-signed S3 URL from Wonderful API
-	storageURL := fmt.Sprintf("%s/api/v1/storage", wonderfulAPIURL)
+	// Try RAG-specific storage endpoint first
+	storageURL := fmt.Sprintf("%s/api/v1/rags/%s/storage", wonderfulAPIURL, wonderfulRAGID)
 	logger.Debugf("    Step 1: Requesting pre-signed S3 URL from: %s", storageURL)
 	
 	// Determine content type from file extension
