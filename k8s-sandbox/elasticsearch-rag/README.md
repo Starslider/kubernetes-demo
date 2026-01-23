@@ -23,11 +23,13 @@ A Kubernetes deployment of Elasticsearch with a RAG (Retrieval-Augmented Generat
 ```
 elasticsearch-rag/
 ├── docker/                    # Docker build files
-│   ├── Dockerfile            # Container image definition
-│   ├── requirements.txt      # Python dependencies
-│   ├── rag_pipeline.py       # Application code
+│   ├── Dockerfile            # Container image definition (Go)
+│   ├── main.go               # Main application code
+│   ├── embedding.go          # Embedding service
+│   ├── go.mod                # Go module definition
 │   ├── .dockerignore         # Docker ignore rules
-│   └── BUILD.md              # Build instructions
+│   ├── BUILD.md              # Build instructions
+│   └── README-GO.md          # Go implementation details
 ├── *.yaml                    # Kubernetes manifests
 ├── kustomization.yaml        # Kustomize configuration
 └── README.md                 # This file
@@ -45,6 +47,7 @@ elasticsearch-rag/
 ### RAG Pipeline Service
 - **Type**: Deployment
 - **Image**: `ghcr.io/starslider/kubernetes-demo/rag-pipeline:latest`
+- **Language**: Go (for maximum performance)
 - **Features**:
   - Document indexing with embeddings
   - Semantic search using vector similarity
@@ -138,7 +141,7 @@ The RAG pipeline uses a pre-built Docker image to significantly reduce startup t
 
 **Pre-built image**: `ghcr.io/starslider/kubernetes-demo/rag-pipeline:latest`
 
-For manual builds or more details, see `docker/BUILD.md`.
+For manual builds or more details, see `docker/BUILD.md`. For Go implementation details, see `docker/README-GO.md`.
 
 ## Deployment
 
