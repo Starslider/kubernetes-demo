@@ -21,4 +21,11 @@ tmp/
 # CI vendor or downloaded tools
 node_modules/
 
+# BFG Repo-Cleaner and credential cleanup files
+bfg.jar
+passwords.txt
+clean-history.ps1
+run-bfg.ps1
+*.bfg-report/
+
 # Keep this file tracked; patterns above only affect files under the repo root
