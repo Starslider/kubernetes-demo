@@ -25,50 +25,122 @@ data:
     es_index = os.getenv('ELASTICSEARCH_INDEX', 'rag-documents')
     embedding_model_name = os.getenv('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
     
-    es = Elasticsearch([f'http://{es_host}:{es_port}'])
-    embedding_model = SentenceTransformer(embedding_model_name)
+    es = Elasticsearch([f'http://{es_host}:{es_port}'], request_timeout=30, max_retries=3, retry_on_timeout=True)
+    embedding_model = None
+    es_ready = False
+    
+    # Initialize embedding model (this can take time on first run)
+    try:
+        logger.info(f"Loading embedding model: {embedding_model_name}")
+        embedding_model = SentenceTransformer(embedding_model_name)
+        logger.info("Embedding model loaded successfully")
+    except Exception as e:
+        logger.error(f"Failed to load embedding model: {e}")
     
     # Ensure index exists with proper mapping
     def ensure_index():
-        if not es.indices.exists(index=es_index):
-            mapping = {
-                "mappings": {
-                    "properties": {
-                        "text": {"type": "text"},
-                        "metadata": {"type": "object"},
-                        "embedding": {
-                            "type": "dense_vector",
-                            "dims": embedding_model.get_sentence_embedding_dimension()
-                        },
-                        "timestamp": {"type": "date"}
+        global es_ready
+        try:
+            if not es.ping():
+                logger.warning("Elasticsearch is not ready yet")
+                es_ready = False
+                return
+            
+            es_ready = True
+            if not es.indices.exists(index=es_index):
+                if embedding_model is None:
+                    logger.warning("Cannot create index: embedding model not loaded")
+                    return
+                    
+                mapping = {
+                    "mappings": {
+                        "properties": {
+                            "text": {"type": "text"},
+                            "metadata": {"type": "object"},
+                            "embedding": {
+                                "type": "dense_vector",
+                                "dims": embedding_model.get_sentence_embedding_dimension()
+                            },
+                            "timestamp": {"type": "date"}
+                        }
                     }
                 }
-            }
-            es.indices.create(index=es_index, body=mapping)
-            logger.info(f"Created index: {es_index}")
-        else:
-            logger.info(f"Index {es_index} already exists")
+                es.indices.create(index=es_index, body=mapping)
+                logger.info(f"Created index: {es_index}")
+            else:
+                logger.info(f"Index {es_index} already exists")
+        except Exception as e:
+            logger.warning(f"Error ensuring index exists: {e}")
+            es_ready = False
     
-    # Initialize on startup
-    ensure_index()
+    # Initialize on startup (non-blocking)
+    import threading
+    def init_background():
+        import time
+        max_retries = 30
+        retry_count = 0
+        while retry_count < max_retries:
+            try:
+                ensure_index()
+                if es_ready:
+                    break
+            except Exception as e:
+                logger.warning(f"Initialization attempt {retry_count + 1} failed: {e}")
+            retry_count += 1
+            time.sleep(2)
+    
+    init_thread = threading.Thread(target=init_background, daemon=True)
+    init_thread.start()
     
     @app.route('/health', methods=['GET'])
     def health():
         try:
-            es_status = es.ping()
+            # Check if Flask app is running
+            app_ready = True
+            
+            # Check Elasticsearch connection (non-blocking)
+            es_status = False
+            try:
+                es_status = es.ping()
+            except Exception as e:
+                logger.debug(f"Elasticsearch ping failed: {e}")
+            
+            # Check if embedding model is loaded
+            model_ready = embedding_model is not None
+            
+            # Determine overall health
+            if app_ready and es_status and model_ready:
+                status = "healthy"
+                http_status = 200
+            elif app_ready:
+                # App is running but dependencies not fully ready
+                status = "starting"
+                http_status = 200
+            else:
+                status = "unhealthy"
+                http_status = 503
+            
             return jsonify({
-                "status": "healthy",
-                "elasticsearch": "connected" if es_status else "disconnected"
-            }), 200
+                "status": status,
+                "app": "ready" if app_ready else "not ready",
+                "elasticsearch": "connected" if es_status else "disconnected",
+                "embedding_model": "loaded" if model_ready else "loading"
+            }), http_status
         except Exception as e:
+            logger.error(f"Health check error: {e}")
             return jsonify({
-                "status": "unhealthy",
+                "status": "error",
                 "error": str(e)
             }), 503
     
     @app.route('/api/v1/index', methods=['POST'])
     def index_document():
         try:
+            if not es_ready:
+                return jsonify({"error": "Elasticsearch is not ready"}), 503
+            if embedding_model is None:
+                return jsonify({"error": "Embedding model is not loaded"}), 503
+                
             data = request.json
             if not data or 'text' not in data:
                 return jsonify({"error": "Missing 'text' field"}), 400
@@ -102,6 +174,11 @@ data:
     @app.route('/api/v1/search', methods=['POST'])
     def search():
         try:
+            if not es_ready:
+                return jsonify({"error": "Elasticsearch is not ready"}), 503
+            if embedding_model is None:
+                return jsonify({"error": "Embedding model is not loaded"}), 503
+                
             data = request.json
             if not data or 'query' not in data:
                 return jsonify({"error": "Missing 'query' field"}), 400
@@ -148,6 +225,11 @@ data:
     @app.route('/api/v1/batch-index', methods=['POST'])
     def batch_index():
         try:
+            if not es_ready:
+                return jsonify({"error": "Elasticsearch is not ready"}), 503
+            if embedding_model is None:
+                return jsonify({"error": "Embedding model is not loaded"}), 503
+                
             data = request.json
             if not data or 'documents' not in data:
                 return jsonify({"error": "Missing 'documents' array"}), 400
@@ -203,6 +285,9 @@ data:
     @app.route('/api/v1/stats', methods=['GET'])
     def stats():
         try:
+            if not es_ready:
+                return jsonify({"error": "Elasticsearch is not ready"}), 503
+                
             stats = es.indices.stats(index=es_index)
             count = es.count(index=es_index)
             
