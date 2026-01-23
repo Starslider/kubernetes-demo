@@ -157,11 +157,17 @@ func indexDocument(c *gin.Context) {
 	}
 
 	// Generate embedding
-	embedding, err := embedder.Encode(req.Text)
+	embedding32, err := embedder.Encode(req.Text)
 	if err != nil {
 		logger.Errorf("Error generating embedding: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate embedding"})
 		return
+	}
+
+	// Convert float32 to float64 for Elasticsearch
+	embedding := make([]float64, len(embedding32))
+	for i, v := range embedding32 {
+		embedding[i] = float64(v)
 	}
 
 	// Create document
@@ -224,11 +230,17 @@ func searchDocuments(c *gin.Context) {
 	}
 
 	// Generate query embedding
-	queryEmbedding, err := embedder.Encode(req.Query)
+	queryEmbedding32, err := embedder.Encode(req.Query)
 	if err != nil {
 		logger.Errorf("Error generating embedding: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate embedding"})
 		return
+	}
+
+	// Convert float32 to float64 for Elasticsearch
+	queryEmbedding := make([]float64, len(queryEmbedding32))
+	for i, v := range queryEmbedding32 {
+		queryEmbedding[i] = float64(v)
 	}
 
 	// Build kNN search query
@@ -324,22 +336,28 @@ func batchIndex(c *gin.Context) {
 	errorCount := 0
 	errors := []string{}
 
-	for _, doc := range req.Documents {
-		// Generate embedding
-		embedding, err := embedder.Encode(doc.Text)
-		if err != nil {
-			errorCount++
-			errors = append(errors, fmt.Sprintf("Error generating embedding: %v", err))
-			continue
-		}
+		for _, doc := range req.Documents {
+			// Generate embedding
+			embedding32, err := embedder.Encode(doc.Text)
+			if err != nil {
+				errorCount++
+				errors = append(errors, fmt.Sprintf("Error generating embedding: %v", err))
+				continue
+			}
 
-		// Create document
-		esDoc := map[string]interface{}{
-			"text":      doc.Text,
-			"metadata":  doc.Metadata,
-			"embedding": embedding,
-			"timestamp": time.Now().Format(time.RFC3339),
-		}
+			// Convert float32 to float64 for Elasticsearch
+			embedding := make([]float64, len(embedding32))
+			for i, v := range embedding32 {
+				embedding[i] = float64(v)
+			}
+
+			// Create document
+			esDoc := map[string]interface{}{
+				"text":      doc.Text,
+				"metadata":  doc.Metadata,
+				"embedding": embedding,
+				"timestamp": time.Now().Format(time.RFC3339),
+			}
 
 		docJSON, _ := json.Marshal(esDoc)
 

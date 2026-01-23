@@ -15,7 +15,7 @@ RUN go mod download
 COPY *.go ./
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o rag-pipeline .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o rag-pipeline .
 
 # Final stage
 FROM alpine:latest
