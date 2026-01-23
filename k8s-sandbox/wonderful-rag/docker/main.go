@@ -51,7 +51,14 @@ func main() {
 	awsAccessKeyID := getEnv("AWS_ACCESS_KEY_ID", "")
 	awsSecretAccessKey := getEnv("AWS_SECRET_ACCESS_KEY", "")
 	s3Bucket = getEnv("S3_BUCKET", "")
-	s3Prefix = getEnv("S3_PREFIX", "")
+	s3PrefixRaw := getEnv("S3_PREFIX", "")
+	// Normalize prefix: remove leading/trailing slashes, empty string means root
+	s3Prefix = strings.Trim(s3PrefixRaw, "/")
+	if s3Prefix == "" {
+		logger.Debug("S3 prefix is empty - will list files from root of bucket")
+	} else {
+		logger.Debugf("S3 prefix normalized: '%s' -> '%s'", s3PrefixRaw, s3Prefix)
+	}
 	wonderfulAPIURL = getEnv("WONDERFUL_API_URL", "https://swiss-german.app.sb.wonderful.ai")
 	wonderfulRAGID = getEnv("WONDERFUL_RAG_ID", "")
 	wonderfulAPIKey = getEnv("WONDERFUL_API_KEY", "")
@@ -268,7 +275,9 @@ func syncS3ToWonderful() {
 
 	if s3Prefix != "" {
 		listInput.Prefix = aws.String(s3Prefix)
-		logger.Debugf("Using S3 prefix filter: %s", s3Prefix)
+		logger.Debugf("Using S3 prefix filter: '%s'", s3Prefix)
+	} else {
+		logger.Debug("No S3 prefix specified - listing all files from bucket root")
 	}
 
 	logger.Debug("Initializing S3 downloader and uploader...")
