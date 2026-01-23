@@ -54,6 +54,7 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: ./k8s-sandbox/elasticsearch-rag/docker
@@ -66,5 +67,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
       - name: Image digest
+        if: steps.build.outputs.digest != ''
         run: echo "Image pushed with digest ${{ steps.build.outputs.digest }}"
 
