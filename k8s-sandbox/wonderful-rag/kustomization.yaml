@@ -9,4 +9,5 @@ resources:
   - namespace.yaml
   - deployment.yaml
   - configmap.yaml
+  - wonderful-rag-external-secret.yaml
 
