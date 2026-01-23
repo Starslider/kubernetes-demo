@@ -70,11 +70,18 @@ spec:
             secretKeyRef:
               name: wonderful-rag-secrets
               key: wonderful_api_key
+        - name: SYNC_INTERVAL_SECONDS
+          valueFrom:
+            configMapKeyRef:
+              name: wonderful-rag-config
+              key: sync_interval_seconds
+              optional: true
         - name: SYNC_INTERVAL_MINUTES
           valueFrom:
             configMapKeyRef:
               name: wonderful-rag-config
               key: sync_interval_minutes
+              optional: true
         - name: PORT
           value: "8080"
         resources:

@@ -8,5 +8,5 @@ data:
   s3_bucket: "starsliderragdemo"
   s3_prefix: "/"
   wonderful_api_url: "https://swiss-german.app.sb.wonderful.ai"
-  sync_interval_minutes: "30"
+  sync_interval_seconds: "20"
 
