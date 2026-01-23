@@ -113,7 +113,7 @@ spec:
       name: elasticsearch-data
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      storageClassName: standard
+      storageClassName: nfs
       resources:
         requests:
           storage: 20Gi
