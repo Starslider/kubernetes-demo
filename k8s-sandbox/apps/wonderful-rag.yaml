@@ -10,9 +10,7 @@ spec:
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
-    automated:
-      prune: true
-      selfHeal: true
+    automated: null
   sources:
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/wonderful-rag
