@@ -436,8 +436,7 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	}
 
 	// Step 1: Get pre-signed S3 URL from Wonderful API
-	// Try RAG-specific storage endpoint first
-	storageURL := fmt.Sprintf("%s/api/v1/rags/%s/storage", wonderfulAPIURL, wonderfulRAGID)
+	storageURL := fmt.Sprintf("%s/api/v1/storage", wonderfulAPIURL)
 	logger.Debugf("    Step 1: Requesting pre-signed S3 URL from: %s", storageURL)
 	
 	// Determine content type from file extension
@@ -468,6 +467,7 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	
 	logger.Debugf("    ✓ Storage request payload: %s", string(storageBody))
 	
+	// Try POST method first (as per API spec)
 	req, err := http.NewRequest("POST", storageURL, bytes.NewBuffer(storageBody))
 	if err != nil {
 		logger.Errorf("    ✗ Failed to create storage request: %v", err)
@@ -476,6 +476,7 @@ func uploadToWonderful(fileName string, fileContent []byte, s3Key string) (strin
 	
 	req.Header.Set("Authorization", "Bearer "+wonderfulAPIKey)
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
 	
 	resp, err := client.Do(req)
 	if err != nil {
