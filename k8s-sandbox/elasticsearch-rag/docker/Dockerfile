@@ -14,8 +14,12 @@ RUN go mod download
 # Copy source code
 COPY *.go ./
 
+# Build arguments for multi-platform support
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
+
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -a -installsuffix cgo -o rag-pipeline .
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -v -a -installsuffix cgo -o rag-pipeline .
 
 # Final stage
 FROM alpine:latest
