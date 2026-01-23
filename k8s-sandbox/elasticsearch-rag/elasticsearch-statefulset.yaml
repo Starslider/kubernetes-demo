@@ -109,12 +109,16 @@ spec:
           timeoutSeconds: 5
           failureThreshold: 3
   volumeClaimTemplates:
-  - metadata:
-      name: elasticsearch-data
-    spec:
-      accessModes: [ "ReadWriteOnce" ]
-      storageClassName: nfs
-      resources:
-        requests:
-          storage: 20Gi
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: elasticsearch-data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
+        storageClassName: nfs
+        volumeMode: Filesystem
 
