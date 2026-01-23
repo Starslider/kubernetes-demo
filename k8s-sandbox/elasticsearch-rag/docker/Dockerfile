@@ -8,8 +8,8 @@ RUN apk add --no-cache git
 
 # Copy go mod files
 COPY go.mod ./
-# Download dependencies (this will generate go.sum)
-RUN go mod download
+# Download dependencies and generate go.sum
+RUN go mod download && go mod tidy
 
 # Copy source code
 COPY *.go ./
