@@ -10,6 +10,14 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+  ignoreDifferences:
+    - group: ""
+      kind: ServiceAccount
+      name: mcp-test
+      namespace: kmcp-system
+      jsonPointers:
+        - /secrets
+        - /imagePullSecrets
   sources:
     - repoURL: https://github.com/kagent-dev/kmcp.git
       path: helm/kmcp-crds
