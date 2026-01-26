@@ -1,0 +1,12 @@
+env:
+  storageProvider: s3
+  awsRegion: us-east-1
+  s3Bucket: starsliderragdemo
+  s3Prefix: ""
+  wonderfulTenant: swiss-german
+  wonderfulEnv: sb
+  syncIntervalSeconds: "20"
+  maxFileSizeMb: "10"
+
+secrets:
+  existingSecret: wonderful-rag-secrets

@@ -13,9 +13,13 @@ spec:
     automated: null
   sources:
     - repoURL: https://github.com/domatwonderful/s3-to-wonderful-rag.git
-      path: deploy/k8s
+      path: charts/s3-to-wonderful-rag
       targetRevision: HEAD
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/wonderful-rag/values.yaml
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/wonderful-rag
       targetRevision: HEAD
+      ref: values
 
