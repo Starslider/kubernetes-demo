@@ -32,4 +32,3 @@ resources:
   - wonderful-rag.yaml
   - strimzi.yaml
   - postgres.yaml
-  - wonderful-ui.yaml
