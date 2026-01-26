@@ -52,6 +52,9 @@ spec:
         gateway:
           enabled: true
           replicas: 1
+        # Disable network policies that might block traffic
+        networkPolicy:
+          enabled: false
     chart: loki
   destination:
     server: https://kubernetes.default.svc
