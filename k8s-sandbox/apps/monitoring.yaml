@@ -51,6 +51,15 @@ spec:
                   secretKeyRef:
                     name: grafana-oauth-secret
                     key: client-secret
+            additionalDataSources:
+              - name: Loki
+                type: loki
+                uid: loki
+                url: http://loki.loki.svc.cluster.local:3100
+                access: proxy
+                isDefault: false
+                jsonData:
+                  maxLines: 1000
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/monitoring
       targetRevision: HEAD
