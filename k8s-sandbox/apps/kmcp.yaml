@@ -18,6 +18,7 @@ spec:
       jsonPointers:
         - /secrets
         - /imagePullSecrets
+        - /metadata/annotations
   sources:
     - repoURL: https://github.com/kagent-dev/kmcp.git
       path: helm/kmcp-crds
