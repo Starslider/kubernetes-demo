@@ -48,6 +48,10 @@ spec:
           replicas: 0
         write:
           replicas: 0
+        # Enable gateway for external access
+        gateway:
+          enabled: true
+          replicas: 1
     chart: loki
   destination:
     server: https://kubernetes.default.svc
