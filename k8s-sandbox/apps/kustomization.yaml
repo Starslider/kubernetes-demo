@@ -17,7 +17,6 @@ resources:
   - cyberchef.yaml
   - metrics-server.yaml
   - home-assistant.yaml
-  - n8n.yaml
   #- awx.yaml
   - authentik.yaml
   - harbor.yaml
