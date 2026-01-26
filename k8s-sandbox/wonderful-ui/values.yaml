@@ -1,0 +1,54 @@
+customer: "demo"
+region: "local"
+environment: dev
+replicaCount: 1
+
+accountId: "000000000000"
+
+nodeAffinity: {}
+tolerations: []
+
+service:
+  type: ClusterIP
+  port: 80
+  protocol: TCP
+  name: http
+  targetPort: 80
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+env:
+  NODE_ENV: "development"
+
+ingress:
+  paths: ["/"]
+  hosts: []
+
+hpa:
+  enabled: false
+
+livenessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  path: /
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+  successThreshold: 1
+
+datadog:
+  agent_host: ""

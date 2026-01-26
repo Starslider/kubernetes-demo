@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: wonderful-ui
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/AiWonderful/wonderful.git
+      path: deploy/helm-charts/wonderful-ui
+      targetRevision: HEAD
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/wonderful-ui/values.yaml
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/wonderful-ui
+      targetRevision: HEAD
+      ref: values
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: wonderful-ui
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
