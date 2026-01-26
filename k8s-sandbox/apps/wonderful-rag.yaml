@@ -12,7 +12,13 @@ spec:
       - ServerSideApply=true
     automated: null
   sources:
-    - repoURL: https://github.com/Starslider/kubernetes-demo.git
-      path: k8s-sandbox/wonderful-rag
+    - repoURL: https://github.com/domatwonderful/s3-to-wonderful-rag.git
+      path: deploy/k8s
       targetRevision: HEAD
+      kustomize:
+        patches:
+          - path: $config/k8s-sandbox/wonderful-rag/configmap.yaml
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      targetRevision: HEAD
+      ref: config
 
