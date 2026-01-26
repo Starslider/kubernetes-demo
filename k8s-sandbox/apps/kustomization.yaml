@@ -31,3 +31,4 @@ resources:
   - elasticsearch-rag.yaml
   - wonderful-rag.yaml
   - strimzi.yaml
+  - postgres.yaml
