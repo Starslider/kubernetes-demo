@@ -11,8 +11,6 @@ spec:
       helm:
         valuesObject:
           watchAnyNamespace: false
-          watchNamespaces:
-            - strimzi
           resources:
             requests:
               cpu: 100m
