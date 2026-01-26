@@ -48,12 +48,16 @@ spec:
           replicas: 0
         write:
           replicas: 0
-        # Enable gateway for external access
+        # Disable gateway - use direct service access
         gateway:
-          enabled: true
-          replicas: 1
+          enabled: false
         # Disable network policies that might block traffic
         networkPolicy:
+          enabled: false
+        # Disable caches for simpler setup
+        chunksCache:
+          enabled: false
+        resultsCache:
           enabled: false
     chart: loki
   destination:
