@@ -10,6 +10,7 @@ spec:
   syncPolicy:
     syncOptions:
       - ServerSideApply=true
+      - CreateNamespace=true
     automated: null
   sources:
     - repoURL: https://github.com/domatwonderful/s3-to-wonderful-rag.git
