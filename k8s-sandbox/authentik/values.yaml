@@ -46,8 +46,6 @@ server:
             secretKeyRef:
               name: authentik-secrets  
               key: postgresql-password
-        - name: AUTHENTIK_REDIS__HOST
-          value: "authentik-redis-master"
         - name: AUTHENTIK_WEB__PATH
           value: "/"
         - name: AUTHENTIK_SECRET_KEY
@@ -96,8 +94,6 @@ worker:
             secretKeyRef:
               name: authentik-secrets  
               key: postgresql-password
-        - name: AUTHENTIK_REDIS__HOST
-          value: "authentik-redis-master"
         - name: AUTHENTIK_WEB__PATH
           value: "/"
         - name: AUTHENTIK_SECRET_KEY
@@ -114,4 +110,4 @@ postgresql:
             adminPasswordKey: postgresql-password
         usePasswordFiles: false
 redis:
-    enabled: true
+    enabled: false
