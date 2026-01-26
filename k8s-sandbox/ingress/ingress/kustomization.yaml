@@ -9,7 +9,6 @@ resources:
 - grafana-httproute.yaml
 - cyberchef-httproute.yaml
 - minio-httproute.yaml
-- n8n-httproute.yaml
 #- awx-httproute.yaml
 - authentik-httproute.yaml
 - harbor-httproute.yaml
