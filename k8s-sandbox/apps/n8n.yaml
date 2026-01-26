@@ -11,7 +11,7 @@ spec:
       ref: values
 
     - repoURL: https://oauth2-proxy.github.io/manifests
-      targetRevision: 8.2.1
+      targetRevision: 10.1.0
       helm:
         valueFiles:
           - $values/k8s-sandbox/n8n/oauth2-proxy-values.yaml
