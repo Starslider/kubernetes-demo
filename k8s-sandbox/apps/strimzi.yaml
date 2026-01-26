@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: strimzi
+spec:
+  project: default
+  sources:
+    - repoURL: https://strimzi.io/charts/
+      targetRevision: 0.50.0
+      chart: strimzi-kafka-operator
+      helm:
+        valuesObject:
+          watchAnyNamespace: false
+          watchNamespaces:
+            - strimzi
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          leaderElection:
+            enabled: true
+          dashboards:
+            enabled: false
+          logLevel: INFO
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/strimzi
+      targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: strimzi
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true

@@ -30,3 +30,4 @@ resources:
   - ollama.yaml
   - elasticsearch-rag.yaml
   - wonderful-rag.yaml
+  - strimzi.yaml
