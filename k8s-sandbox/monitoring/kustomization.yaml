@@ -11,3 +11,4 @@ resources:
 - vmalertmanager-config.yaml
 - control-plane-monitoring.yaml
 - etcd-metrics.yaml
+- loki-datasource.yaml
