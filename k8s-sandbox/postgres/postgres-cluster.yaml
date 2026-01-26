@@ -39,7 +39,7 @@ spec:
       owner: app
 
   monitoring:
-    enablePodMonitor: false
+    enablePodMonitor: true
 
   backup:
     retentionPolicy: "7d"

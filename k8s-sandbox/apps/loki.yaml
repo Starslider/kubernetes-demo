@@ -6,30 +6,49 @@ spec:
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
-    targetRevision: 0.80.6
+    targetRevision: 6.49.0
     helm:
-      parameters:
-        - name: compactor.persistence.enabled
-          value: 'true'
-        - name: indexGateway.persistence.enabled
-          value: 'true'
-        - name: ingester.persistence.enabled
-          value: 'true'
-        - name: memcachedChunks.persistence.enabled
-          value: 'true'
-        - name: memcachedFrontend.persistence.enabled
-          value: 'true'
-        - name: memcachedIndexQueries.persistence.enabled
-          value: 'true'
-        - name: memcachedIndexWrites.persistence.enabled
-          value: 'true'
-        - name: querier.persistence.enabled
-          value: 'true'
-        - name: ruler.persistence.enabled
-          value: 'true'
-        - name: serviceMonitor.enabled
-          value: 'true'
-    chart: loki-distributed
+      valuesObject:
+        # Single binary mode with filesystem storage
+        loki:
+          commonConfig:
+            replication_factor: 1
+          storage:
+            type: filesystem
+          schemaConfig:
+            configs:
+              - from: "2024-01-01"
+                store: tsdb
+                object_store: filesystem
+                schema: v13
+                index:
+                  prefix: index_
+                  period: 24h
+        # Disable dependencies we manage separately
+        minio:
+          enabled: false
+        monitoring:
+          selfMonitoring:
+            enabled: false
+            grafanaAgent:
+              installOperator: false
+          serviceMonitor:
+            enabled: true
+        # Single binary deployment
+        deploymentMode: SingleBinary
+        singleBinary:
+          replicas: 1
+          persistence:
+            enabled: true
+            size: 10Gi
+        # Disable scalable components
+        backend:
+          replicas: 0
+        read:
+          replicas: 0
+        write:
+          replicas: 0
+    chart: loki
   destination:
     server: https://kubernetes.default.svc
     namespace: loki

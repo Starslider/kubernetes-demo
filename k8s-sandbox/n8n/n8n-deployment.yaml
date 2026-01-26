@@ -56,7 +56,7 @@ spec:
               value: "https://n8n.dhlabs.org"
             - name: WEBHOOK_URL
               value: "https://n8n.dhlabs.org"
-          image: n8nio/n8n
+          image: n8nio/n8n:2.4.6
           name: n8n
           ports:
             - containerPort: 5678
