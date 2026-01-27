@@ -31,3 +31,4 @@ resources:
   - wonderful-rag.yaml
   - strimzi.yaml
   - postgres.yaml
+  - hp-wmi-sensors.yaml
