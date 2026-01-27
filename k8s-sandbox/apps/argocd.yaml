@@ -7,6 +7,10 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  syncPolicy:
+    syncOptions:
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
   sources:
     -
       repoURL: https://github.com/argoproj/argo-cd.git
