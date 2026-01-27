@@ -30,8 +30,8 @@ make defconfig
 scripts/config --module SENSORS_HP_WMI
 make modules_prepare
 
-# Build the module
-make M=drivers/hwmon CONFIG_SENSORS_HP_WMI=m
+# Build the module (allow symbol warnings since we'll load on correct kernel)
+make M=drivers/hwmon CONFIG_SENSORS_HP_WMI=m KBUILD_MODPOST_WARN=1
 
 # Copy output
 mkdir -p /output
