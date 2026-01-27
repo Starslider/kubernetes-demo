@@ -19,6 +19,9 @@ spec:
       chart: cilium
       helm:
         parameters:
+          # IPAM: Use 10.244.0.0/16 to avoid conflict with VPN subnet 10.0.1.0/24
+          - name: ipam.operator.clusterPoolIPv4PodCIDRList
+            value: '10.244.0.0/16'
           - name: gatewayAPI.enabled
             value: 'true'
           - name: kubeProxyReplacement
