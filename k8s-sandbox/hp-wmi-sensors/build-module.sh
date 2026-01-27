@@ -35,6 +35,7 @@ make M=drivers/hwmon CONFIG_SENSORS_HP_WMI=m KBUILD_MODPOST_WARN=1
 
 # Copy output
 mkdir -p /output
-find drivers/hwmon -name "hp-wmi-sensors.ko" -o -name "hp_wmi_sensors.ko" | xargs -I {} cp {} /output/
+find drivers/hwmon \( -name "hp-wmi-sensors.ko" -o -name "hp_wmi_sensors.ko" \) -exec cp {} /output/ \;
 
+echo "Built modules:"
 ls -lh /output/
