@@ -43,7 +43,7 @@ spec:
             - name: ARGOCD_HELM_ALLOW_CONCURRENCY
               value: 'true'
             - name: GOMEMLIMIT
-              value: '1900MiB'
+              value: '2200MiB'
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -299,11 +299,11 @@ spec:
             periodSeconds: 10
           resources:
             requests:
-              cpu: 500m
-              memory: 1Gi
+              cpu: 750m
+              memory: 1.5Gi
             limits:
-              cpu: 2000m
-              memory: 2Gi
+              cpu: 2500m
+              memory: 2.5Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

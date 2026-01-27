@@ -18,6 +18,12 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: minio
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
   ignoreDifferences:
   - group: ""
     kind: Secret

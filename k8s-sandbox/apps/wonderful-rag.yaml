@@ -11,7 +11,7 @@ spec:
     syncOptions:
       - ServerSideApply=true
       - CreateNamespace=true
-    automated: null
+      - ApplyOutOfSyncOnly=true
   sources:
     - repoURL: https://github.com/domatwonderful/s3-to-wonderful-rag.git
       path: charts/s3-to-wonderful-rag

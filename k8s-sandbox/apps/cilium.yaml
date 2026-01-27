@@ -4,6 +4,12 @@ metadata:
   name: cilium
 spec:
   project: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
   ignoreDifferences:
     - group: ''
       jsonPointers:

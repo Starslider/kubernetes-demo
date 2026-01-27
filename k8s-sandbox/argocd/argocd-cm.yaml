@@ -126,7 +126,7 @@ data:
   exec.enabled: "true"
   url: https://argocd.dhlabs.org
   timeout.reconciliation: 6m
-  timeout.hard.reconciliation: 0s
+  timeout.hard.reconciliation: 30m
   application.resync: "10m"
 kind: ConfigMap
 metadata:

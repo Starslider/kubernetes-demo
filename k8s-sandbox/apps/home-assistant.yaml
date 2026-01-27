@@ -10,6 +10,8 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
   source:
     repoURL: https://github.com/Starslider/kubernetes-demo.git
     path: k8s-sandbox/home-assistant

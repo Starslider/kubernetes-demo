@@ -11,6 +11,9 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
   ignoreDifferences:
     - group: ""
       kind: Secret

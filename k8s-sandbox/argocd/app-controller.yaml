@@ -41,7 +41,7 @@ spec:
             - name: GOMAXPROCS
               value: '4'
             - name: GOMEMLIMIT
-              value: '2700MiB'
+              value: '3200MiB'
             - name: ARGOCD_K8S_CLIENT_BURST
               value: "10000"
             - name: ARGOCD_K8S_CLIENT_QPS
@@ -321,10 +321,10 @@ spec:
           resources:
             requests:
               cpu: 1000m
-              memory: 1.5Gi
+              memory: 2Gi
             limits:
-              cpu: 2000m
-              memory: 3Gi
+              cpu: 2500m
+              memory: 3.5Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:

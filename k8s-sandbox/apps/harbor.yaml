@@ -9,10 +9,14 @@ spec:
     namespace: harbor
   syncPolicy:
     automated:
-      selfHeal: true
       enabled: true
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - RespectIgnoreDifferences=true
+      - ApplyOutOfSyncOnly=true
   sources:
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/harbor

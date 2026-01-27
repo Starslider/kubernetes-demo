@@ -4,6 +4,10 @@ metadata:
   name: flatcar-linux-update-operator
 spec:
   project: default
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
   source:
     repoURL: https://github.com/flatcar/flatcar-linux-update-operator.git
     path: examples/deploy
