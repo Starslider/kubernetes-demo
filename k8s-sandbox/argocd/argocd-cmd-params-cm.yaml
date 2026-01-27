@@ -6,12 +6,13 @@ data:
   server.insecure: "true"
   dex.server: "http://argocd-dex-server:5556"
   server.repo.server.timeout.seconds: "180"
-  controller.status.processors: "600"
-  controller.operation.processors: "300"
+  controller.status.processors: "100"
+  controller.operation.processors: "50"
   controller.repo.server.timeout.seconds: "180"
   controller.kubectl.parallelism.limit: "100"
   controller.sharding.algorithm: "round-robin"
-  reposerver.parallelism.limit: "100"
+  reposerver.parallelism.limit: "20"
+  redis.compression: "gzip"
 kind: ConfigMap
 metadata:
   name: argocd-cmd-params-cm

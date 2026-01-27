@@ -41,7 +41,7 @@ spec:
             - name: GOMAXPROCS
               value: '4'
             - name: GOMEMLIMIT
-              value: '512MiB'
+              value: '2700MiB'
             - name: ARGOCD_K8S_CLIENT_BURST
               value: "10000"
             - name: ARGOCD_K8S_CLIENT_QPS
@@ -318,6 +318,13 @@ spec:
               port: 8082
             initialDelaySeconds: 5
             periodSeconds: 10
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1.5Gi
+            limits:
+              cpu: 2000m
+              memory: 3Gi
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
