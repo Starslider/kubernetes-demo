@@ -127,6 +127,7 @@ data:
   url: https://argocd.dhlabs.org
   timeout.reconciliation: 6m
   timeout.hard.reconciliation: 0s
+  application.resync: "10m"
 kind: ConfigMap
 metadata:
   name: argocd-cm

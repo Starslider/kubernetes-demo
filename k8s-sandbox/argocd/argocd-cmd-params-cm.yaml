@@ -13,6 +13,8 @@ data:
   controller.sharding.algorithm: "round-robin"
   reposerver.parallelism.limit: "20"
   redis.compression: "gzip"
+  controller.app.resync.jitter: "30s"
+  reposerver.repo.cache.expiration: "24h"
 kind: ConfigMap
 metadata:
   name: argocd-cmd-params-cm
