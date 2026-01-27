@@ -12,6 +12,16 @@ spec:
       - ServerSideApply=true
       - CreateNamespace=true
       - ApplyOutOfSyncOnly=true
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - '.spec.data[].remoteRef.conversionStrategy'
+        - '.spec.data[].remoteRef.decodingStrategy'
+        - '.spec.data[].remoteRef.metadataPolicy'
+        - '.spec.refreshInterval'
+        - '.spec.target.creationPolicy'
+        - '.spec.target.deletionPolicy'
   sources:
     - repoURL: https://github.com/domatwonderful/s3-to-wonderful-rag.git
       path: charts/s3-to-wonderful-rag

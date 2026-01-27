@@ -21,6 +21,15 @@ spec:
       namespace: authentik
       jsonPointers:
         - /data
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - '.spec.data[].remoteRef.conversionStrategy'
+        - '.spec.data[].remoteRef.decodingStrategy'
+        - '.spec.data[].remoteRef.metadataPolicy'
+        - '.spec.refreshInterval'
+        - '.spec.target.creationPolicy'
+        - '.spec.target.deletionPolicy'
   sources:
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/authentik

@@ -26,6 +26,15 @@ spec:
       name: monitoring-victoria-metrics-operator-admission
       jqPathExpressions:
       - '.webhooks[]?.clientConfig.caBundle'
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - '.spec.data[].remoteRef.conversionStrategy'
+        - '.spec.data[].remoteRef.decodingStrategy'
+        - '.spec.data[].remoteRef.metadataPolicy'
+        - '.spec.refreshInterval'
+        - '.spec.target.creationPolicy'
+        - '.spec.target.deletionPolicy'
   sources:
     - repoURL: https://victoriametrics.github.io/helm-charts/
       targetRevision: 0.67.0
