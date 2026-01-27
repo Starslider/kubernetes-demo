@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: hp-wmi-sensors-loader
+  namespace: kube-system
+  labels:
+    app: hp-wmi-sensors-loader
+spec:
+  selector:
+    matchLabels:
+      app: hp-wmi-sensors-loader
+  template:
+    metadata:
+      labels:
+        app: hp-wmi-sensors-loader
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      # Only run on Flatcar nodes (HP G3 Minis)
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/hostname
+                operator: In
+                values:
+                - flatcar-worker-01
+                - flatcar-worker-02
+                - flatcar-worker-03
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+      - operator: Exists
+      containers:
+      - name: module-loader
+        image: ghcr.io/starslider/hp-wmi-sensors-loader:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 10m
+            memory: 64Mi
+        volumeMounts:
+        - name: host
+          mountPath: /host
+      volumes:
+      - name: host
+        hostPath:
+          path: /
