@@ -12,7 +12,7 @@ spec:
         - name: serviceMonitor.enabled
           value: 'true'
         - name: config.clients[0].url
-          value: 'http://loki-loki-distributed-gateway/loki/api/v1/push'
+          value: 'http://loki:3100/loki/api/v1/push'
     chart: promtail
   destination:
     server: https://kubernetes.default.svc
@@ -20,3 +20,5 @@ spec:
   syncPolicy:
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
