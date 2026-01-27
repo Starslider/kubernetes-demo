@@ -14,6 +14,8 @@ spec:
           auth_enabled: false
           commonConfig:
             replication_factor: 1
+          memberlist:
+            join_members: []
           storage:
             type: filesystem
           schemaConfig:
@@ -25,6 +27,9 @@ spec:
                 index:
                   prefix: index_
                   period: 24h
+          limits_config:
+            retention_period: 30d
+            max_cache_freshness_per_query: 10m
         # Disable dependencies we manage separately
         minio:
           enabled: false
@@ -42,6 +47,13 @@ spec:
           persistence:
             enabled: true
             size: 10Gi
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 1500m
+              memory: 2Gi
         # Disable scalable components
         backend:
           replicas: 0
@@ -55,11 +67,13 @@ spec:
         # Disable network policies that might block traffic
         networkPolicy:
           enabled: false
-        # Disable caches for simpler setup
+        # Enable caches for better performance
         chunksCache:
-          enabled: false
+          enabled: true
+          allocatedMemory: 512
         resultsCache:
-          enabled: false
+          enabled: true
+          allocatedMemory: 512
     chart: loki
   destination:
     server: https://kubernetes.default.svc
