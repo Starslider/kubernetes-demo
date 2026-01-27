@@ -399,13 +399,14 @@ data:
           "pluginVersion": "9.0.0",
           "targets": [
             {
-              "expr": "node_cooling_device_cur_state",
+              "expr": "node_cooling_device_cur_state{type=\"Processor\"}",
               "refId": "A",
-              "legendFormat": "{{instance}} - {{name}} - {{type}}"
+              "legendFormat": "{{instance}} - CPU{{name}}"
             }
           ],
-          "title": "Cooling Device States (Fan Speeds)",
-          "type": "timeseries"
+          "title": "CPU Thermal Throttling State (0=No Throttling)",
+          "type": "timeseries",
+          "description": "Shows CPU throttling states. 0 means no thermal throttling (optimal). Higher values indicate the CPU is reducing performance due to heat."
         },
         {
           "datasource": "VictoriaMetrics",
@@ -574,6 +575,7 @@ data:
       "timepicker": {},
       "timezone": "browser",
       "title": "Hardware Monitoring - Temperatures and Sensors",
+      "description": "Hardware temperature monitoring using node-exporter hwmon metrics. Note: Fan RPM speeds require hardware with exposed fan sensors (IPMI/BMC or motherboard sensors). CPU throttling states show thermal management behavior.",
       "uid": "hardware-monitoring",
       "version": 1
     }
