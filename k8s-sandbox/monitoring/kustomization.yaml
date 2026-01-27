@@ -12,3 +12,4 @@ resources:
 - control-plane-monitoring.yaml
 - etcd-metrics.yaml
 - loki-datasource.yaml
+- hardware-monitoring-dashboard.yaml
