@@ -13,3 +13,4 @@ resources:
 - authentik-httproute.yaml
 - harbor-httproute.yaml
 - kmcp-httproute.yaml
+- allow-vpn-ingress.yaml

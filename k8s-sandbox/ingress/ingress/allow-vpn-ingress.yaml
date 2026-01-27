@@ -1,0 +1,10 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-vpn-ingress
+spec:
+  description: "Allow ingress traffic from VPN subnet (WireGuard)"
+  endpointSelector: {}  # Applies to all pods in namespace
+  ingress:
+    - fromCIDR:
+        - 10.0.1.0/24  # WireGuard VPN subnet
