@@ -7,4 +7,3 @@ resources:
 - httproute-grant.yaml
 - IPAddressPool.yaml
 - bgpconf.yaml
-#- vpn-route-fix.yaml
