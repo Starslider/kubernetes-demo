@@ -1,0 +1,99 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: vpn-route-fix
+  namespace: kube-system
+  labels:
+    app: vpn-route-fix
+spec:
+  selector:
+    matchLabels:
+      app: vpn-route-fix
+  template:
+    metadata:
+      labels:
+        app: vpn-route-fix
+    spec:
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+        - operator: Exists  # Run on all nodes including control plane
+      initContainers:
+        - name: fix-vpn-route
+          image: alpine:3.19
+          securityContext:
+            privileged: true
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              
+              # Install iproute2 and iptables
+              apk add --no-cache iproute2 iptables
+              
+              VPN_SUBNET="10.0.1.0/24"
+              GATEWAY="192.168.1.1"
+              
+              # Find the default interface (the one with the default route)
+              DEFAULT_IF=$(ip route | grep "^default" | head -1 | awk '{print $5}')
+              echo "Default interface: $DEFAULT_IF"
+              
+              # Delete Cilium's route for VPN subnet if it exists
+              if ip route show $VPN_SUBNET | grep -q "cilium_host"; then
+                echo "Deleting Cilium route for $VPN_SUBNET"
+                ip route del $VPN_SUBNET || true
+              fi
+              
+              # Add route for VPN subnet via gateway on physical interface
+              if ! ip route show $VPN_SUBNET | grep -q "via $GATEWAY"; then
+                echo "Adding route for $VPN_SUBNET via $GATEWAY dev $DEFAULT_IF"
+                ip route add $VPN_SUBNET via $GATEWAY dev $DEFAULT_IF || true
+              fi
+              
+              # Add iptables rules if not present
+              if ! iptables -C INPUT -s $VPN_SUBNET -j ACCEPT 2>/dev/null; then
+                echo "Adding iptables INPUT rule for $VPN_SUBNET"
+                iptables -I INPUT -s $VPN_SUBNET -j ACCEPT
+              fi
+              
+              if ! iptables -C FORWARD -s $VPN_SUBNET -j ACCEPT 2>/dev/null; then
+                echo "Adding iptables FORWARD rule for $VPN_SUBNET"
+                iptables -I FORWARD -s $VPN_SUBNET -j ACCEPT
+              fi
+              
+              echo "VPN route fix completed"
+      containers:
+        - name: keepalive
+          image: alpine:3.19
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Keep checking and fixing the route every 60 seconds
+              apk add --no-cache iproute2 iptables
+              
+              VPN_SUBNET="10.0.1.0/24"
+              GATEWAY="192.168.1.1"
+              
+              while true; do
+                DEFAULT_IF=$(ip route | grep "^default" | head -1 | awk '{print $5}')
+                
+                # Check if Cilium has re-added its route
+                if ip route show $VPN_SUBNET | grep -q "cilium_host"; then
+                  echo "$(date): Cilium re-added route, fixing..."
+                  ip route del $VPN_SUBNET || true
+                  ip route add $VPN_SUBNET via $GATEWAY dev $DEFAULT_IF || true
+                fi
+                
+                sleep 60
+              done
+          securityContext:
+            privileged: true
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+            limits:
+              cpu: 50m
+              memory: 32Mi
