@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/bin/sh
 # Build hp-wmi-sensors kernel module for Flatcar Linux
-set -euxo pipefail
+set -eux
 
 KERNEL_VERSION=${KERNEL_VERSION:-"6.12.66"}
 KERNEL_MAJOR=$(echo ${KERNEL_VERSION} | cut -d. -f1)
