@@ -155,7 +155,8 @@
 
     <div class="reveal">
         <div class="slides">
-            <section data-markdown="slides.md"
+            <section id="markdown-slides"
+                     data-markdown="slides.md"
                      data-separator="^\n---\n$"
                      data-separator-vertical="^\n--\n$"
                      data-separator-notes="^Note:"
@@ -172,6 +173,16 @@
     <script src="plugin/zoom/zoom.js"></script>
 
     <script>
+        // Language detection BEFORE Reveal initializes
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlLang = urlParams.get('lang');
+        const currentLang = urlLang || localStorage.getItem('k8s-workshop-lang') || 'en';
+
+        // Set markdown file based on language BEFORE Reveal initializes
+        const slideFile = currentLang === 'de' ? 'slides-de.md' : 'slides.md';
+        document.getElementById('markdown-slides').setAttribute('data-markdown', slideFile);
+
+        // Initialize Reveal.js
         Reveal.initialize({
             hash: true,
             history: true,
@@ -218,40 +229,27 @@
             console.log(`Slide ${event.indexh + 1}`);
         });
 
-        // Language switching
+        // Language button handlers
         const langButtons = document.querySelectorAll('.lang-btn');
-        const currentLang = localStorage.getItem('k8s-workshop-lang') || 'en';
 
-        // Set initial language
-        if (currentLang === 'de') {
-            switchLanguage('de');
-        }
+        // Update active button based on current language
+        langButtons.forEach(btn => {
+            if (btn.dataset.lang === currentLang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
 
+        // Add click handlers for language switching
         langButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const lang = btn.dataset.lang;
-                switchLanguage(lang);
                 localStorage.setItem('k8s-workshop-lang', lang);
+                // Reload page with language parameter
+                window.location.href = window.location.pathname + '?lang=' + lang;
             });
         });
-
-        function switchLanguage(lang) {
-            // Update active button
-            langButtons.forEach(b => b.classList.remove('active'));
-            document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
-
-            // Update markdown source
-            const slideFile = lang === 'de' ? 'slides-de.md' : 'slides.md';
-            const section = document.querySelector('section[data-markdown]');
-            section.setAttribute('data-markdown', slideFile);
-
-            // Reload Reveal.js with new content
-            Reveal.sync();
-            Reveal.slide(0);
-
-            // Force reload of markdown
-            window.location.href = window.location.pathname + '?lang=' + lang + '#/';
-        }
     </script>
 </body>
 </html>
