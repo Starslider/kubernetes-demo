@@ -246,8 +246,13 @@
             btn.addEventListener('click', () => {
                 const lang = btn.dataset.lang;
                 localStorage.setItem('ai-workshop-lang', lang);
-                // Reload page with language parameter
-                window.location.href = window.location.pathname + '?lang=' + lang;
+
+                // Get current slide position
+                const indices = Reveal.getIndices();
+                const slideHash = `${indices.h}/${indices.v || 0}`;
+
+                // Reload page with language parameter and slide position
+                window.location.href = window.location.pathname + '?lang=' + lang + '#/' + slideHash;
             });
         });
     </script>
