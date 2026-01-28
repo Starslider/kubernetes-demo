@@ -37,14 +37,21 @@ RUN echo 'server { \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
-# Modify existing nginx user and fix permissions
+# Modify existing nginx user and fix permissions for non-root operation
 RUN deluser nginx && \
     adduser -D -u 1001 -g nginx nginx && \
-    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/run
+    # Create necessary directories with proper permissions
+    mkdir -p /var/run/nginx /var/lib/nginx /var/log/nginx /var/cache/nginx/client_temp && \
+    chown -R nginx:nginx /usr/share/nginx/html /var/cache/nginx /var/run/nginx /var/lib/nginx /var/log/nginx && \
+    chmod -R 755 /var/run/nginx /var/lib/nginx /var/log/nginx /var/cache/nginx && \
+    # Update nginx config to use port 8080 and non-privileged paths
+    sed -i 's/listen 80;/listen 8080;/' /etc/nginx/conf.d/default.conf && \
+    # Update main nginx.conf to write PID file in accessible location
+    sed -i 's|pid /var/run/nginx.pid;|pid /var/run/nginx/nginx.pid;|' /etc/nginx/nginx.conf
 
 # Switch to non-root user
 USER 1001
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
