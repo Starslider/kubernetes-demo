@@ -8,9 +8,12 @@ RUN npm init -y && \
 
 # Copy markdown slides
 COPY slides.md /slides/
+COPY ai-slides.md /slides/
 
-# Copy index.html and nginx config
-COPY index.html /slides/
+# Copy HTML files and nginx config
+COPY landing.html /slides/
+COPY k8s-workshop.html /slides/
+COPY ai-workshop.html /slides/
 COPY nginx.conf /slides/
 
 # Production stage - serve with nginx
@@ -20,7 +23,10 @@ FROM nginx:1.25-alpine
 COPY --from=builder /slides/node_modules/reveal.js/dist /usr/share/nginx/html/dist
 COPY --from=builder /slides/node_modules/reveal.js/plugin /usr/share/nginx/html/plugin
 COPY --from=builder /slides/slides.md /usr/share/nginx/html/
-COPY --from=builder /slides/index.html /usr/share/nginx/html/
+COPY --from=builder /slides/ai-slides.md /usr/share/nginx/html/
+COPY --from=builder /slides/landing.html /usr/share/nginx/html/
+COPY --from=builder /slides/k8s-workshop.html /usr/share/nginx/html/
+COPY --from=builder /slides/ai-workshop.html /usr/share/nginx/html/
 
 # Copy custom nginx config for non-root operation
 COPY --from=builder /slides/nginx.conf /etc/nginx/nginx.conf
