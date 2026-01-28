@@ -25,6 +25,7 @@ resources:
   - dayz.yaml
   - crossplane.yaml
   - kmcp.yaml
+  - k8s-workshop.yaml
   - flatcar.yaml
   - ollama.yaml
   - elasticsearch-rag.yaml

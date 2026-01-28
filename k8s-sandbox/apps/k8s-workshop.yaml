@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: k8s-workshop
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: k8s-workshop
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: https://github.com/Starslider/kubernetes-demo.git
+    path: k8s-sandbox/k8s-workshop
+    targetRevision: HEAD
