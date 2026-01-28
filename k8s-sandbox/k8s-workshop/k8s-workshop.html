@@ -109,10 +109,49 @@
             background: rgba(66, 175, 250, 1);
             transform: scale(1.05);
         }
+
+        /* Language switcher */
+        .language-switcher {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 10px;
+            border-radius: 50px;
+        }
+
+        .language-switcher button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 32px;
+            padding: 5px;
+            opacity: 0.6;
+            transition: all 0.3s ease;
+            border-radius: 50%;
+        }
+
+        .language-switcher button:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .language-switcher button.active {
+            opacity: 1;
+            background: rgba(66, 175, 250, 0.3);
+        }
     </style>
 </head>
 <body>
     <a href="/" class="home-button">← Home</a>
+
+    <div class="language-switcher">
+        <button class="lang-btn active" data-lang="en" title="English">🇬🇧</button>
+        <button class="lang-btn" data-lang="de" title="Deutsch">🇩🇪</button>
+    </div>
 
     <div class="reveal">
         <div class="slides">
@@ -178,6 +217,41 @@
         Reveal.on('slidechanged', event => {
             console.log(`Slide ${event.indexh + 1}`);
         });
+
+        // Language switching
+        const langButtons = document.querySelectorAll('.lang-btn');
+        const currentLang = localStorage.getItem('k8s-workshop-lang') || 'en';
+
+        // Set initial language
+        if (currentLang === 'de') {
+            switchLanguage('de');
+        }
+
+        langButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.dataset.lang;
+                switchLanguage(lang);
+                localStorage.setItem('k8s-workshop-lang', lang);
+            });
+        });
+
+        function switchLanguage(lang) {
+            // Update active button
+            langButtons.forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-lang="${lang}"]`).classList.add('active');
+
+            // Update markdown source
+            const slideFile = lang === 'de' ? 'slides-de.md' : 'slides.md';
+            const section = document.querySelector('section[data-markdown]');
+            section.setAttribute('data-markdown', slideFile);
+
+            // Reload Reveal.js with new content
+            Reveal.sync();
+            Reveal.slide(0);
+
+            // Force reload of markdown
+            window.location.href = window.location.pathname + '?lang=' + lang + '#/';
+        }
     </script>
 </body>
 </html>

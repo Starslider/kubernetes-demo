@@ -6,9 +6,11 @@ WORKDIR /slides
 RUN npm init -y && \
     npm install reveal.js@5.0.4
 
-# Copy markdown slides
+# Copy markdown slides (English and German)
 COPY slides.md /slides/
+COPY slides-de.md /slides/
 COPY ai-slides.md /slides/
+COPY ai-slides-de.md /slides/
 
 # Copy HTML files and nginx config
 COPY landing.html /slides/
@@ -23,7 +25,9 @@ FROM nginx:1.25-alpine
 COPY --from=builder /slides/node_modules/reveal.js/dist /usr/share/nginx/html/dist
 COPY --from=builder /slides/node_modules/reveal.js/plugin /usr/share/nginx/html/plugin
 COPY --from=builder /slides/slides.md /usr/share/nginx/html/
+COPY --from=builder /slides/slides-de.md /usr/share/nginx/html/
 COPY --from=builder /slides/ai-slides.md /usr/share/nginx/html/
+COPY --from=builder /slides/ai-slides-de.md /usr/share/nginx/html/
 COPY --from=builder /slides/landing.html /usr/share/nginx/html/
 COPY --from=builder /slides/k8s-workshop.html /usr/share/nginx/html/
 COPY --from=builder /slides/ai-workshop.html /usr/share/nginx/html/
