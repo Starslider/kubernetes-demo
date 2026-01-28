@@ -182,6 +182,9 @@
         const slideFile = currentLang === 'de' ? 'ai-slides-de.md' : 'ai-slides.md';
         document.getElementById('markdown-slides').setAttribute('data-markdown', slideFile);
 
+        // Get the hash from URL to navigate after slides are loaded
+        const targetHash = window.location.hash;
+
         // Initialize Reveal.js
         Reveal.initialize({
             hash: true,
@@ -216,6 +219,14 @@
             // Code highlighting
             highlight: {
                 highlightOnLoad: true
+            }
+        }).then(() => {
+            // After Reveal is ready and markdown is parsed, navigate to target slide
+            if (targetHash && targetHash.includes('/')) {
+                const hashParts = targetHash.replace('#/', '').split('/');
+                const h = parseInt(hashParts[0]) || 0;
+                const v = parseInt(hashParts[1]) || 0;
+                Reveal.slide(h, v);
             }
         });
 
