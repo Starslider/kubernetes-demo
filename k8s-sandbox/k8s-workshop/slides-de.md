@@ -664,23 +664,87 @@ kubectl get services
 
 ---
 
-## KCNA Zertifizierung
+## Paket-Management: Helm
 
-**Kubernetes and Cloud Native Associate**
+**Helm** = Paketmanager für Kubernetes
 
-- Einstiegs-Zertifizierung
-- Validiert Grundlagen die wir heute behandelt haben
-- 90-Minuten Online-Prüfung
-- 60 Multiple-Choice-Fragen
+Denk daran wie **apt, yum, oder npm** für Kubernetes
 
-**Prüfung umfasst:**
-- Kubernetes Fundamentals (46%)
-- Container Orchestration (22%)
-- Cloud Native Architecture (16%)
-- Observability (8%)
-- Application Delivery (8%)
+```yaml
+# Statt 20+ YAML-Dateien zu verwalten
+helm install my-app stable/wordpress
 
-**Toller Einstiegspunkt für deine Kubernetes-Reise!**
+# Updates leicht gemacht
+helm upgrade my-app stable/wordpress --version 2.0
+
+# Einfacher Rollback
+helm rollback my-app
+```
+
+**Vorteile:**
+- Wiederverwendbare Anwendungs-Templates
+- Versionsverwaltung
+- Einfache Updates und Rollbacks
+- Pakete teilen über Helm Charts
+
+---
+
+## Konfigurations-Management: Kustomize
+
+**Kustomize** = Template-freie Anpassung
+
+**Das Problem:** Gleiche App, verschiedene Umgebungen
+
+```
+Basis-Konfiguration (gemeinsam)
+    ↓
+├─> Dev (kleine Ressourcen, Debug aktiv)
+├─> Staging (mittlere Ressourcen)
+└─> Production (große Ressourcen, Monitoring)
+```
+
+**So funktioniert es:**
+```yaml
+# Basis-Deployment
+resources:
+  - deployment.yaml
+
+# Production-Overlay
+resources:
+  - ../../base
+patches:
+  - replica-count.yaml
+  - resource-limits.yaml
+```
+
+**In kubectl integriert!**
+
+---
+
+## GitOps mit ArgoCD
+
+**ArgoCD** = Continuous Delivery für Kubernetes
+
+**Traditionelle CI/CD:**
+```
+Git → CI Pipeline → kubectl apply → Cluster
+      (Push-Modell - Pipeline hat Cluster-Zugriff)
+```
+
+**ArgoCD (GitOps):**
+```
+Git → ArgoCD überwacht → Synchronisiert automatisch
+      (Pull-Modell - Cluster holt Änderungen)
+```
+
+**Hauptfunktionen:**
+- 🔄 Automatische Sync von Git
+- 👁️ Visuelles Dashboard für Deployments
+- 🔙 Einfacher Rollback zu jedem Git Commit
+- 🎯 Multi-Cluster-Management
+- 📊 Health-Monitoring
+
+**Dein Git-Repo wird zur Single Source of Truth**
 
 ---
 

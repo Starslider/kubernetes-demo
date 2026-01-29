@@ -663,23 +663,87 @@ kubectl get services
 
 ---
 
-## KCNA Certification
+## Package Management: Helm
 
-**Kubernetes and Cloud Native Associate**
+**Helm** = Package manager for Kubernetes
 
-- Entry-level certification
-- Validates basics we covered today
-- 90-minute online exam
-- 60 multiple choice questions
+Think of it like **apt, yum, or npm** for Kubernetes
 
-**Exam covers:**
-- Kubernetes fundamentals (46%)
-- Container orchestration (22%)
-- Cloud native architecture (16%)
-- Observability (8%)
-- Application delivery (8%)
+```yaml
+# Instead of managing 20+ YAML files
+helm install my-app stable/wordpress
 
-**Great starting point for your Kubernetes journey!**
+# Upgrades made easy
+helm upgrade my-app stable/wordpress --version 2.0
+
+# Easy rollback
+helm rollback my-app
+```
+
+**Benefits:**
+- Reusable application templates
+- Version management
+- Easy updates and rollbacks
+- Share packages via Helm charts
+
+---
+
+## Configuration Management: Kustomize
+
+**Kustomize** = Template-free customization
+
+**The problem:** Same app, different environments
+
+```
+Base Configuration (common)
+    ↓
+├─> Dev (small resources, debug enabled)
+├─> Staging (medium resources)
+└─> Production (large resources, monitoring)
+```
+
+**How it works:**
+```yaml
+# Base deployment
+resources:
+  - deployment.yaml
+
+# Production overlay
+resources:
+  - ../../base
+patches:
+  - replica-count.yaml
+  - resource-limits.yaml
+```
+
+**Built into kubectl!**
+
+---
+
+## GitOps with ArgoCD
+
+**ArgoCD** = Continuous delivery for Kubernetes
+
+**Traditional CI/CD:**
+```
+Git → CI Pipeline → kubectl apply → Cluster
+      (push model - pipeline has cluster access)
+```
+
+**ArgoCD (GitOps):**
+```
+Git → ArgoCD watches → Syncs automatically
+      (pull model - cluster pulls changes)
+```
+
+**Key Features:**
+- 🔄 Automatic sync from Git
+- 👁️ Visual dashboard of deployments
+- 🔙 Easy rollback to any Git commit
+- 🎯 Multi-cluster management
+- 📊 Health monitoring
+
+**Your Git repo becomes the single source of truth**
 
 ---
 
