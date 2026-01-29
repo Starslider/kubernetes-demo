@@ -566,58 +566,6 @@ Developer → Git commit → Automatic deployment
 
 ---
 
-## Getting Started with Kubernetes
-
-**Local Development:**
-
-**Option 1: Minikube**
-- Full Kubernetes on your laptop
-- Good for learning
-
-**Option 2: Kind (Kubernetes in Docker)**
-- Lightweight
-- Fast to start
-
-**Option 3: Docker Desktop**
-- Built-in Kubernetes
-- Easy setup
-
-```bash
-# Try it!
-minikube start
-kubectl get nodes
-```
-
----
-
-## Your First Kubernetes App
-
-**Step 1:** Create deployment
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hello-world
-spec:
-  replicas: 2
-  template:
-    spec:
-      containers:
-      - name: app
-        image: nginx
-        ports:
-        - containerPort: 80
-```
-
-**Step 2:** Apply it
-```bash
-kubectl apply -f deployment.yaml
-```
-
-**Done!** Your app is running
-
----
-
 ## Common kubectl Commands
 
 ```bash
@@ -807,24 +755,24 @@ Over 1000+ tools in the ecosystem:
 ## Your Next Steps
 
 **Week 1-2:** Basics
-- Install minikube/kind
-- Deploy your first app
-- Learn kubectl basics
+- Set up local cluster
+- Practice with kubectl
+- Understand core resources
 
 **Week 3-4:** Core Concepts
-- Deployments, Services, ConfigMaps
-- Understand Pods and ReplicaSets
-- Practice scaling
+- Master Deployments, Services, ConfigMaps
+- Work with Pods and ReplicaSets
+- Practice scaling and updates
 
 **Month 2:** Advanced Topics
-- Storage, networking
-- Security basics
-- Monitoring setup
+- Storage and networking
+- Security best practices
+- Monitoring and observability
 
 **Month 3:** Real Projects
-- Build a multi-service app
-- Implement CI/CD
-- Consider KCNA exam
+- Build multi-service applications
+- Implement GitOps with ArgoCD
+- Use Helm and Kustomize
 
 ---
 

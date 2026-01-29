@@ -567,58 +567,6 @@ Entwickler → Git Commit → Automatisches Deployment
 
 ---
 
-## Mit Kubernetes starten
-
-**Lokale Entwicklung:**
-
-**Option 1: Minikube**
-- Volles Kubernetes auf deinem Laptop
-- Gut zum Lernen
-
-**Option 2: Kind (Kubernetes in Docker)**
-- Leichtgewicht
-- Schneller Start
-
-**Option 3: Docker Desktop**
-- Eingebautes Kubernetes
-- Einfaches Setup
-
-```bash
-# Probier es aus!
-minikube start
-kubectl get nodes
-```
-
----
-
-## Deine erste Kubernetes App
-
-**Schritt 1:** Deployment erstellen
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: hello-world
-spec:
-  replicas: 2
-  template:
-    spec:
-      containers:
-      - name: app
-        image: nginx
-        ports:
-        - containerPort: 80
-```
-
-**Schritt 2:** Anwenden
-```bash
-kubectl apply -f deployment.yaml
-```
-
-**Fertig!** Deine App läuft
-
----
-
 ## Häufige kubectl Befehle
 
 ```bash
@@ -808,24 +756,24 @@ Git → ArgoCD überwacht → Synchronisiert automatisch
 ## Deine nächsten Schritte
 
 **Woche 1-2:** Grundlagen
-- Installiere minikube/kind
-- Deploye deine erste App
-- Lerne kubectl Basics
+- Richte lokalen Cluster ein
+- Übe mit kubectl
+- Verstehe Kern-Ressourcen
 
 **Woche 3-4:** Kernkonzepte
-- Deployments, Services, ConfigMaps
-- Verstehe Pods und ReplicaSets
-- Übe Skalierung
+- Meistere Deployments, Services, ConfigMaps
+- Arbeite mit Pods und ReplicaSets
+- Übe Skalierung und Updates
 
 **Monat 2:** Fortgeschrittene Themen
-- Storage, Networking
-- Security Basics
-- Monitoring Setup
+- Storage und Networking
+- Security Best Practices
+- Monitoring und Observability
 
 **Monat 3:** Echte Projekte
-- Baue Multi-Service-App
-- Implementiere CI/CD
-- Erwäge KCNA Prüfung
+- Baue Multi-Service-Anwendungen
+- Implementiere GitOps mit ArgoCD
+- Nutze Helm und Kustomize
 
 ---
 
