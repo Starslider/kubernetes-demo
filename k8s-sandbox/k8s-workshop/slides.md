@@ -1,17 +1,17 @@
 # Kubernetes Workshop
-## Understanding Containers and Orchestration
+## Core Architecture and Cloud Native Concepts
 
-Engineering Team Training
+KCNA-Aligned Training
 
 ---
 
 ## What We'll Cover Today
 
-- What is Docker?
-- Understanding Containers
-- Why Kubernetes?
-- Kubernetes Core Concepts
-- Hands-on Architecture
+- Container Fundamentals
+- Kubernetes Architecture Deep Dive
+- Core Kubernetes Concepts
+- Cloud Native Patterns
+- Observability, Security & Autoscaling
 
 ---
 
@@ -260,22 +260,183 @@ docker rm web
 ---
 
 ## Section 4
-### Kubernetes Core Concepts
+### Kubernetes Architecture Deep Dive
 
 ---
 
-## Kubernetes Architecture
+## Kubernetes: Distributed System
 
-**Control Plane** (Master)
-- API Server (kubectl talks here)
-- etcd (distributed database)
-- Scheduler (assigns pods to nodes)
-- Controller Manager (maintains desired state)
+**Kubernetes is a distributed system** running across multiple nodes
 
-**Worker Nodes**
-- kubelet (runs containers)
-- kube-proxy (networking)
-- Container runtime (containerd, CRI-O)
+**Key Principles:**
+- Declarative configuration (desired state)
+- Controllers reconcile actual vs desired state
+- API-driven architecture
+- Eventually consistent
+- Highly available and scalable
+
+**You declare what you want, Kubernetes figures out how to achieve it**
+
+---
+
+## Control Plane Components
+
+**API Server** (`kube-apiserver`)
+- Central hub for all cluster communication
+- RESTful API (kubectl, controllers, operators talk here)
+- Authentication and authorization gateway
+- Only component that talks to etcd
+- Horizontally scalable
+
+**Key Point:** Everything in Kubernetes goes through the API Server
+
+---
+
+## Control Plane: etcd
+
+**etcd** - Distributed Key-Value Store
+- Stores entire cluster state
+- Single source of truth
+- Strongly consistent (Raft consensus)
+- Watches for changes (event-driven)
+
+**What's stored:**
+- All resource definitions (Pods, Services, etc.)
+- Cluster configuration
+- Secrets, ConfigMaps
+- Current state vs desired state
+
+**Critical:** Without etcd, your cluster has no memory
+
+---
+
+## Control Plane: Scheduler
+
+**Scheduler** (`kube-scheduler`)
+- Watches for newly created Pods with no assigned node
+- Selects optimal node for each Pod
+- Does NOT start the Pod (kubelet does that)
+
+**Scheduling Factors:**
+- Resource requests (CPU, memory)
+- Node selectors and affinity rules
+- Taints and tolerations
+- Pod topology spread constraints
+- Data locality
+
+---
+
+## Control Plane: Controller Manager
+
+**Controller Manager** (`kube-controller-manager`)
+- Runs multiple controllers in one process
+- Each controller watches specific resources
+- Reconciliation loops (observe → diff → act)
+
+**Built-in Controllers:**
+- Deployment Controller (manages ReplicaSets)
+- ReplicaSet Controller (maintains pod replicas)
+- Node Controller (monitors node health)
+- Service Controller (manages cloud load balancers)
+- Job Controller (runs pods to completion)
+
+**Pattern:** Watch desired state → ensure actual state matches
+
+---
+
+## Control Plane: Cloud Controller Manager
+
+**Cloud Controller Manager** (optional)
+- Interacts with cloud provider APIs
+- Manages cloud-specific resources
+- Decouples cloud logic from core Kubernetes
+
+**Cloud Controllers:**
+- Node Controller (verifies nodes with cloud provider)
+- Route Controller (sets up network routes)
+- Service Controller (creates cloud load balancers)
+- Volume Controller (creates/attaches cloud volumes)
+
+**Example:** Creates AWS ELB when you create Service type LoadBalancer
+
+---
+
+## Worker Node Components
+
+**kubelet** - Node Agent
+- Runs on every worker node
+- Ensures containers are running in Pods
+- Communicates with API Server
+- Reports node and pod status
+- Executes pod lifecycle hooks
+- Mounts volumes
+
+**Key:** kubelet is the "worker" that does the actual container management
+
+---
+
+## Worker Node: Container Runtime
+
+**Container Runtime** - Runs containers
+- Kubernetes uses Container Runtime Interface (CRI)
+- Popular runtimes: containerd, CRI-O, Docker (deprecated)
+
+**What it does:**
+- Pulls container images from registries
+- Unpacks images to disk
+- Starts/stops containers
+- Manages container lifecycle
+
+**containerd is the most common runtime today**
+
+---
+
+## Worker Node: kube-proxy
+
+**kube-proxy** - Network Proxy
+- Runs on every node
+- Maintains network rules for Services
+- Implements Service abstraction (ClusterIP, NodePort)
+
+**Modes:**
+- **iptables** (default) - Creates iptables rules
+- **ipvs** (better performance) - Uses Linux IPVS
+- **userspace** (legacy)
+
+**Key:** Enables pod-to-pod and service-to-pod networking
+
+---
+
+## Kubernetes Networking Model
+
+**Kubernetes Network Requirements:**
+1. All pods can communicate without NAT
+2. All nodes can communicate with all pods
+3. Pod sees its own IP (no NAT from pod perspective)
+
+**Implemented by CNI (Container Network Interface) plugins:**
+- Calico, Cilium, Flannel, Weave, etc.
+- Each has different features and performance
+
+**Result:** Flat network where every pod has unique IP
+
+---
+
+## Core Concepts: Pods
+
+**Pod** - Smallest deployable unit
+- One or more containers sharing:
+  - Network namespace (same localhost)
+  - IPC namespace
+  - Storage volumes
+- Atomic scheduling unit
+
+**When to use multiple containers in a pod:**
+- Sidecar pattern (logging, proxies)
+- Adapter pattern (normalize output)
+- Ambassador pattern (proxy to external services)
+
+**Pods are cattle, not pets - they're ephemeral**
 
 ---
 
@@ -316,15 +477,36 @@ spec:
 
 ---
 
-## Deployment: Declarative Apps
+## Core Concepts: ReplicaSet
 
-**Deployment** manages:
-- ReplicaSet (desired number of pods)
-- Rolling updates
-- Rollbacks
-- Self-healing
+**ReplicaSet** - Maintains pod replicas
+- Ensures specified number of pod replicas running
+- Creates/deletes pods to match desired count
+- Identified by selector labels
 
-**You declare "I want 3 replicas", Kubernetes makes it happen**
+**Usually NOT created directly:**
+- Deployments manage ReplicaSets
+- ReplicaSets manage Pods
+- You manage Deployments
+
+**Deployment → ReplicaSet → Pods**
+
+---
+
+## Core Concepts: Deployment
+
+**Deployment** - Declarative updates for Pods
+- Creates and manages ReplicaSets
+- Rolling updates (zero-downtime deployments)
+- Rollback to previous versions
+- Pause and resume deployments
+- Scale up/down
+
+**Update Strategies:**
+- **RollingUpdate** (default) - Gradual replacement
+- **Recreate** - Delete all pods then create new ones
+
+**Deployment is your main workload controller**
 
 ---
 
@@ -354,19 +536,93 @@ spec:
 
 ---
 
-## Service: Stable Networking
+## Core Concepts: StatefulSet
 
-**Problem:** Pods have dynamic IPs (they restart)
+**StatefulSet** - For stateful applications
+- Stable, unique network identifiers
+- Stable, persistent storage
+- Ordered, graceful deployment and scaling
+- Ordered, automated rolling updates
 
-**Solution:** Service provides:
-- Stable DNS name
-- Load balancing across pods
-- Service discovery
+**Use cases:**
+- Databases (PostgreSQL, MySQL, MongoDB)
+- Message queues (Kafka, RabbitMQ)
+- Distributed systems requiring stable identity
 
-**Types:**
-- ClusterIP (internal only)
-- NodePort (external via node IP)
-- LoadBalancer (cloud provider LB)
+**Pods get predictable names:** `app-0`, `app-1`, `app-2`
+
+---
+
+## Core Concepts: DaemonSet
+
+**DaemonSet** - Runs on all (or some) nodes
+- Ensures a copy of a pod runs on every node
+- New nodes automatically get the pod
+- Useful for node-level operations
+
+**Use cases:**
+- Log collection (Fluentd, Promtail)
+- Monitoring agents (Node Exporter)
+- Network plugins (CNI agents)
+- Storage daemons
+
+**Example:** Cilium CNI runs as DaemonSet
+
+---
+
+## Core Concepts: Job & CronJob
+
+**Job** - Runs pods to completion
+- Ensures specified number of successful completions
+- Retries on failure
+- Parallel execution supported
+
+**CronJob** - Runs Jobs on schedule
+- Cron syntax for scheduling
+- Creates Jobs at specified times
+
+**Use cases:**
+- Batch processing
+- Database migrations
+- Backups
+- Periodic cleanup tasks
+
+---
+
+## Core Concepts: Services
+
+**Problem:** Pods have ephemeral IPs
+
+**Solution: Service** - Stable networking abstraction
+- Stable ClusterIP (virtual IP)
+- DNS name: `<service>.<namespace>.svc.cluster.local`
+- Load balances across pod replicas
+- Selector-based (targets pods by labels)
+
+**Services provide service discovery and load balancing**
+
+---
+
+## Service Types
+
+**ClusterIP** (default)
+- Only reachable within cluster
+- Virtual IP in cluster network
+- Most common for internal communication
+
+**NodePort**
+- Exposes service on each node's IP at static port
+- Range: 30000-32767
+- Accessible from outside: `<NodeIP>:<NodePort>`
+
+**LoadBalancer**
+- Creates external load balancer (cloud provider)
+- Automatically gets external IP
+- Built on top of NodePort
+
+**ExternalName**
+- Maps service to DNS name (CNAME)
+- No proxying involved
 
 ---
 
@@ -380,14 +636,32 @@ metadata:
 spec:
   type: LoadBalancer
   selector:
-    app: nginx
+    app: nginx  # Targets pods with this label
   ports:
   - protocol: TCP
-    port: 80
-    targetPort: 80
+    port: 80          # Service port
+    targetPort: 8080  # Container port
 ```
 
 **DNS:** `nginx-service.default.svc.cluster.local`
+
+---
+
+## Ingress and Gateway API
+
+**Ingress** - HTTP/HTTPS routing
+- Layer 7 load balancing
+- Host and path-based routing
+- TLS termination
+- Requires Ingress Controller (nginx, Traefik, etc.)
+
+**Gateway API** (newer, better)
+- Successor to Ingress
+- More expressive and extensible
+- Role-oriented design
+- Multiple resource types (Gateway, HTTPRoute, etc.)
+
+**Use for exposing multiple HTTP services with routing rules**
 
 ---
 
@@ -431,220 +705,533 @@ data:
 
 ---
 
-## Persistent Volumes
+## Core Concepts: Storage
 
-**Problem:** Containers are stateless
+**Volumes** - Pod-level storage
+- Tied to pod lifecycle
+- Shared between containers in same pod
+- Types: emptyDir, hostPath, configMap, secret
 
-**Solution:**
-- **PersistentVolume (PV):** Storage resource
-- **PersistentVolumeClaim (PVC):** Storage request
-- **StorageClass:** Dynamic provisioning
+**PersistentVolume (PV)** - Cluster-level storage resource
+- Independent of pod lifecycle
+- Provisioned by admin or dynamically
+- Access modes: ReadWriteOnce, ReadOnlyMany, ReadWriteMany
 
-**Example:** PostgreSQL database needs persistent storage
+**PersistentVolumeClaim (PVC)** - Storage request
+- User requests storage with specific size and access mode
+- Binds to available PV
+
+**StorageClass** - Dynamic provisioning
+- Defines "classes" of storage (fast SSD, slow HDD, etc.)
+- Automatic PV creation when PVC is created
+
+---
+
+## Storage Example
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: fast-ssd
+---
+# In Pod spec:
+volumes:
+- name: postgres-storage
+  persistentVolumeClaim:
+    claimName: postgres-pvc
+```
+
+---
+
+## Labels and Selectors
+
+**Labels** - Key-value pairs attached to objects
+- Used for organization and selection
+- Multiple labels per object
+- Examples: `app=nginx`, `env=prod`, `tier=frontend`
+
+**Selectors** - Query objects by labels
+- **Equality-based:** `app=nginx`, `env!=dev`
+- **Set-based:** `env in (prod, staging)`, `tier notin (cache)`
+
+**Use cases:**
+- Services select pods: `selector: app=nginx`
+- Deployments match pods: `matchLabels: app=nginx`
+- kubectl: `kubectl get pods -l app=nginx`
+
+**Labels are how Kubernetes connects resources**
+
+---
+
+## Annotations vs Labels
+
+**Labels:**
+- Used for selection and grouping
+- Max 63 characters
+- Must be valid DNS subdomain
+- Used by Kubernetes selectors
+
+**Annotations:**
+- Store arbitrary metadata
+- No size limit (within reason)
+- Not used for selection
+- Documentation, tool configuration
+
+**Example annotations:**
+```yaml
+annotations:
+  prometheus.io/scrape: "true"
+  kubernetes.io/change-cause: "Update to v2.0"
+  description: "Production database"
+```
 
 ---
 
 ## Section 5
-### Hands-on Architecture
+### Cloud Native Patterns and KCNA Topics
 
 ---
 
-## Your Home Lab Setup
+## Cloud Native Architecture
 
-**Infrastructure:**
-- Multiple nodes (VMs, bare metal, hybrid)
-- containerd runtime
-- Kubernetes v1.34
+**CNCF Definition:**
+Cloud native technologies empower organizations to build and run scalable applications in modern, dynamic environments such as public, private, and hybrid clouds.
 
-**GitOps with ArgoCD:**
-- All configs in Git
-- Declarative deployments
-- Automatic sync
-- Rollback capabilities
+**Key Characteristics:**
+- Containerized workloads
+- Dynamically orchestrated
+- Microservices-oriented
+- Declarative APIs
+- Designed for automation
 
----
-
-## Networking: Cilium CNI
-
-**Cilium** provides:
-- Pod networking (eBPF-based)
-- Network policies (security)
-- Load balancing
-- BGP for LoadBalancer IPs
-- Service mesh capabilities
-
-**Why Cilium?**
-- High performance
-- Advanced observability
-- Kubernetes-native
+**Cloud native ≠ running in the cloud (it's about the approach)**
 
 ---
 
-## Gateway API (Modern Ingress)
+## Microservices vs Monoliths
 
-**Gateway API** replaces Ingress:
+**Monolithic Architecture:**
+- Single deployable unit
+- Shared database
+- Tight coupling
+- Scale entire application
+- Simpler to start, harder to scale
 
-**HTTPRoute:**
+**Microservices Architecture:**
+- Independent services
+- Separate databases (data isolation)
+- Loose coupling via APIs
+- Scale services independently
+- Complex to start, easier to scale
+
+**Kubernetes excels at managing microservices**
+
+---
+
+## 12-Factor App Principles
+
+**Key principles for cloud native apps:**
+1. **Codebase** - One codebase in version control
+2. **Dependencies** - Explicitly declare dependencies
+3. **Config** - Store config in environment
+4. **Backing Services** - Treat as attached resources
+5. **Build, Release, Run** - Strictly separate stages
+6. **Processes** - Execute as stateless processes
+7. **Port Binding** - Export services via port binding
+8. **Concurrency** - Scale out via process model
+9. **Disposability** - Fast startup and graceful shutdown
+10. **Dev/Prod Parity** - Keep environments similar
+11. **Logs** - Treat logs as event streams
+12. **Admin Processes** - Run as one-off processes
+
+---
+
+## Observability: The Three Pillars
+
+**Metrics** - Numerical data over time
+- CPU, memory usage
+- Request rates, latencies
+- Error rates
+- Tools: Prometheus, VictoriaMetrics
+
+**Logs** - Event records
+- Application logs
+- System logs
+- Audit logs
+- Tools: Loki, Elasticsearch, Fluentd
+
+**Traces** - Request flows across services
+- Distributed tracing
+- Performance bottlenecks
+- Service dependencies
+- Tools: Jaeger, Tempo, Zipkin
+
+---
+
+## Prometheus and Metrics
+
+**Prometheus** - Open-source monitoring system
+- Pull-based metrics collection
+- Time-series database
+- PromQL query language
+- Service discovery (Kubernetes integration)
+- Alerting with AlertManager
+
+**ServiceMonitor** (Prometheus Operator)
 ```yaml
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
 metadata:
-  name: web-route
+  name: app-metrics
 spec:
-  parentRefs:
-  - name: ingress-gateway
-  hostnames:
-  - "app.example.com"
-  rules:
-  - backendRefs:
-    - name: web-service
-      port: 80
+  selector:
+    matchLabels:
+      app: myapp
+  endpoints:
+  - port: metrics
+    interval: 30s
 ```
 
 ---
 
-## Monitoring Stack
+## Health Checks and Probes
 
-**VictoriaMetrics:**
-- Metrics storage (Prometheus-compatible)
-- High performance, low resource usage
+**Liveness Probe** - Is the container alive?
+- Restarts container if check fails
+- Use for detecting deadlocks
 
-**Grafana:**
-- Dashboards and visualization
-- Alerting
+**Readiness Probe** - Is the container ready to serve traffic?
+- Removes pod from service endpoints if check fails
+- Use for startup time, dependencies
 
-**Promtail + Loki:**
-- Log aggregation
-- Easy querying
+**Startup Probe** - Has the container started?
+- Disables liveness/readiness until passing
+- Use for slow-starting containers
 
----
-
-## Database: CloudNativePG
-
-**High-availability PostgreSQL:**
-- Primary + replicas
-- Automatic failover
-- Connection pooling (PgBouncer)
-- Backup management
-- WAL archiving
-
-**Operator pattern:** Extends Kubernetes API
-
----
-
-## Secret Management
-
-**External Secrets Operator:**
-- Syncs from 1Password
-- Kubernetes Secret created automatically
-- Never commit secrets to Git
-
-**Pattern:**
 ```yaml
-apiVersion: external-secrets.io/v1beta1
-kind: ExternalSecret
-metadata:
-  name: db-credentials
-spec:
-  secretStoreRef:
-    name: onepassword
-  target:
-    name: db-password
-  data:
-  - secretKey: password
-    remoteRef:
-      key: postgres-prod
-      property: password
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 3
+  periodSeconds: 10
 ```
 
 ---
 
-## TLS with cert-manager
+## Security: Defense in Depth
 
-**Automatic certificate management:**
-- Let's Encrypt integration
-- Auto-renewal
-- Certificate CRDs
+**Layers of Security:**
+1. **Cluster** - RBAC, network policies, pod security
+2. **Container** - Image scanning, minimal images, non-root
+3. **Network** - Service mesh, mTLS, egress control
+4. **Data** - Encryption at rest/transit, secret management
+5. **Code** - Secure coding, dependency scanning
+
+**Security is multi-layered, not a single tool**
+
+---
+
+## RBAC (Role-Based Access Control)
+
+**Core Components:**
+- **ServiceAccount** - Identity for pods
+- **Role** - Set of permissions (namespace-scoped)
+- **ClusterRole** - Set of permissions (cluster-scoped)
+- **RoleBinding** - Grants Role to subject
+- **ClusterRoleBinding** - Grants ClusterRole to subject
 
 **Example:**
 ```yaml
-apiVersion: cert-manager.io/v1
-kind: Certificate
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
 metadata:
-  name: app-tls
+  name: pod-reader
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+```
+
+**Principle of least privilege: Grant minimum necessary permissions**
+
+---
+
+## Network Policies
+
+**NetworkPolicy** - Controls pod-to-pod traffic
+- Firewall rules for pods
+- Label-based selection
+- Ingress and egress rules
+- Requires CNI plugin support (Calico, Cilium, etc.)
+
+**Example: Deny all, allow specific**
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: api-allow-frontend
 spec:
-  secretName: app-tls-secret
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
-  dnsNames:
-  - app.example.com
+  podSelector:
+    matchLabels:
+      app: api
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: frontend
+    ports:
+    - port: 8080
 ```
 
 ---
 
-## Multi-Source ArgoCD Pattern
+## Pod Security Standards
 
-**Combine upstream Helm + local customizations:**
+**Three levels (least to most restrictive):**
+
+**Privileged** - Unrestricted (no restrictions)
+
+**Baseline** - Minimally restrictive
+- Prevents known privilege escalations
+- Allows default capabilities
+
+**Restricted** - Heavily restricted (best practice)
+- Non-root containers
+- Disallows privilege escalation
+- Drops all capabilities
+- Read-only root filesystem
+
+**Enforced via Pod Security Admission or external tools (Kyverno, OPA)**
+
+---
+
+## Resource Management: Requests vs Limits
+
+**Requests** - Guaranteed resources
+- Used by scheduler for placement
+- Container gets at least this much
+- QoS class determination
+
+**Limits** - Maximum resources
+- Container cannot exceed this
+- OOMKilled if memory limit exceeded
+- CPU throttled if CPU limit exceeded
+
+**Best Practice:**
+```yaml
+resources:
+  requests:
+    cpu: "100m"      # 0.1 CPU core
+    memory: "128Mi"
+  limits:
+    cpu: "500m"      # 0.5 CPU core
+    memory: "512Mi"
+```
+
+**Always set requests and limits to avoid noisy neighbors**
+
+---
+
+## QoS Classes
+
+**Guaranteed** (highest priority)
+- Requests = Limits for all containers
+- Least likely to be evicted
+
+**Burstable** (medium priority)
+- Requests < Limits
+- Can use extra resources when available
+
+**BestEffort** (lowest priority)
+- No requests or limits set
+- First to be evicted under pressure
+
+**QoS affects scheduling and eviction behavior**
+
+---
+
+## Horizontal Pod Autoscaler (HPA)
+
+**HPA** - Automatically scales replica count
+- Monitors metrics (CPU, memory, custom)
+- Adjusts Deployment/StatefulSet replicas
+- Reconciliation loop (every 15 seconds)
+
+**Example:**
+```yaml
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: app-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: app
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+```
+
+---
+
+## Vertical Pod Autoscaler (VPA)
+
+**VPA** - Automatically adjusts resource requests/limits
+- Monitors actual resource usage
+- Updates requests/limits recommendations
+- Can automatically apply changes (requires pod restart)
+
+**Modes:**
+- **Off** - Only recommendations
+- **Initial** - Set on pod creation only
+- **Auto** - Update running pods (requires restart)
+
+**Use VPA when you don't know the right resource values**
+
+---
+
+## Cluster Autoscaler
+
+**Cluster Autoscaler** - Adjusts cluster size
+- Adds nodes when pods can't be scheduled
+- Removes nodes when underutilized
+- Cloud provider integration required
+
+**Works with:**
+- AWS Auto Scaling Groups
+- GCP Managed Instance Groups
+- Azure Virtual Machine Scale Sets
+
+**Complete autoscaling = HPA + VPA + Cluster Autoscaler**
+
+---
+
+## Application Delivery: GitOps
+
+**GitOps** - Git as single source of truth
+- Declarative infrastructure and applications
+- Git repository contains desired state
+- Automated sync to cluster
+- Version control for everything
+- Easy rollback (git revert)
+
+**Popular Tools:**
+- **ArgoCD** - Kubernetes-native GitOps
+- **Flux** - GitOps toolkit
+- **Jenkins X** - CI/CD for Kubernetes
+
+**GitOps = Infrastructure as Code + Pull Requests + CI/CD**
+
+---
+
+## Helm: Package Manager
+
+**Helm** - Package manager for Kubernetes
+- Packages called "Charts"
+- Templating for Kubernetes manifests
+- Version management
+- Dependency management
+
+**Chart Structure:**
+```
+mychart/
+  Chart.yaml       # Chart metadata
+  values.yaml      # Default values
+  templates/       # Kubernetes manifests
+    deployment.yaml
+    service.yaml
+```
+
+**Helm simplifies deploying complex applications**
+
+---
+
+## Application Delivery Strategies
+
+**Rolling Update** (default)
+- Gradual replacement of old pods
+- Zero downtime
+- Configurable max surge and max unavailable
+
+**Blue/Green Deployment**
+- Two identical environments (blue and green)
+- Switch traffic instantly
+- Easy rollback
+- Requires 2x resources
+
+**Canary Deployment**
+- Gradual traffic shift to new version
+- Monitor metrics before full rollout
+- Progressive delivery
+- Tools: Flagger, Argo Rollouts
+
+---
+
+## ConfigMaps and Secrets
+
+**ConfigMap** - Non-sensitive configuration
+- Environment variables
+- Command-line arguments
+- Configuration files
+
+**Secret** - Sensitive data
+- Base64 encoded (not encrypted!)
+- Passwords, tokens, keys
+- Should be encrypted at rest (etcd encryption)
+
+**Best Practice:**
+- External secret management (Vault, AWS Secrets Manager)
+- Tools: External Secrets Operator, Sealed Secrets
 
 ```yaml
-sources:
-- repoURL: https://charts.bitnami.com/bitnami
-  chart: postgresql
-  targetRevision: 12.1.0
-- repoURL: https://github.com/org/repo.git
-  path: k8s-sandbox/postgres
-  targetRevision: HEAD
+envFrom:
+- configMapRef:
+    name: app-config
+- secretRef:
+    name: app-secrets
 ```
-
-**Benefits:** Upstream updates + local config
-
----
-
-## Development Workflow
-
-**1. Make changes locally**
-```bash
-kubectl kustomize k8s-sandbox/my-app/
-```
-
-**2. Validate**
-```bash
-./scripts/check-yaml.sh
-```
-
-**3. Commit to Git**
-```bash
-git commit -m "feat(my-app): add feature"
-git push
-```
-
-**4. ArgoCD syncs automatically**
 
 ---
 
 ## Debugging Kubernetes
 
-**View resources:**
+**Essential kubectl commands:**
 ```bash
-kubectl get pods -n namespace
-kubectl get svc,deploy,ing -A
-```
+# View resources
+kubectl get pods -n namespace -o wide
+kubectl get events --sort-by=.metadata.creationTimestamp
 
-**Describe resource:**
-```bash
+# Detailed information
 kubectl describe pod pod-name -n namespace
-```
 
-**Logs:**
-```bash
-kubectl logs pod-name -n namespace -f
-kubectl logs deploy/app-name --tail=100
-```
+# Logs
+kubectl logs pod-name -n namespace -f --tail=100
+kubectl logs -l app=myapp --all-containers=true
 
-**Execute in pod:**
-```bash
-kubectl exec -it pod-name -n namespace -- /bin/bash
+# Execute commands
+kubectl exec -it pod-name -n namespace -- /bin/sh
+
+# Port forwarding
+kubectl port-forward svc/myapp 8080:80
+
+# Debug with ephemeral container (K8s 1.23+)
+kubectl debug pod-name -it --image=busybox
 ```
 
 ---
@@ -652,77 +1239,124 @@ kubectl exec -it pod-name -n namespace -- /bin/bash
 ## Common Issues & Solutions
 
 **CrashLoopBackOff**
-- Check logs: `kubectl logs pod-name`
-- Check events: `kubectl describe pod pod-name`
-- Verify image exists and is pullable
+- Application exiting immediately
+- Check logs and container CMD/ENTRYPOINT
+- Verify dependencies are ready
 
 **ImagePullBackOff**
-- Check image name and tag
-- Verify registry credentials
+- Image doesn't exist or wrong tag
+- Registry authentication issues
 - Check imagePullSecrets
 
 **Pending Pods**
-- Insufficient resources (CPU/memory)
-- Node selector constraints
-- PVC not bound
+- Insufficient cluster resources
+- Node selector/affinity constraints not met
+- PVC not bound or storage unavailable
+
+**OOMKilled (Out of Memory)**
+- Container exceeded memory limit
+- Increase memory limit or optimize app
+- Check for memory leaks
 
 ---
 
-## Best Practices
+## CNCF Landscape
 
-**Resource Limits**
-```yaml
-resources:
-  requests:
-    memory: "128Mi"
-    cpu: "100m"
-  limits:
-    memory: "256Mi"
-    cpu: "200m"
-```
+**CNCF** (Cloud Native Computing Foundation)
+- Home of Kubernetes and 100+ projects
+- Three maturity levels: Sandbox, Incubating, Graduated
 
-**Health Checks**
-```yaml
-livenessProbe:
-  httpGet:
-    path: /health
-    port: 8080
-readinessProbe:
-  httpGet:
-    path: /ready
-    port: 8080
-```
+**Key CNCF Projects:**
+- **Runtime:** Kubernetes, containerd, CRI-O
+- **Orchestration:** Helm, Argo, Flux
+- **Observability:** Prometheus, Grafana, Jaeger, Fluentd
+- **Service Mesh:** Istio, Linkerd, Envoy
+- **Security:** Falco, cert-manager, SPIFFE/SPIRE
+- **Storage:** Rook, Longhorn, Velero
+
+**landscape.cncf.io - Explore 1000+ tools**
 
 ---
 
-## Kubernetes Ecosystem (CNCF)
+## Best Practices Summary
 
-**Popular Tools:**
-- **ArgoCD** - GitOps deployments
-- **Helm** - Package manager
-- **Prometheus** - Monitoring
-- **Cert-Manager** - Certificate automation
-- **External-DNS** - DNS automation
-- **Velero** - Backup/restore
-- **Kyverno** - Policy management
-- **Crossplane** - Infrastructure as code
+**Workloads:**
+- Always set resource requests and limits
+- Use health probes (liveness, readiness, startup)
+- Don't run as root
+- Use specific image tags (not `latest`)
+
+**Security:**
+- Enable RBAC and follow least privilege
+- Use Network Policies
+- Scan container images
+- Encrypt secrets at rest
+
+**Operations:**
+- Use GitOps for deployments
+- Implement observability (metrics, logs, traces)
+- Plan for scaling (HPA, VPA, Cluster Autoscaler)
+- Regular backups with Velero or similar
 
 ---
 
-## Next Steps
+## Next Steps: KCNA Certification
 
-**Continue Learning:**
-- Deploy a simple app to your cluster
-- Explore kubectl commands
-- Study the repo's existing apps
-- Experiment with scaling and updates
-- Learn about StatefulSets for stateful apps
-- Dive into Helm charts
+**KCNA** (Kubernetes and Cloud Native Associate)
+- Entry-level certification from CNCF
+- Covers fundamentals we discussed today
+- 90-minute exam, 60 questions
+- Online proctored exam
 
-**Resources:**
+**Exam Domains:**
+- Kubernetes Fundamentals (46%)
+- Container Orchestration (22%)
+- Cloud Native Architecture (16%)
+- Cloud Native Observability (8%)
+- Cloud Native Application Delivery (8%)
+
+**This workshop covered most KCNA topics!**
+
+---
+
+## Hands-on Practice
+
+**Essential Practice:**
+1. Set up local Kubernetes (minikube, kind, k3s)
+2. Deploy sample applications
+3. Experiment with kubectl commands
+4. Break things and fix them
+5. Implement health probes and resource limits
+6. Practice troubleshooting
+
+**Learning Platforms:**
+- killercoda.com (interactive K8s scenarios)
+- kubernetes.io/docs/tutorials
+- play-with-k8s.com (temporary clusters)
+
+**Hands-on experience is crucial**
+
+---
+
+## Additional Resources
+
+**Official Documentation:**
 - kubernetes.io/docs
-- CNCF Landscape
-- This repo's CLAUDE.md
+- cncf.io (CNCF projects)
+- landscape.cncf.io (ecosystem overview)
+
+**Books:**
+- "Kubernetes Up & Running" (O'Reilly)
+- "Cloud Native DevOps with Kubernetes" (O'Reilly)
+
+**Practice:**
+- GitHub repos with sample apps
+- Helm charts for real applications
+- KCNA exam prep resources
+
+**Community:**
+- Kubernetes Slack
+- CNCF Community groups
 
 ---
 
