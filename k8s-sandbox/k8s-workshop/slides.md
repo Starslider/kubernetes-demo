@@ -341,15 +341,19 @@ api_key: "key-abc-xyz"
 
 **For data that needs to survive:**
 
-**Persistent Volume** = Storage that lives beyond containers
+```
+┌──────────┐    ┌──────────────┐    ┌──────────────┐
+│Your Pod  │───→│ PersistentVC │───→│ Persistent   │
+│          │    │   (Claim)    │    │   Volume     │
+│ [App]    │    │              │    │   (Storage)  │
+└──────────┘    └──────────────┘    └──────────────┘
+ (temporary)      (request)           (actual disk)
+```
 
-```
-┌────────────┐       ┌─────────────────┐
-│  Your Pod  │ ───→  │ Persistent Disk │
-│    📦      │       │   💾 Database   │
-└────────────┘       └─────────────────┘
-   (temporary)           (permanent)
-```
+**How it works:**
+1. **Persistent Volume (PV)** - Actual storage resource
+2. **PersistentVolumeClaim (PVC)** - Request for storage
+3. **Pod** - Uses the PVC to access storage
 
 **Use for databases, uploaded files, etc.**
 
