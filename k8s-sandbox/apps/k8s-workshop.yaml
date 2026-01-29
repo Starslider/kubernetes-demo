@@ -9,8 +9,6 @@ metadata:
     argocd-image-updater.argoproj.io/workshop.update-strategy: newest-build
     # Don't write back to git, just update in ArgoCD (for faster updates)
     argocd-image-updater.argoproj.io/write-back-method: argocd
-    # Pull secrets using plain credentials (not docker config)
-    argocd-image-updater.argoproj.io/workshop.pull-secret: secret:argocd/github-registry-creds#creds
     # Allow tags matching this pattern (optional - tracks both latest and SHA tags)
     argocd-image-updater.argoproj.io/workshop.allow-tags: regexp:^(latest|main-[a-f0-9]{7})$
 spec:
