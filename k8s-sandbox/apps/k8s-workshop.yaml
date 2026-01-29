@@ -17,6 +17,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: k8s-workshop
   syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
   source:
