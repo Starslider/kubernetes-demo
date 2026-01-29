@@ -2,6 +2,17 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: k8s-workshop
+  annotations:
+    # Enable image updater
+    argocd-image-updater.argoproj.io/image-list: workshop=ghcr.io/starslider/kubernetes-demo/k8s-workshop
+    # Use latest tag strategy (tracks latest tag and SHA-based tags)
+    argocd-image-updater.argoproj.io/workshop.update-strategy: latest
+    # Don't write back to git, just update in ArgoCD (for faster updates)
+    argocd-image-updater.argoproj.io/write-back-method: argocd
+    # Pull secrets if needed
+    argocd-image-updater.argoproj.io/workshop.pull-secret: pullsecret:argocd/github-registry-creds
+    # Allow tags matching this pattern (optional - tracks both latest and SHA tags)
+    argocd-image-updater.argoproj.io/workshop.allow-tags: regexp:^(latest|main-[a-f0-9]{7})$
 spec:
   project: default
   destination:

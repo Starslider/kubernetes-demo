@@ -1,0 +1,2 @@
+# This file is used by ArgoCD to ignore differences in the image updater deployment
+# The image updater modifies applications dynamically, which can cause sync issues

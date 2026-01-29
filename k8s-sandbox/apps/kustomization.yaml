@@ -6,6 +6,7 @@ metadata:
 resources:
   - monitoring.yaml
   - argocd.yaml
+  - argocd-image-updater.yaml
   - cert-manager.yaml
   - gateway-api.yaml
   - ingress.yaml
