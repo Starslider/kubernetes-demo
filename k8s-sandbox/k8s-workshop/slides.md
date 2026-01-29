@@ -44,12 +44,12 @@ But in production...
 
 ## Enter: Containers
 
-Think of a container like a **shipping container** 📦
+Think of a container like a **frozen pizza** 🍕
 
-- **Standardized** - Same everywhere
-- **Self-contained** - Everything inside
-- **Portable** - Works anywhere
-- **Isolated** - Doesn't interfere with others
+- **Standardized** - Every pizza has the same packaging
+- **Self-contained** - All ingredients included
+- **Portable** - Works in any oven
+- **Isolated** - Keeps separate from other food
 
 **A container packages your app + everything it needs to run**
 

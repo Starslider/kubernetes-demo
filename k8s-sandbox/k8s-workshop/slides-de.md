@@ -44,12 +44,12 @@ Aber in Production...
 
 ## Lösung: Container
 
-Denk an einen Container wie einen **Schiffscontainer** 📦
+Denk an einen Container wie eine **Tiefkühlpizza** 🍕
 
-- **Standardisiert** - Überall gleich
-- **In sich geschlossen** - Alles drin
-- **Portabel** - Funktioniert überall
-- **Isoliert** - Stört andere nicht
+- **Standardisiert** - Jede Pizza gleich verpackt
+- **In sich geschlossen** - Alle Zutaten enthalten
+- **Portabel** - Funktioniert in jedem Ofen
+- **Isoliert** - Bleibt getrennt von anderem Essen
 
 **Ein Container verpackt deine App + alles was sie braucht**
 
