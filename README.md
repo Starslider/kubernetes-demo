@@ -28,6 +28,10 @@ This repository provides a complete setup guide and configuration for deploying 
 
 ## 🏗️ Architecture
 
+![Architecture Diagram](docs/architecture-diagram.drawio)
+
+**[View Interactive Diagram](docs/architecture-diagram.drawio)** - Open in draw.io for full details
+
 ### Deployment Options
 
 - **Virtual Machines** - Unraid, Proxmox, VMware, VirtualBox

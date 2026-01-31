@@ -1,0 +1,134 @@
+<mxfile host="embed.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36" version="29.3.6">
+  <diagram id="sURG5lRKLJ8CJWfVpxtl" name="Page-1">
+    <mxGraphModel dx="1168" dy="811" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ext-title" parent="1" style="text;fontSize=16;fontStyle=1;align=left;" value="External Services" vertex="1">
+          <mxGeometry height="30" width="200" x="40" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="github" parent="1" style=" rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="GitHub&#xa;(GitOps Source)" vertex="1">
+          <mxGeometry height="60" width="110" x="40" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="onepassword" parent="1" style=" rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="1Password&#xa;(Secrets)" vertex="1">
+          <mxGeometry height="60" width="110" x="170" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="letsencrypt" parent="1" style=" rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Let&#39;s Encrypt&#xa;(TLS Certs)" vertex="1">
+          <mxGeometry height="60" width="110" x="300" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="dns-provider" parent="1" style=" rounded=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="DNS Provider&#xa;(External DNS)" vertex="1">
+          <mxGeometry height="60" width="110" x="430" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="k8s-cluster" parent="1" style=" rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;align=left;verticalAlign=top;fontSize=14;fontStyle=1;" value="Kubernetes v1.34 Cluster (containerd)" vertex="1">
+          <mxGeometry height="430" width="720" x="40" y="150" as="geometry" />
+        </mxCell>
+        <mxCell id="core-label" parent="1" style="text;fontSize=12;fontStyle=1;" value="Core Infrastructure" vertex="1">
+          <mxGeometry height="25" width="150" x="50" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="argocd" parent="1" style=" rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="ArgoCD&#xa;(GitOps)" vertex="1">
+          <mxGeometry height="60" width="100" x="50" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="cilium" parent="1" style=" rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Cilium CNI&#xa;(BGP + L2)" vertex="1">
+          <mxGeometry height="60" width="100" x="170" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="gateway-api" parent="1" style=" rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Gateway API&#xa;(Ingress)" vertex="1">
+          <mxGeometry height="60" width="100" x="290" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="platform-label" parent="1" style="text;fontSize=12;fontStyle=1;" value="Platform Services" vertex="1">
+          <mxGeometry height="25" width="150" x="50" y="285" as="geometry" />
+        </mxCell>
+        <mxCell id="cert-manager" parent="1" style=" rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="cert-manager&#xa;(TLS Auto)" vertex="1">
+          <mxGeometry height="60" width="100" x="50" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="external-secrets" parent="1" style=" rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="External Secrets&#xa;(1Pass Sync)" vertex="1">
+          <mxGeometry height="60" width="100" x="170" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="external-dns" parent="1" style=" rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="External DNS&#xa;(DNS Auto)" vertex="1">
+          <mxGeometry height="60" width="100" x="290" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="data-label" parent="1" style="text;fontSize=12;fontStyle=1;" value="Data &amp; Storage" vertex="1">
+          <mxGeometry height="25" width="150" x="50" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="postgres" parent="1" style=" rounded=1;fillColor=#f8cecc;strokeColor=#b85450;" value="PostgreSQL&#xa;(CloudNativePG HA)" vertex="1">
+          <mxGeometry height="60" width="120" x="50" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="minio" parent="1" style=" rounded=1;fillColor=#f8cecc;strokeColor=#b85450;" value="MinIO&#xa;(Object Storage)" vertex="1">
+          <mxGeometry height="60" width="110" x="190" y="425" as="geometry" />
+        </mxCell>
+        <mxCell id="monitoring-label" parent="1" style="text;fontSize=12;fontStyle=1;" value="Monitoring &amp; Observability" vertex="1">
+          <mxGeometry height="25" width="200" x="420" y="175" as="geometry" />
+        </mxCell>
+        <mxCell id="victoria" parent="1" style=" rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="VictoriaMetrics&#xa;(Metrics)" vertex="1">
+          <mxGeometry height="60" width="110" x="420" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="grafana" parent="1" style=" rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Grafana&#xa;(Dashboards)" vertex="1">
+          <mxGeometry height="60" width="100" x="550" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="loki" parent="1" style=" rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="Loki + Promtail&#xa;(Logs)" vertex="1">
+          <mxGeometry height="60" width="110" x="670" y="205" as="geometry" />
+        </mxCell>
+        <mxCell id="alertmanager" parent="1" style=" rounded=1;fillColor=#ffe6cc;strokeColor=#d79b00;" value="AlertManager&#xa;(Discord)" vertex="1">
+          <mxGeometry height="60" width="110" x="485" y="285" as="geometry" />
+        </mxCell>
+        <mxCell id="apps-label" parent="1" style="text;fontSize=12;fontStyle=1;" value="Applications" vertex="1">
+          <mxGeometry height="25" width="150" x="420" y="365" as="geometry" />
+        </mxCell>
+        <mxCell id="authentik" parent="1" style=" rounded=1;fillColor=#f5f5f5;strokeColor=#666666;" value="Authentik&#xa;(SSO)" vertex="1">
+          <mxGeometry height="60" width="90" x="420" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="harbor" parent="1" style=" rounded=1;fillColor=#f5f5f5;strokeColor=#666666;" value="Harbor&#xa;(Registry)" vertex="1">
+          <mxGeometry height="60" width="90" x="530" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="awx" parent="1" style=" rounded=1;fillColor=#f5f5f5;strokeColor=#666666;" value="AWX&#xa;(Automation)" vertex="1">
+          <mxGeometry height="60" width="90" x="640" y="395" as="geometry" />
+        </mxCell>
+        <mxCell id="homeassistant" parent="1" style=" rounded=1;fillColor=#f5f5f5;strokeColor=#666666;" value="Home Assistant&#xa;(IoT)" vertex="1">
+          <mxGeometry height="60" width="110" x="530" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="network" parent="1" style=" rounded=1;fillColor=#cdeb8b;strokeColor=#36393d;fontSize=14;fontStyle=1;" value="Home Network (BGP Integration)" vertex="1">
+          <mxGeometry height="50" width="720" x="40" y="600" as="geometry" />
+        </mxCell>
+        <mxCell id="edge1" edge="1" parent="1" source="github" style=" endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="argocd" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge2" edge="1" parent="1" source="onepassword" style=" endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="external-secrets" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge3" edge="1" parent="1" source="letsencrypt" style=" endArrow=classic;exitX=0;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="cert-manager" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge4" edge="1" parent="1" source="dns-provider" style=" endArrow=classic;exitX=0;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="external-dns" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge5" edge="1" parent="1" source="argocd" style=" endArrow=classic;dashed=1;exitX=0.5;exitY=1;entryX=0.5;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="external-secrets" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge6" edge="1" parent="1" source="cilium" style=" endArrow=classic;exitX=0.5;exitY=1;entryX=0.3;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="network" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="220" y="550" />
+              <mxPoint x="256" y="550" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge7" edge="1" parent="1" source="gateway-api" style=" endArrow=classic;exitX=0.5;exitY=1;entryX=0.4;entryY=0;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="network" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="550" />
+              <mxPoint x="328" y="550" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge8" edge="1" parent="1" source="postgres" style=" endArrow=classic;dashed=1;exitX=1;exitY=0;entryX=0;entryY=1;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="victoria" value="metrics">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge9" edge="1" parent="1" source="victoria" style=" endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.5;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="grafana" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge10" edge="1" parent="1" source="authentik" style=" endArrow=classic;dashed=1;exitX=1;exitY=0;entryX=0;entryY=1;exitDx=0;exitDy=0;entryDx=0;entryDy=0;" target="grafana" value="SSO">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
