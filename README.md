@@ -28,9 +28,9 @@ This repository provides a complete setup guide and configuration for deploying 
 
 ## 🏗️ Architecture
 
-![Architecture Diagram](docs/architecture-diagram.drawio)
+![Architecture Diagram](docs/architecture-diagram.png)
 
-**[View Interactive Diagram](docs/architecture-diagram.drawio)** - Open in draw.io for full details
+**[View/Edit Interactive Diagram](docs/architecture-diagram.drawio)** - Open in draw.io to modify
 
 ### Deployment Options
 
