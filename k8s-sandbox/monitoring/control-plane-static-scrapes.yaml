@@ -1,0 +1,36 @@
+# VMStaticScrape resources for control-plane components
+# These must use localhost because the components bind to 127.0.0.1 only
+# The control-plane-vmagent has hostNetwork: true, so localhost works
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: kube-scheduler
+  namespace: monitoring
+  labels:
+    control-plane: "true"
+spec:
+  jobName: kube-scheduler
+  targetEndpoints:
+    - targets:
+        - "localhost:10259"
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true
+
+---
+apiVersion: operator.victoriametrics.com/v1beta1
+kind: VMStaticScrape
+metadata:
+  name: kube-controller-manager
+  namespace: monitoring
+  labels:
+    control-plane: "true"
+spec:
+  jobName: kube-controller-manager
+  targetEndpoints:
+    - targets:
+        - "localhost:10257"
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true

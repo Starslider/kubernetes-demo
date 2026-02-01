@@ -1,23 +1,33 @@
+# etcd monitoring requires TLS client certificates for authentication.
+#
+# SETUP REQUIRED:
+# 1. Create a secret with etcd certificates:
+#    kubectl create secret generic etcd-client-certs -n monitoring \
+#      --from-file=ca.crt=/etc/kubernetes/pki/etcd/ca.crt \
+#      --from-file=client.crt=/etc/kubernetes/pki/etcd/healthcheck-client.crt \
+#      --from-file=client.key=/etc/kubernetes/pki/etcd/healthcheck-client.key
+#
+# 2. Mount the secret in the control-plane-vmagent by updating control-plane-monitoring.yaml
+#
+# For now, this uses VMStaticScrape with localhost (requires hostNetwork on VMAgent)
+---
 apiVersion: operator.victoriametrics.com/v1beta1
-kind: VMServiceScrape
+kind: VMStaticScrape
 metadata:
   name: etcd-metrics
   namespace: monitoring
   labels:
     control-plane: "true"
 spec:
-  endpoints:
-  - port: http-metrics
-    scheme: https
-    tlsConfig:
-      insecureSkipVerify: true
-  jobLabel: jobLabel
-  namespaceSelector:
-    matchNames:
-    - kube-system
-  selector:
-    matchLabels:
-      app: monitoring-victoria-metrics-k8s-stack-kube-etcd
-      app.kubernetes.io/instance: monitoring
-      app.kubernetes.io/name: victoria-metrics-k8s-stack
-      jobLabel: kube-etcd
+  jobName: kube-etcd
+  targetEndpoints:
+    - targets:
+        - "localhost:2379"
+      scheme: https
+      tlsConfig:
+        # Requires etcd-client-certs secret to be created and mounted in VMAgent
+        # caFile: /etc/etcd-certs/ca.crt
+        # certFile: /etc/etcd-certs/client.crt
+        # keyFile: /etc/etcd-certs/client.key
+        # For testing without proper certs (will show auth errors):
+        insecureSkipVerify: true

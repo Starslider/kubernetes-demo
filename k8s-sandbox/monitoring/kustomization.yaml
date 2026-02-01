@@ -10,6 +10,7 @@ resources:
 - discord-webhook-external-secret.yaml
 - vmalertmanager-config.yaml
 - control-plane-monitoring.yaml
+- control-plane-static-scrapes.yaml
 - etcd-metrics.yaml
 - loki-datasource.yaml
 - hardware-monitoring-dashboard.yaml
