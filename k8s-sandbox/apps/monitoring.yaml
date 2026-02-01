@@ -48,6 +48,14 @@ spec:
           - name: grafana.envFromSecrets[0].optional
             value: 'false'
         valuesObject:
+          # Disable control-plane scrapes - these components bind to localhost only
+          # and are scraped by control-plane-vmagent with hostNetwork: true instead
+          kubeScheduler:
+            enabled: false
+          kubeControllerManager:
+            enabled: false
+          kubeEtcd:
+            enabled: false
           grafana:
             env:
               GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
