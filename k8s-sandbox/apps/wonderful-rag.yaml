@@ -6,7 +6,7 @@ metadata:
     argocd-image-updater.argoproj.io/image-list: rag=ghcr.io/domatwonderful/s3-to-wonderful-rag
     argocd-image-updater.argoproj.io/rag.update-strategy: newest-build
     argocd-image-updater.argoproj.io/write-back-method: argocd
-    argocd-image-updater.argoproj.io/rag.allow-tags: regexp:^(latest|main-[a-f0-9]{7})$
+    argocd-image-updater.argoproj.io/rag.allow-tags: regexp:^(latest|sha-[a-f0-9]{7})$
 spec:
   project: default
   destination:
