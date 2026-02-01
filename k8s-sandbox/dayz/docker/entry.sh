@@ -182,9 +182,18 @@ function startGame() {
         echo "Please check the logs and ensure SteamCMD authentication completed."
         exit 1
     fi
-    
+
+    # Build Steam Login Token parameter if set
+    STEAM_TOKEN_PARAM=""
+    if [ -n "${STEAM_LOGIN_TOKEN}" ]; then
+        echo "✅ Steam Game Server Login Token configured"
+        STEAM_TOKEN_PARAM="-steamLoginToken=${STEAM_LOGIN_TOKEN}"
+    else
+        echo "⚠️  No Steam Game Server Login Token configured - server may require manual Steam authentication"
+    fi
+
 	cd ${HOME}/${GAME}
-	${HOME}/${GAME}/DayZServer -config="${HOME}/serverDZ.cfg" -adminlog -netlog --dologs --freezeCheck -cpuCount=${CPUCOUNT} -port=${PORT} -profiles=${HOME}/profile -BEpath=${HOME}/battleye ${MODS:+-mod=$MODS}
+	${HOME}/${GAME}/DayZServer -config="${HOME}/serverDZ.cfg" -adminlog -netlog --dologs --freezeCheck -cpuCount=${CPUCOUNT} -port=${PORT} -profiles=${HOME}/profile -BEpath=${HOME}/battleye ${MODS:+-mod=$MODS} ${STEAM_TOKEN_PARAM}
 }
 
 updateGame

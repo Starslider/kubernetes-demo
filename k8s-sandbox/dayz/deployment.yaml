@@ -153,6 +153,11 @@ spec:
                 secretKeyRef:
                   name: steamaccount
                   key: STEAMPASSWORD
+            - name: STEAM_LOGIN_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: steamaccount
+                  key: STEAM_LOGIN_TOKEN
             - name: CPUCOUNT
               value: "4"
             - name: PORT
