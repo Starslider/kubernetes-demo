@@ -6,6 +6,11 @@ metadata:
 spec:
   daemonSetMode: true
   selectAllByDefault: false
+  # Explicitly set namespace selectors (empty = all namespaces)
+  staticScrapeNamespaceSelector: {}
+  serviceScrapeNamespaceSelector: {}
+  podScrapeNamespaceSelector: {}
+  # Resource selectors
   serviceScrapeSelector:
     matchExpressions:
     - key: app.kubernetes.io/name
