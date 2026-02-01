@@ -11,6 +11,7 @@ resources:
 - httproute-grant.yaml
 - argocd-notifications-cm.yaml
 - repo-server.yaml
+- server.yaml
 - app-controller.yaml
 - monitoring
 - github-secret.yaml

@@ -15,7 +15,7 @@ data:
   redis.compression: "gzip"
   controller.app.resync.jitter: "30s"
   reposerver.repo.cache.expiration: "24h"
-  controller.app.state.cache.expiration: "60s"
+  controller.app.state.cache.expiration: "5m"
   controller.default.cache.expiration: "24h"
 kind: ConfigMap
 metadata:
