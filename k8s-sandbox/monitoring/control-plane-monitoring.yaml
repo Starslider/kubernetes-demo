@@ -1,3 +1,7 @@
+# Control-plane VMAgent with inline scrape configs
+# Uses inlineScrapeConfig instead of VMStaticScrape because the main VMAgent
+# (victoria-metrics-k8s-stack) has selectAllByDefault: true and claims all
+# VMStaticScrape resources first. inlineScrapeConfig bypasses this mechanism.
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMAgent
 metadata:
@@ -6,23 +10,37 @@ metadata:
 spec:
   daemonSetMode: true
   selectAllByDefault: false
-  # Explicitly set namespace selectors (empty = all namespaces)
-  staticScrapeNamespaceSelector: {}
-  serviceScrapeNamespaceSelector: {}
-  podScrapeNamespaceSelector: {}
-  # Resource selectors
+  # Disable all scrape object selection - we use inlineScrapeConfig instead
   serviceScrapeSelector:
-    matchExpressions:
-    - key: app.kubernetes.io/name
-      operator: NotIn
-      values: [victoria-metrics-k8s-stack]
-    - key: jobLabel
-      operator: NotIn
-      values: [kube-etcd]
-  podScrapeSelector: {}
+    matchLabels:
+      non-existent-label: "disabled"
+  podScrapeSelector:
+    matchLabels:
+      non-existent-label: "disabled"
   staticScrapeSelector:
     matchLabels:
-      control-plane: "true"
+      non-existent-label: "disabled"
+  # Inline scrape configs for control-plane components
+  # These targets bind to localhost only, so hostNetwork: true is required
+  inlineScrapeConfig: |
+    - job_name: kube-scheduler
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      static_configs:
+        - targets: ["localhost:10259"]
+    - job_name: kube-controller-manager
+      scheme: https
+      tls_config:
+        insecure_skip_verify: true
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+      static_configs:
+        - targets: ["localhost:10257"]
+    - job_name: kube-etcd
+      scheme: http
+      static_configs:
+        - targets: ["localhost:2381"]
   remoteWrite:
   - url: http://vmsingle-monitoring-victoria-metrics-k8s-stack:8428/api/v1/write
   tolerations:
