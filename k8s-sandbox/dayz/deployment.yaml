@@ -104,6 +104,9 @@ spec:
           volumeMounts:
             - name: dayz-data
               mountPath: /home/steam/dayz
+            - name: dayz-data
+              mountPath: /home/steam/.steam
+              subPath: .steam-cache
             - name: mod-downloader-script
               mountPath: /scripts
           env:
@@ -128,6 +131,9 @@ spec:
           volumeMounts:
           - mountPath: "/home/steam/dayz"
             name: dayz-data
+          - mountPath: "/home/steam/.steam"
+            name: dayz-data
+            subPath: .steam-cache
           - mountPath: "/home/steam/profile"
             name: dayz-profile
           - name: dayz-server-cfg
