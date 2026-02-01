@@ -1,6 +1,7 @@
 # VMStaticScrape resources for control-plane components
 # These must use localhost because the components bind to 127.0.0.1 only
 # The control-plane-vmagent has hostNetwork: true, so localhost works
+# Bearer token auth is required (403 Forbidden without it)
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
 kind: VMStaticScrape
@@ -17,6 +18,7 @@ spec:
       scheme: https
       tlsConfig:
         insecureSkipVerify: true
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
 
 ---
 apiVersion: operator.victoriametrics.com/v1beta1
@@ -34,3 +36,4 @@ spec:
       scheme: https
       tlsConfig:
         insecureSkipVerify: true
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
