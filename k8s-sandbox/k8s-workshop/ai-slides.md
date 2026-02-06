@@ -9,9 +9,9 @@ A 30-Minute Introduction for Non-Technical Audiences
 
 1. **What is Generative AI?** - The technology behind the hype
 2. **What is an LLM?** - The engine that powers it all
-3. **Examples You Already Know** - AI in everyday life
+3. **The Art of Prompting** - Why how you ask matters
 4. **The Future: AI Agents** - From chatbot to autonomous assistant
-5. **Live Demo** - Building a website with AI (if time permits)
+5. **Live Demo** - Building a Snake game with AI (if time permits)
 
 ---
 
@@ -127,44 +127,79 @@ All of them: Predict the most likely next words based on your input + their trai
 ---
 
 ## Part 3
-### Examples You Already Know
+### The Art of Prompting
 
 ---
 
-## AI Is Already Everywhere
+## Why Prompting Matters
 
-**Things you probably use daily:**
-- Smart email replies (Gmail, Outlook)
-- Photo enhancement on your phone
-- Netflix/Spotify recommendations
-- Google Translate (now AI-powered)
-- Auto-generated subtitles on YouTube
+**The same AI, completely different results:**
 
-**Things that went viral:**
-- ChatGPT (fastest app to 100M users - ever)
-- AI-generated images flooding social media
-- Students using AI for homework (and teachers using it to check)
-- AI voice cloning and deepfakes in the news
+| Prompt | Result |
+|--------|--------|
+| "Write something about sales" | Generic, vague, useless paragraph |
+| "Write a 3-paragraph email to our B2B clients announcing our new pricing model. Tone: professional but friendly. Mention the 15% early-bird discount." | Exactly what you needed, ready to send |
+
+**The quality of the output is directly tied to the quality of your input**
+
+Your prompt is the steering wheel - the AI is the engine.
 
 ---
 
-## AI in the Workplace Today
+## What is Prompt Engineering?
 
-**Marketing & Communication:**
-- Draft campaigns, social media posts, press releases
-- Translate content into 20 languages in minutes
+**Prompt Engineering** = The skill of writing instructions that get the best results from AI
 
-**Customer Service:**
-- Chatbots handling 70%+ of routine questions
-- 24/7 availability, instant responses
+**It's not programming - it's clear communication.**
 
-**Software Development:**
-- GitHub Copilot: AI pair programmer used by millions
-- Claude Code: Build entire applications from descriptions
+**The 5 building blocks of a good prompt:**
 
-**Research & Analysis:**
-- Days of research compressed into hours
-- Summarize hundreds of documents instantly
+1. **Role** - Who should the AI be? *"You are a senior marketing expert"*
+2. **Task** - What exactly should it do? *"Write a product description"*
+3. **Context** - What background info does it need? *"For our B2B SaaS product..."*
+4. **Format** - How should the output look? *"3 bullet points, max 50 words each"*
+5. **Constraints** - What to avoid? *"No jargon, no emojis, formal tone"*
+
+---
+
+## Bad vs. Good Prompts - Live Examples
+
+**Vague prompt:**
+> "Help me with a presentation"
+
+**Engineered prompt:**
+> "Create an outline for a 10-slide presentation about our Q4 results. Audience: C-level executives. Include: revenue growth (+12%), new client wins (8), and 3 key challenges. Style: data-driven, concise, one key message per slide."
+
+**Why this works:**
+- AI knows the **audience** (executives, not interns)
+- AI knows the **scope** (10 slides, Q4)
+- AI knows the **data** to include
+- AI knows the **style** to follow
+
+**Prompt engineering is the #1 skill for working with AI effectively**
+
+---
+
+## Quick Prompting Tips
+
+**Start simple, then refine:**
+- First attempt won't be perfect - and that's fine
+- Say "make it shorter", "more formal", "add examples"
+- Treat it like a conversation, not a one-shot command
+
+**Give examples of what you want:**
+- "Write it in this style: [paste example]"
+- Show it the format you expect
+
+**Tell it what NOT to do:**
+- "Don't use buzzwords"
+- "Don't make up statistics"
+- "Don't start every sentence with 'In today's world...'"
+
+**Use it as a thinking partner:**
+- "What am I missing in this plan?"
+- "Play devil's advocate on this idea"
+- "What questions would a skeptical customer ask?"
 
 ---
 

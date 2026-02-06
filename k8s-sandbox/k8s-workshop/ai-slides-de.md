@@ -9,9 +9,9 @@ Eine 30-Minuten Einführung für nicht-technische Zielgruppen
 
 1. **Was ist Generative KI?** - Die Technologie hinter dem Hype
 2. **Was ist ein LLM?** - Der Motor hinter allem
-3. **Beispiele die ihr schon kennt** - KI im Alltag
+3. **Die Kunst des Promptens** - Warum es darauf ankommt wie man fragt
 4. **Die Zukunft: KI-Agenten** - Vom Chatbot zum autonomen Assistenten
-5. **Live Demo** - Eine Website mit KI bauen (wenn die Zeit reicht)
+5. **Live Demo** - Ein Snake-Spiel mit KI bauen (wenn die Zeit reicht)
 
 ---
 
@@ -127,44 +127,79 @@ Alle gemeinsam: Sagen die wahrscheinlichsten nächsten Wörter voraus, basierend
 ---
 
 ## Teil 3
-### Beispiele die ihr schon kennt
+### Die Kunst des Promptens
 
 ---
 
-## KI ist bereits überall
+## Warum Prompting so wichtig ist
 
-**Dinge die ihr vermutlich täglich nutzt:**
-- Smarte E-Mail-Antworten (Gmail, Outlook)
-- Fotobearbeitung auf dem Handy
-- Netflix/Spotify-Empfehlungen
-- Google Translate (jetzt KI-basiert)
-- Auto-generierte Untertitel auf YouTube
+**Dieselbe KI, komplett andere Ergebnisse:**
 
-**Dinge die viral gingen:**
-- ChatGPT (schnellste App die jemals 100 Mio. Nutzer erreichte)
-- KI-generierte Bilder überall in Social Media
-- Schüler nutzen KI für Hausaufgaben (und Lehrer nutzen KI um das zu prüfen)
-- KI-Stimmenklonen und Deepfakes in den Nachrichten
+| Prompt | Ergebnis |
+|--------|----------|
+| "Schreib was über Vertrieb" | Generischer, vager, nutzloser Absatz |
+| "Schreib eine 3-Absatz E-Mail an unsere B2B-Kunden zur Ankündigung unseres neuen Preismodells. Ton: professionell aber freundlich. Erwähne den 15% Frühbucher-Rabatt." | Genau was man braucht, versandfertig |
+
+**Die Qualität des Ergebnisses hängt direkt von der Qualität eurer Eingabe ab**
+
+Euer Prompt ist das Lenkrad - die KI ist der Motor.
 
 ---
 
-## KI am Arbeitsplatz heute
+## Was ist Prompt Engineering?
 
-**Marketing & Kommunikation:**
-- Kampagnen, Social-Media-Posts, Pressemitteilungen entwerfen
-- Inhalte in 20 Sprachen übersetzen - in Minuten
+**Prompt Engineering** = Die Fähigkeit, Anweisungen zu schreiben die das Beste aus der KI herausholen
 
-**Kundenservice:**
-- Chatbots bearbeiten 70%+ der Routine-Anfragen
-- 24/7 erreichbar, sofortige Antworten
+**Das ist kein Programmieren - das ist klare Kommunikation.**
 
-**Software-Entwicklung:**
-- GitHub Copilot: KI-Programmierpartner, genutzt von Millionen
-- Claude Code: Komplette Anwendungen aus Beschreibungen bauen
+**Die 5 Bausteine eines guten Prompts:**
 
-**Recherche & Analyse:**
-- Tage Recherche komprimiert auf Stunden
-- Hunderte Dokumente sofort zusammenfassen
+1. **Rolle** - Wer soll die KI sein? *"Du bist ein erfahrener Marketing-Experte"*
+2. **Aufgabe** - Was genau soll sie tun? *"Schreib eine Produktbeschreibung"*
+3. **Kontext** - Welche Hintergrundinfo braucht sie? *"Für unser B2B SaaS-Produkt..."*
+4. **Format** - Wie soll die Ausgabe aussehen? *"3 Stichpunkte, max. 50 Wörter pro Punkt"*
+5. **Einschränkungen** - Was vermeiden? *"Kein Fachjargon, keine Emojis, formeller Ton"*
+
+---
+
+## Schlechte vs. gute Prompts - Beispiele
+
+**Vager Prompt:**
+> "Hilf mir bei einer Präsentation"
+
+**Engineered Prompt:**
+> "Erstelle eine Gliederung für eine 10-Folien-Präsentation über unsere Q4-Ergebnisse. Zielgruppe: C-Level Führungskräfte. Enthalten: Umsatzwachstum (+12%), Neukunden (8) und 3 zentrale Herausforderungen. Stil: datengetrieben, prägnant, eine Kernaussage pro Folie."
+
+**Warum das funktioniert:**
+- KI kennt die **Zielgruppe** (Führungskräfte, nicht Praktikanten)
+- KI kennt den **Umfang** (10 Folien, Q4)
+- KI kennt die **Daten** die rein sollen
+- KI kennt den **Stil** dem sie folgen soll
+
+**Prompt Engineering ist die Schlüsselkompetenz für die Arbeit mit KI**
+
+---
+
+## Schnelle Prompting-Tipps
+
+**Einfach anfangen, dann verfeinern:**
+- Der erste Versuch wird nicht perfekt sein - und das ist okay
+- Sagt "mach es kürzer", "formeller", "füge Beispiele hinzu"
+- Behandelt es wie ein Gespräch, nicht wie einen einmaligen Befehl
+
+**Zeigt Beispiele von dem was ihr wollt:**
+- "Schreib es in diesem Stil: [Beispiel einfügen]"
+- Zeigt das Format das ihr erwartet
+
+**Sagt was die KI NICHT tun soll:**
+- "Keine Buzzwords verwenden"
+- "Keine Statistiken erfinden"
+- "Nicht jeden Satz mit 'In der heutigen Zeit...' beginnen"
+
+**Nutzt KI als Sparringspartner:**
+- "Was fehlt in diesem Plan?"
+- "Spiel den Advocatus Diaboli bei dieser Idee"
+- "Welche Fragen würde ein skeptischer Kunde stellen?"
 
 ---
 
