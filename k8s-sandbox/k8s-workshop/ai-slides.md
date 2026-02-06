@@ -1,8 +1,6 @@
 # AI Agents Workshop
 ## From Generative AI to Autonomous Agents
 
-A 30-Minute Introduction for Non-Technical Audiences
-
 ---
 
 ## What We'll Cover Today
@@ -11,7 +9,7 @@ A 30-Minute Introduction for Non-Technical Audiences
 2. **What is an LLM?** - The engine that powers it all
 3. **The Art of Prompting** - Why how you ask matters
 4. **The Future: AI Agents** - From chatbot to autonomous assistant
-5. **Live Demo** - Building a Snake game with AI (if time permits)
+5. **Live Demo** - Building a Snake game with AI
 
 ---
 
@@ -23,47 +21,38 @@ A 30-Minute Introduction for Non-Technical Audiences
 ## The Big Shift in AI
 
 **Traditional AI (2010s):**
-- "Is this email spam?" (Classification)
-- "Will this machine break down?" (Prediction)
+- "Is this email spam?" → Classification
+- "Will this machine break?" → Prediction
 - AI that **analyzes** existing data
 
 **Generative AI (2020s):**
 - "Write me a marketing email"
-- "Design a logo for my startup"
-- "Summarize this 50-page report in 5 bullet points"
+- "Summarize this 50-page report"
 - AI that **creates** new content
 
 ---
 
 ## What Can Generative AI Create?
 
-| Type | Examples | Tools You Might Know |
-|------|----------|---------------------|
-| **Text** | Articles, emails, code, translations | ChatGPT, Claude |
-| **Images** | Art, product photos, designs | Midjourney, DALL-E |
-| **Audio** | Music, voice clones, podcasts | Suno, ElevenLabs |
-| **Video** | Animations, short clips, avatars | Sora, Runway |
-| **Code** | Full applications, scripts, websites | GitHub Copilot, Claude Code |
+| Type | Examples | Tools |
+|------|----------|-------|
+| **Text** | Articles, emails, code | ChatGPT, Claude |
+| **Images** | Art, designs, photos | Midjourney, DALL-E |
+| **Audio** | Music, voice clones | Suno, ElevenLabs |
+| **Video** | Animations, clips | Sora, Runway |
+| **Code** | Apps, scripts, websites | Copilot, Claude Code |
 
 ---
 
-## How Does It Work? (The Simple Version)
+## How Does It Work?
 
-**Three steps:**
+**1. Training** - Read billions of books, websites, conversations
 
-**1. Training** - Read the internet
-- Billions of books, websites, conversations
-- Learn patterns: what words, pixels, sounds go together
+**2. Understanding** - Recognize patterns (not memorizing)
 
-**2. Understanding** - Build internal "knowledge"
-- Not memorizing - recognizing patterns
-- Like learning a language by immersion
+**3. Generating** - Predict the most likely next word/pixel/note
 
-**3. Generating** - Create something new
-- Predicts the most likely next word/pixel/note
-- Guided by your instructions (the "prompt")
-
-**Not magic - very sophisticated pattern matching at massive scale**
+**Not magic - sophisticated pattern matching at massive scale**
 
 ---
 
@@ -74,55 +63,52 @@ A 30-Minute Introduction for Non-Technical Audiences
 
 ## LLM = Large Language Model
 
-**Think of it as autocomplete on steroids:**
+**Autocomplete on steroids:**
 
 You type: *"The cat sat on the..."*
 
 | | Prediction |
 |---|---|
 | **Phone autocomplete** | "mat" |
-| **LLM** | Writes you a full story about the cat, its backstory, and what happens next |
+| **LLM** | Writes a full story about the cat and what happens next |
 
-**"Large"** = Trained on enormous text data, billions of parameters
+**"Large"** = Billions of parameters trained on enormous data
 
-**"Language Model"** = Specialized in understanding and generating human language
-
-**LLMs are a type of Generative AI - focused specifically on language**
+**"Language Model"** = Specialized in human language
 
 ---
 
 ## The Big Players
 
-**GPT-4o** (OpenAI) - Powers ChatGPT, most well-known
+**GPT-4o** (OpenAI) - Powers ChatGPT
 
 **Claude** (Anthropic) - Strong at reasoning and longer tasks
 
 **Gemini** (Google) - Built into Google products
 
-**LLaMA / DeepSeek** (Meta / DeepSeek) - Open-source models anyone can run
+**LLaMA / DeepSeek** (Meta / DeepSeek) - Open-source
 
 **Grok** (xAI) - Integrated into X/Twitter
 
-All of them: Predict the most likely next words based on your input + their training
+All predict the most likely next words based on input + training
 
 ---
 
-## What LLMs Are Great At (And Not)
+## Strengths & Limitations
 
-**Strengths:**
-- Answering questions and explaining complex topics
-- Writing and editing text (emails, reports, code)
-- Translating between languages
-- Summarizing long documents
+**Great at:**
+- Explaining complex topics
+- Writing and editing (emails, reports, code)
+- Translating and summarizing
 - Brainstorming and creative work
 
-**Limitations:**
-- Can confidently make up facts ("hallucinations")
-- No real-world knowledge after training cutoff
-- Math and precise logic can be unreliable
-- No true understanding - pattern matching, not thinking
+**Watch out for:**
+- Confident fabrications ("hallucinations")
+- No knowledge after training cutoff
+- Math and precise logic can fail
+- Pattern matching, not true understanding
 
-**Rule of thumb:** Great assistant, but always verify important outputs
+**Great assistant - always verify important outputs**
 
 ---
 
@@ -133,73 +119,42 @@ All of them: Predict the most likely next words based on your input + their trai
 
 ## Why Prompting Matters
 
-**The same AI, completely different results:**
+**Same AI, completely different results:**
 
 | Prompt | Result |
 |--------|--------|
-| "Write something about sales" | Generic, vague, useless paragraph |
-| "Write a 3-paragraph email to our B2B clients announcing our new pricing model. Tone: professional but friendly. Mention the 15% early-bird discount." | Exactly what you needed, ready to send |
+| "Write something about sales" | Generic, vague, useless |
+| "Write a 3-paragraph email to B2B clients about our new pricing. Professional but friendly. Mention the 15% early-bird discount." | Ready to send |
 
-**The quality of the output is directly tied to the quality of your input**
-
-Your prompt is the steering wheel - the AI is the engine.
+**Output quality = Input quality**
 
 ---
 
-## What is Prompt Engineering?
+## The 5 Building Blocks
 
-**Prompt Engineering** = The skill of writing instructions that get the best results from AI
+1. **Role** - *"You are a senior marketing expert"*
+2. **Task** - *"Write a product description"*
+3. **Context** - *"For our B2B SaaS product..."*
+4. **Format** - *"3 bullet points, max 50 words each"*
+5. **Constraints** - *"No jargon, formal tone"*
 
-**It's not programming - it's clear communication.**
-
-**The 5 building blocks of a good prompt:**
-
-1. **Role** - Who should the AI be? *"You are a senior marketing expert"*
-2. **Task** - What exactly should it do? *"Write a product description"*
-3. **Context** - What background info does it need? *"For our B2B SaaS product..."*
-4. **Format** - How should the output look? *"3 bullet points, max 50 words each"*
-5. **Constraints** - What to avoid? *"No jargon, no emojis, formal tone"*
+**Prompt engineering is clear communication, not programming**
 
 ---
 
-## Bad vs. Good Prompts - Live Examples
+## Bad vs. Good Prompts
 
-**Vague prompt:**
+**Vague:**
 > "Help me with a presentation"
 
-**Engineered prompt:**
-> "Create an outline for a 10-slide presentation about our Q4 results. Audience: C-level executives. Include: revenue growth (+12%), new client wins (8), and 3 key challenges. Style: data-driven, concise, one key message per slide."
+**Engineered:**
+> "Create a 10-slide outline for Q4 results. Audience: C-level. Include: revenue growth (+12%), new clients (8), 3 challenges. Style: data-driven, one message per slide."
 
-**Why this works:**
-- AI knows the **audience** (executives, not interns)
-- AI knows the **scope** (10 slides, Q4)
-- AI knows the **data** to include
-- AI knows the **style** to follow
-
-**Prompt engineering is the #1 skill for working with AI effectively**
-
----
-
-## Quick Prompting Tips
-
-**Start simple, then refine:**
-- First attempt won't be perfect - and that's fine
-- Say "make it shorter", "more formal", "add examples"
-- Treat it like a conversation, not a one-shot command
-
-**Give examples of what you want:**
-- "Write it in this style: [paste example]"
-- Show it the format you expect
-
-**Tell it what NOT to do:**
-- "Don't use buzzwords"
-- "Don't make up statistics"
-- "Don't start every sentence with 'In today's world...'"
-
-**Use it as a thinking partner:**
-- "What am I missing in this plan?"
-- "Play devil's advocate on this idea"
-- "What questions would a skeptical customer ask?"
+**Pro tips:**
+- Start simple, then refine iteratively
+- Give examples of what you want
+- Tell it what NOT to do
+- Use it as a thinking partner
 
 ---
 
@@ -210,15 +165,15 @@ Your prompt is the steering wheel - the AI is the engine.
 
 ## From Chatbot to Agent
 
-**LLM (today's chatbot):**
-- You: "Find me a flight to Berlin for next Friday"
-- ChatGPT: *"I'd recommend checking Lufthansa or booking.com..."*
+**LLM (chatbot):**
+- You: "Find me a flight to Berlin for Friday"
+- AI: *"I'd recommend checking Lufthansa..."*
 - **You still do all the work**
 
-**AI Agent (the next step):**
-- You: "Book me a flight to Berlin for next Friday"
-- Agent: *Checks your calendar > Searches flights > Compares prices > Books the best option > Adds to your calendar > Sends you confirmation*
-- **The agent does the work for you**
+**AI Agent:**
+- You: "Book me a flight to Berlin for Friday"
+- Agent: *Checks calendar > Searches flights > Compares prices > Books > Confirms*
+- **The agent does the work**
 
 **The shift: From advisor to employee**
 
@@ -226,114 +181,80 @@ Your prompt is the steering wheel - the AI is the engine.
 
 ## What Makes an Agent Different?
 
-**An AI Agent can:**
-
 1. **Understand goals** - Not just questions, but objectives
 2. **Make plans** - Break complex tasks into steps
-3. **Use tools** - Browse the web, call APIs, send emails, write files
-4. **Act autonomously** - Execute without asking for every step
-5. **Learn and adapt** - Adjust when something doesn't work
+3. **Use tools** - Browse web, call APIs, send emails
+4. **Act autonomously** - Execute without asking every step
+5. **Adapt** - Adjust when something doesn't work
 
-**Analogy:**
-- LLM = Expert consultant who gives advice
-- Agent = Employee who gets things done
+**LLM = Consultant who gives advice**
+**Agent = Employee who gets things done**
 
 ---
 
 ## The Agent Loop
 
-**How agents work - a continuous cycle:**
-
-**Observe** - What's the current situation?
+**Observe** - What's the situation?
 
 **Think** - What should I do next?
 
-**Act** - Use a tool, make a call, write something
+**Act** - Use a tool, write something
 
-**Reflect** - Did it work? What changed?
+**Reflect** - Did it work?
 
 **Repeat** - Until the goal is achieved
 
-This is exactly how Claude Code works - you give it a goal, it plans, writes code, tests it, fixes bugs, and delivers.
+This is exactly how Claude Code works - give it a goal, it plans, codes, tests, fixes, and delivers.
 
 ---
 
-## Agents in Action - Real Examples
+## Agents in Action
 
-**Coding Agents (available now):**
-- Understand feature requests in plain language
-- Write, test, and debug code autonomously
-- Example: Claude Code, GitHub Copilot Workspace
+**Coding Agents** - Write, test, and debug code autonomously
+*Claude Code, GitHub Copilot Workspace*
 
-**Research Agents:**
-- Given a topic, search dozens of sources
-- Synthesize findings into structured reports
-- Fact-check across multiple references
+**Research Agents** - Search dozens of sources, synthesize reports
+*Deep Research, Perplexity*
 
-**Business Process Agents:**
-- Process invoices and expense reports
-- Monitor systems and alert on issues
-- Generate weekly reports from raw data
+**Business Agents** - Process invoices, monitor systems, generate reports
 
 ---
 
-## Where This Is Heading (2026-2028)
+## Where This Is Heading
 
-**What's coming:**
-- Agents that manage your calendar and email
+**Coming soon:**
 - Multi-agent teams (one researches, one writes, one reviews)
 - Agents integrated into every software tool
-- Personal AI assistants that truly know your preferences
-- AI that handles entire workflows end-to-end
+- Personal AI assistants that know your preferences
+- AI handling entire workflows end-to-end
 
-**What stays the same:**
+**What stays:**
 - Human judgment for important decisions
 - Creativity and empathy remain uniquely human
-- "Human-in-the-loop" for high-stakes actions
 
 **The future is human + AI, not human vs. AI**
 
 ---
 
-## Part 5
-### Key Takeaways
+## Key Takeaways
 
----
+**The AI Stack:**
+**Generative AI** &rarr; **LLMs** &rarr; **AI Agents**
+Each layer builds on the one below
 
-## The AI Stack in One Picture
-
-**Generative AI** = The foundation - AI that creates content
-&darr;
-**LLMs** = Specialized for language - powers conversations
-&darr;
-**AI Agents** = The next level - AI that takes autonomous action
-
-**Each layer builds on the one below**
-
----
-
-## What You Can Do Today
-
-**Start experimenting:**
+**Start today:**
 1. Try ChatGPT or Claude for daily tasks
-2. Use AI to draft emails, summarize documents, brainstorm
+2. Practice writing better prompts
 3. Always verify important outputs
 4. Share what works with your team
 
-**Think about your work:**
-- What tasks are repetitive?
-- Where do you spend time on routine work?
-- What would you do with 2 extra hours per day?
-
-**The people who learn to work with AI will have a significant advantage**
+**People who learn to work with AI will have a significant advantage**
 
 ---
 
 ## Questions?
 
-**Thank you for your time!**
-
-Let's discuss how AI might impact your work.
+**Thank you!**
 
 **Try it yourself:**
 - claude.ai - Try Claude
@@ -350,4 +271,4 @@ Let's discuss how AI might impact your work.
 One prompt. One AI agent. A fully playable Snake game - built live in under 2 minutes.
 
 **Watch for the agent loop:**
-Understand goal > Plan approach > Write code > Test > Deliver
+Understand goal &rarr; Plan &rarr; Write code &rarr; Test &rarr; Deliver
