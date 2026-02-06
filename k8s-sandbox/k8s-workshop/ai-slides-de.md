@@ -1,585 +1,318 @@
 # AI Agents Workshop
-## Agentic AI und moderne KI-Systeme verstehen
+## Von Generativer KI zu autonomen Agenten
 
-Eine 30-minütige Einführung für nicht-technische Zielgruppen
-
----
-
-## Heutige Reise
-
-**Drei große Ideen:**
-
-1. **Generative KI** - Technologie die Inhalte erstellt
-2. **Large Language Models (LLMs)** - KI die Sprache versteht
-3. **Agentic AI** - KI die Aktionen ausführt
-
-**Plus:** Wie sie sich unterscheiden und warum es wichtig ist
+Eine 30-Minuten Einführung für nicht-technische Zielgruppen
 
 ---
 
-## Sektion 1
+## Was wir heute besprechen
+
+1. **Was ist Generative KI?** - Die Technologie hinter dem Hype
+2. **Was ist ein LLM?** - Der Motor hinter allem
+3. **Beispiele die ihr schon kennt** - KI im Alltag
+4. **Die Zukunft: KI-Agenten** - Vom Chatbot zum autonomen Assistenten
+5. **Live Demo** - Eine Website mit KI bauen (wenn die Zeit reicht)
+
+---
+
+## Teil 1
 ### Was ist Generative KI?
 
 ---
 
-## Die KI-Evolution
+## Der grosse Wandel in der KI
 
 **Traditionelle KI (2010er):**
-- "Ist das eine Katze oder ein Hund?" (Klassifikation)
-- "Wird dieser Kunde kaufen?" (Vorhersage)
+- "Ist diese E-Mail Spam?" (Klassifikation)
+- "Wird diese Maschine ausfallen?" (Vorhersage)
+- KI die bestehende Daten **analysiert**
 
-**Generative KI (2020er+):**
-- "Schreibe mir eine Geschichte über eine Katze"
-- "Entwirf ein Logo für mein Unternehmen"
-- "Erstelle eine Marketing-Kampagne"
-
-**Der Wandel:** Von Analysieren → zu Erstellen
-
----
-
-## Was erstellt Generative KI?
-
-**Inhalte die sie generiert:**
-- Text (Artikel, E-Mails, Code)
-- Bilder (Kunst, Fotos, Designs)
-- Audio (Musik, Stimmen)
-- Video (Animationen, Szenen)
-
-**Beispiele die du kennst:**
-- ChatGPT, Claude (Text)
-- DALL-E, Midjourney (Bilder)
-- GitHub Copilot (Code)
-
-**Kernaussage:** Erstellt neue Inhalte die zuvor nicht existierten
+**Generative KI (2020er):**
+- "Schreib mir eine Marketing-E-Mail"
+- "Entwirf ein Logo für mein Startup"
+- "Fasse diesen 50-Seiten-Bericht in 5 Stichpunkten zusammen"
+- KI die neue Inhalte **erschafft**
 
 ---
 
-## Wie es funktioniert (Vereinfacht)
+## Was kann Generative KI erschaffen?
+
+| Art | Beispiele | Tools die ihr kennt |
+|-----|-----------|---------------------|
+| **Text** | Artikel, E-Mails, Code, Übersetzungen | ChatGPT, Claude |
+| **Bilder** | Kunst, Produktfotos, Designs | Midjourney, DALL-E |
+| **Audio** | Musik, Stimmen-Klone, Podcasts | Suno, ElevenLabs |
+| **Video** | Animationen, Kurzclips, Avatare | Sora, Runway |
+| **Code** | Komplette Anwendungen, Skripte, Websites | GitHub Copilot, Claude Code |
+
+---
+
+## Wie funktioniert das? (Die einfache Version)
 
 **Drei Schritte:**
 
-1. **Training:** Von Milliarden Beispielen lernen
-   - Millionen Bücher und Websites lesen
-   - Millionen Bilder studieren
+**1. Training** - Das Internet lesen
+- Milliarden Bücher, Websites, Konversationen
+- Muster lernen: welche Wörter, Pixel, Töne zusammengehören
 
-2. **Mustererkennung:** Internes "Wissen" von Mustern aufbauen
-   - Welche Wörter gehören zusammen?
-   - Was macht guten Inhalt aus?
+**2. Verstehen** - Internes "Wissen" aufbauen
+- Nicht auswendig lernen - Muster erkennen
+- Wie eine Sprache lernen durch Eintauchen
 
-3. **Generierung:** Neue Inhalte nach diesen Mustern erstellen
-   - Nicht kopieren—etwas Neues erstellen
-   - Gelernte "Regeln" befolgen
+**3. Generieren** - Etwas Neues erschaffen
+- Sagt das wahrscheinlichste nächste Wort/Pixel/Note voraus
+- Gesteuert durch eure Anweisungen (den "Prompt")
 
-**Keine Magie:** Sehr ausgefeilte Mustererkennung in massivem Umfang
-
----
-
-## Generative KI: Stärken & Grenzen
-
-**✅ Stärken:**
-- Inhalte in großem Umfang und schnell erstellen
-- 24/7 verfügbar
-- Konsistente Basis-Qualität
-
-**⚠️ Einschränkungen:**
-- Kann sachliche Fehler machen ("Halluzinationen")
-- Kein echtes Verständnis
-- Spiegelt Vorurteile der Trainingsdaten
-- Kann eigene Genauigkeit nicht verifizieren
-
-**Merke:** Mächtiges Werkzeug, aber benötigt menschliche Aufsicht
+**Keine Magie - sehr ausgefeilte Mustererkennung in riesigem Umfang**
 
 ---
 
-## Sektion 2
-### Large Language Models verstehen
+## Teil 2
+### Was ist ein LLM?
 
 ---
 
-## Was ist ein LLM?
+## LLM = Large Language Model
 
-**LLM = Large Language Model**
+**Stellt euch Autocomplete auf Steroiden vor:**
 
-**"Large" bedeutet:**
-- Trainiert auf enormen Textmengen
-- Milliarden von Parametern (einstellbare Werte)
-- Benötigt massive Rechenleistung
+Ihr tippt: *"Die Katze saß auf der..."*
 
-**"Language Model" bedeutet:**
-- Fokus speziell auf menschliche Sprache
-- Versteht und generiert Text
-- Kann übersetzen, zusammenfassen, Fragen beantworten
+| | Vorhersage |
+|---|---|
+| **Handy-Autocomplete** | "Matte" |
+| **LLM** | Schreibt euch eine komplette Geschichte über die Katze, ihre Vorgeschichte und was als nächstes passiert |
 
-**LLMs sind eine Art Generative KI spezialisiert auf Sprache**
+**"Large"** = Trainiert auf riesigen Textmengen, Milliarden von Parametern
 
----
+**"Language Model"** = Spezialisiert auf das Verstehen und Erzeugen menschlicher Sprache
 
-## Beliebte LLMs
-
-**GPT-4** (OpenAI)
-- Treibt ChatGPT an
-- Am bekanntesten
-
-**Claude** (Anthropic)
-- Längere Konversationen
-- Du siehst es jetzt in Claude Code!
-
-**Gemini** (Google)
-- Multimodal (Text + Bilder)
-
-**LLaMA** (Meta)
-- Open-Source Foundation
+**LLMs sind eine Art Generativer KI - spezialisiert auf Sprache**
 
 ---
 
-## Wie LLMs Text generieren
+## Die grossen Player
 
-**Denk daran wie Autocomplete auf Steroiden:**
+**GPT-4o** (OpenAI) - Treibt ChatGPT an, am bekanntesten
 
-Du tippst: "Die Katze saß auf der..."
+**Claude** (Anthropic) - Stark bei Logik und längeren Aufgaben
 
-**Einfaches Autocomplete:** "Matte"
+**Gemini** (Google) - Eingebaut in Google-Produkte
 
-**LLM:** Sagt nächste Wörter voraus basierend auf:
-- Kontext der gesamten Konversation
-- Gelernte Muster aus Training
-- Deine spezifische Frage
+**LLaMA / DeepSeek** (Meta / DeepSeek) - Open-Source Modelle die jeder nutzen kann
 
-**Ergebnis:** Kann Absätze, Artikel oder Code schreiben
+**Grok** (xAI) - Integriert in X/Twitter
 
-**Wichtig:** Vorhersage wahrscheinlicher Wörter, nicht "Denken"
+Alle gemeinsam: Sagen die wahrscheinlichsten nächsten Wörter voraus, basierend auf eurer Eingabe + ihrem Training
 
 ---
 
-## Worin LLMs excellieren
+## Was LLMs gut können (und was nicht)
 
-**Gut für:**
-- Fragen beantworten
-- Dokumente zusammenfassen
-- Inhalte schreiben (E-Mails, Berichte)
+**Stärken:**
+- Fragen beantworten und komplexe Themen erklären
+- Texte schreiben und bearbeiten (E-Mails, Berichte, Code)
 - Zwischen Sprachen übersetzen
-- Komplexe Themen erklären
-- Ideen brainstormen
-- Code schreiben und debuggen
+- Lange Dokumente zusammenfassen
+- Brainstorming und kreative Arbeit
 
-**Aktuelle Grenzen:**
-- Kann selbstbewusst Fakten erfinden
-- Mathe/Logik-Fehler möglich
-- Wissens-Cutoff-Datum
-- Kein echtes Verständnis
+**Grenzen:**
+- Können selbstbewusst Fakten erfinden ("Halluzinationen")
+- Kein Wissen über Ereignisse nach dem Trainings-Stichtag
+- Mathematik und exakte Logik können unzuverlässig sein
+- Kein echtes Verständnis - Mustererkennung, kein Denken
 
----
-
-## Sektion 3
-### Was ist Agentic AI?
+**Faustregel:** Toller Assistent, aber wichtige Aussagen immer prüfen
 
 ---
 
-## Der Schlüsselunterschied
-
-**LLM (Conversational AI):**
-- Du: "Finde mir ein Restaurant für Freitag"
-- LLM: "Ich würde empfehlen OpenTable zu prüfen. Erwäge italienische Restaurants..."
-- **Du machst noch alle Arbeit**
-
-**Agent (Agentic AI):**
-- Du: "Finde mir ein Restaurant für Freitag"
-- Agent: *Prüft deinen Kalender → Sucht Restaurants → Macht Reservierung → Fügt zum Kalender hinzu*
-- **Agent macht die Arbeit**
-
-**Der Wandel:** Von Assistent der redet → Assistent der handelt
+## Teil 3
+### Beispiele die ihr schon kennt
 
 ---
 
-## Was ist ein KI-Agent?
+## KI ist bereits überall
 
-**Ein KI-System das kann:**
+**Dinge die ihr vermutlich täglich nutzt:**
+- Smarte E-Mail-Antworten (Gmail, Outlook)
+- Fotobearbeitung auf dem Handy
+- Netflix/Spotify-Empfehlungen
+- Google Translate (jetzt KI-basiert)
+- Auto-generierte Untertitel auf YouTube
 
-1. ✅ Ein Ziel verstehen
-2. 🧠 Schritte zur Erreichung planen
-3. 🛠️ Autonom Aktionen ausführen
-4. 📝 Aus Ergebnissen lernen
-5. 🔄 Ansatz anpassen
-
-**Schlüsselzutat:** **Agency** = Fähigkeit unabhängig zu handeln
-
-**Analogie:**
-- LLM = Experten-Berater (gibt Rat)
-- Agent = Mitarbeiter (macht die Arbeit)
-
----
-
-## Wie Agents funktionieren
-
-**Die Agent-Schleife:**
-
-1. **Beobachten:** Was ist die aktuelle Situation?
-2. **Denken:** Was sollte ich als nächstes tun?
-3. **Handeln:** Eine Aktion ausführen (Tools/APIs nutzen)
-4. **Reflektieren:** Hat das funktioniert?
-5. **Wiederholen:** Bis Ziel erreicht ist
-
-**Das ist "agentisches Verhalten":** Autonom auf Ziele hinarbeiten
+**Dinge die viral gingen:**
+- ChatGPT (schnellste App die jemals 100 Mio. Nutzer erreichte)
+- KI-generierte Bilder überall in Social Media
+- Schüler nutzen KI für Hausaufgaben (und Lehrer nutzen KI um das zu prüfen)
+- KI-Stimmenklonen und Deepfakes in den Nachrichten
 
 ---
 
-## Agent-Fähigkeiten
+## KI am Arbeitsplatz heute
 
-**Agents können:**
+**Marketing & Kommunikation:**
+- Kampagnen, Social-Media-Posts, Pressemitteilungen entwerfen
+- Inhalte in 20 Sprachen übersetzen - in Minuten
 
-**Tools nutzen:**
-- APIs und Web-Services aufrufen
-- Datenbanken abfragen
-- E-Mails/Nachrichten senden
-- Berechnungen ausführen
-
-**Planen & Schlussfolgern:**
-- Komplexe Probleme aufbrechen
-- Gedanken verketten
-- Sich anpassen wenn Pläne scheitern
-
-**Erinnern:**
-- Von vergangenen Interaktionen lernen
-- Deine Präferenzen merken
-
----
-
-## Echte Agent-Beispiele
-
-**Kunden-Service Agent:**
-- Versteht dein Problem
-- Durchsucht Wissensdatenbank
-- Bietet Lösung an
-- Eskaliert bei Bedarf
-
-**Coding Agent:**
-- Versteht Feature-Anfrage
-- Schreibt Code
-- Testet ihn
-- Behebt Bugs
-
-**Research Agent:**
-- Bekommt ein Thema
-- Durchsucht mehrere Quellen
-- Synthetisiert Erkenntnisse
-- Erstellt Bericht
-
----
-
-## Sektion 4
-### Schlüsselunterschiede
-
----
-
-## Die drei Technologien im Vergleich
-
-| | Generative KI | LLMs | Agentic AI |
-|---|---|---|---|
-| **Was sie tut** | Erstellt Inhalt | Konversiert | Führt Aktionen aus |
-| **Interaktion** | Einmalig | Multi-Turn Chat | Zielorientiert |
-| **Tools** | Nein | Begrenzt | Voller Zugriff |
-| **Planung** | Keine | Grundlegend | Fortgeschritten |
-| **Beispiel** | Bild generieren | Fragen beantworten | Deine Reise buchen |
-
----
-
-## Wie sie zusammenhängen
-
-**Denke an Schichten:**
-
-🔺 **Oben: Agentic AI**
-- Nutzt LLMs + Tools + Planung
-- Führt autonome Aktionen aus
-
-🔺 **Mitte: LLMs**
-- Spezialisiert auf Sprache
-- Treibt Konversationen an
-
-🔺 **Unten: Generative KI**
-- Basis-Technologie
-- Erstellt Inhalt
-
-**Sie bauen aufeinander auf:** Agents nutzen LLMs, welche eine Art Generative KI sind
-
----
-
-## Wann was nutzen?
-
-**Nutze Generative KI wenn:**
-- Einzelnes kreatives Output benötigt
-- Keine Iteration nötig
-
-**Nutze LLMs wenn:**
-- Erklärungen oder Rat benötigt
-- Konversationelle Verfeinerung hilft
-- Keine Aktionen erforderlich
-
-**Nutze Agentic AI wenn:**
-- Ziel hast, nicht nur Frage
-- Mehrere Schritte nötig
-- Autonome Ausführung gewünscht
-
----
-
-## Sektion 5
-### Auswirkungen in der Praxis
-
----
-
-## Agents in Aktion heute
-
-**Kunden-Support (2025):**
-- 70% der Anfragen von Agents bearbeitet
-- 24/7 Verfügbarkeit
-- Lernt von jeder Interaktion
+**Kundenservice:**
+- Chatbots bearbeiten 70%+ der Routine-Anfragen
+- 24/7 erreichbar, sofortige Antworten
 
 **Software-Entwicklung:**
-- Agents schreiben, testen und debuggen Code
-- Generieren Dokumentation
-- Beispiele: GitHub Copilot, Claude Code
+- GitHub Copilot: KI-Programmierpartner, genutzt von Millionen
+- Claude Code: Komplette Anwendungen aus Beschreibungen bauen
 
-**Research & Analyse:**
-- Tage Recherche → Stunden
-- Synthetisiert mehrere Quellen
-- Erstellt umfassende Berichte
+**Recherche & Analyse:**
+- Tage Recherche komprimiert auf Stunden
+- Hunderte Dokumente sofort zusammenfassen
 
 ---
 
-## Business-Anwendungen
-
-**Operations:**
-- Spesenabrechnungen verarbeiten
-- Transaktionen kategorisieren
-- Berichte generieren
-
-**Marketing:**
-- Konkurrenten recherchieren
-- Kampagnen-Ideen generieren
-- Performance analysieren
-
-**HR:**
-- Lebensläufe screenen
-- Interviews planen
-- Mitarbeiter-Fragen beantworten
-
-**Auswirkung:** Massive Produktivitätssteigerungen
+## Teil 4
+### Die Zukunft: KI-Agenten
 
 ---
 
-## Multi-Agent Systeme
+## Vom Chatbot zum Agenten
 
-**Die Zukunft: Mehrere Agents zusammen arbeiten**
+**LLM (heutiger Chatbot):**
+- Ihr: "Finde mir einen Flug nach Berlin für nächsten Freitag"
+- ChatGPT: *"Ich empfehle Lufthansa oder booking.com zu prüfen..."*
+- **Ihr macht noch die ganze Arbeit selbst**
 
-**Beispiel: Content-Erstellungs-Pipeline**
+**KI-Agent (der nächste Schritt):**
+- Ihr: "Buche mir einen Flug nach Berlin für nächsten Freitag"
+- Agent: *Prüft euren Kalender > Sucht Flüge > Vergleicht Preise > Bucht die beste Option > Trägt es in euren Kalender ein > Schickt euch Bestätigung*
+- **Der Agent erledigt die Arbeit für euch**
 
-1. **Research Agent:** Sammelt Informationen
-2. **Writing Agent:** Erstellt ersten Entwurf
-3. **Editing Agent:** Verbessert Klarheit
-4. **Fact-Check Agent:** Verifiziert Genauigkeit
-5. **SEO Agent:** Optimiert für Suchmaschinen
-
-**Warum es funktioniert:** Spezialisierung + Koordination
-
----
-
-## Sektion 6
-### Aktueller Stand & Zukunft
+**Der Wandel: Vom Berater zum Mitarbeiter**
 
 ---
 
-## Wo wir sind (2025)
+## Was einen Agenten anders macht
 
-**Realitäts-Check:**
+**Ein KI-Agent kann:**
 
-✅ **Agents können bewältigen:**
-- Gut definierte Aufgaben
-- Klare Erfolgs-Kriterien
-- Strukturierte Workflows
+1. **Ziele verstehen** - Nicht nur Fragen, sondern Aufgaben
+2. **Pläne machen** - Komplexe Aufgaben in Schritte aufteilen
+3. **Werkzeuge nutzen** - Im Web suchen, APIs aufrufen, E-Mails senden, Dateien schreiben
+4. **Autonom handeln** - Ausführen ohne bei jedem Schritt zu fragen
+5. **Lernen und anpassen** - Vorgehen ändern wenn etwas nicht klappt
 
-⚠️ **Agents haben Schwierigkeiten mit:**
-- Komplexen Entscheidungen die Urteilsvermögen erfordern
-- Tiefer Domain-Expertise
-- Mehrdeutigen Zielen
-- Neuartiger Problemlösung
-
-**Denke an sie als:** Smarte Praktikanten, nicht erfahrene Manager (noch nicht)
+**Vergleich:**
+- LLM = Experten-Berater der Ratschläge gibt
+- Agent = Mitarbeiter der Dinge erledigt
 
 ---
 
-## Die Halluzinations-Herausforderung
+## Die Agenten-Schleife
 
-**Was sind Halluzinationen?**
-- KI gibt selbstbewusst falsche Informationen an
-- Erfindet Fakten oder Zitate
+**Wie Agenten arbeiten - ein stetiger Kreislauf:**
 
-**Warum es passiert:**
-- Sagt wahrscheinlichen Text vorher, nicht Wahrheit
-- Keine eingebaute Fakten-Prüfung
+**Beobachten** - Was ist die aktuelle Situation?
 
-**Lösung:**
-- Gib Agents Tools zur Fakten-Verifizierung
-- Verlange Quellenangaben
-- Menschliche Review kritischer Outputs
-- Nicht blind vertrauen!
+**Denken** - Was sollte ich als nächstes tun?
 
----
+**Handeln** - Ein Werkzeug nutzen, etwas aufrufen, etwas schreiben
 
-## Sicherheit & Kontrolle
+**Reflektieren** - Hat es funktioniert? Was hat sich geändert?
 
-**Der Human-in-the-Loop Ansatz:**
+**Wiederholen** - Bis das Ziel erreicht ist
 
-**Niedrig-Risiko Aufgaben:**
-→ Volle Autonomie (schnell)
-
-**Mittel-Risiko Aufgaben:**
-→ Menschliche Review vor Ausführung (ausgewogen)
-
-**Hoch-Risiko Aufgaben:**
-→ Menschliche Entscheidungsfindung (sicher)
-
-**Best Practice:** Richtige Balance von Geschwindigkeit und Sicherheit für deinen Anwendungsfall
+Genau so funktioniert Claude Code - ihr gebt ein Ziel vor, es plant, schreibt Code, testet, behebt Fehler und liefert.
 
 ---
 
-## Nahe Zukunft (2025-2027)
+## Agenten in Aktion - Echte Beispiele
 
-**Erwartete Fortschritte:**
-- Besseres Schlussfolgern und Planen
-- Längeres Gedächtnis (ganze Projekte erinnern)
-- Zuverlässigere Tool-Nutzung
-- Verbesserte Fakten-Prüfung
-- Bessere Multi-Agent Zusammenarbeit
+**Coding Agents (schon heute verfügbar):**
+- Verstehen Feature-Anfragen in normaler Sprache
+- Schreiben, testen und debuggen Code selbstständig
+- Beispiele: Claude Code, GitHub Copilot Workspace
 
-**Auswirkung:** Zunehmend komplexe Workflows autonom bewältigen
+**Research Agents:**
+- Bekommen ein Thema, durchsuchen Dutzende Quellen
+- Fassen Ergebnisse in strukturierten Berichten zusammen
+- Prüfen Fakten über mehrere Referenzen
 
-**Realität:** Noch immer Menschen augmentierend, nicht ersetzend
-
----
-
-## Sektion 7
-### Praktische Erkenntnisse
-
----
-
-## Die Landschaft verstehen
-
-**Erinnere dich an die Progression:**
-
-**Generative KI** = Erstellt Inhalt
-↓
-**LLMs** = Spezialisiert auf Sprache
-↓
-**Agentic AI** = Führt autonome Aktionen aus
-
-**Jede baut auf der letzten auf**
+**Business-Prozess Agents:**
+- Verarbeiten Rechnungen und Spesenabrechnungen
+- Überwachen Systeme und melden Probleme
+- Erstellen Wochenberichte aus Rohdaten
 
 ---
 
-## Erste Schritte
+## Wohin die Reise geht (2026-2028)
 
-**Für Einzelpersonen:**
-1. Experimentiere mit ChatGPT oder Claude
-2. Nutze KI für tägliche Aufgaben
-3. Lerne was funktioniert und was nicht
-4. Verifiziere immer wichtige Outputs
+**Was kommt:**
+- Agenten die euren Kalender und E-Mails verwalten
+- Multi-Agenten-Teams (einer recherchiert, einer schreibt, einer prüft)
+- Agenten integriert in jedes Software-Tool
+- Persönliche KI-Assistenten die eure Vorlieben wirklich kennen
+- KI die komplette Workflows von Anfang bis Ende übernimmt
 
-**Für Teams:**
-1. Identifiziere repetitive Aufgaben
-2. Pilotiere KI-Tools für spezifische Anwendungsfälle
-3. Trainiere Team in effektiver Nutzung
-4. Etabliere Nutzungs-Richtlinien
+**Was bleibt:**
+- Menschliches Urteilsvermögen bei wichtigen Entscheidungen
+- Kreativität und Empathie bleiben einzigartig menschlich
+- "Human-in-the-Loop" bei kritischen Aktionen
 
----
-
-## Best Practices
-
-**Tu:**
-✅ Starte mit gut definierten Aufgaben
-✅ Liefere klare Ziele
-✅ Prüfe Outputs kritisch
-✅ Nutze menschliches Urteil für wichtige Entscheidungen
-
-**Tu nicht:**
-❌ Blind Outputs vertrauen
-❌ Für kritische Entscheidungen ohne Review nutzen
-❌ Unnötig sensible Informationen teilen
-❌ Perfekte Genauigkeit erwarten
+**Die Zukunft ist Mensch + KI, nicht Mensch gegen KI**
 
 ---
 
-## Schlüsselfragen zum Überlegen
+## Teil 5
+### Die wichtigsten Erkenntnisse
 
-**Für deine Rolle:**
-- Wie könnten KI-Agents deine tägliche Arbeit unterstützen?
+---
+
+## Der KI-Stack auf einen Blick
+
+**Generative KI** = Das Fundament - KI die Inhalte erschafft
+&darr;
+**LLMs** = Spezialisiert auf Sprache - treibt Konversationen an
+&darr;
+**KI-Agenten** = Die nächste Stufe - KI die autonom handelt
+
+**Jede Ebene baut auf der darunter auf**
+
+---
+
+## Was ihr heute schon tun könnt
+
+**Fangt an zu experimentieren:**
+1. Probiert ChatGPT oder Claude für tägliche Aufgaben
+2. Nutzt KI um E-Mails zu entwerfen, Dokumente zusammenzufassen, Ideen zu sammeln
+3. Prüft wichtige Ausgaben immer gegen
+4. Teilt was funktioniert mit eurem Team
+
+**Denkt über eure Arbeit nach:**
 - Welche Aufgaben sind repetitiv?
-- Wo musst du menschliches Urteil bewahren?
+- Wo verbringt ihr Zeit mit Routine-Arbeit?
+- Was würdet ihr mit 2 Extra-Stunden pro Tag machen?
 
-**Für deine Organisation:**
-- Welche Prozesse könnten von Agents profitieren?
-- Was sind die Risiken und Mitigation-Strategien?
-- Wie bereiten wir unsere Belegschaft vor?
-
----
-
-## Das Fazit
-
-**Drei Kernbotschaften:**
-
-1. **Wir sind am Anfang der Agent-Ära**
-   - Technologie ist da und entwickelt sich schnell
-
-2. **Agents augmentieren, ersetzen nicht**
-   - Bewältigen Routine-Arbeit
-   - Schaffen Zeit für höherwertige Aufgaben
-
-3. **Menschliche Aufsicht bleibt essentiell**
-   - Outputs verifizieren
-   - Urteil anwenden
-   - Kontrolle behalten
-
----
-
-## Abschließende Gedanken
-
-**Der KI-Stack in einem Satz:**
-
-Generative KI erstellt Inhalt →
-LLMs konversieren in Sprache →
-Agents führen Aktionen autonom aus
-
-**Deine Rolle:**
-- Lerne mit KI zusammenzuarbeiten
-- Fokussiere auf einzigartig menschliche Fähigkeiten
-- Überwache und leite Agent-Arbeit
-
-**Die Chance:** Wer lernt diese Tools effektiv zu nutzen, wird einen signifikanten Vorteil haben
+**Wer lernt mit KI zu arbeiten, wird einen deutlichen Vorteil haben**
 
 ---
 
 ## Fragen?
 
-**Vielen Dank für deine Zeit!**
+**Vielen Dank für eure Zeit!**
 
-Lass uns besprechen wie KI-Agents deine
-spezifische Arbeit und Organisation beeinflussen könnten.
+Lasst uns besprechen wie KI eure Arbeit verändern könnte.
 
-**Wichtige Ressourcen:**
-- ChatGPT / Claude - Probiere sie selbst aus
-- DeepLearning.AI - Kostenlose Kurse
-- Dein IT/KI-Team - Starte das Gespräch
+**Probiert es selbst aus:**
+- claude.ai - Claude ausprobieren
+- chatgpt.com - ChatGPT ausprobieren
+- midjourney.com - Bildgenerierung ausprobieren
 
 ---
 
-## Bonus: Kurzes Glossar
+## Bonus: Live Demo
+### Ein Snake-Spiel bauen mit Claude Code
 
-**AGI:** Artificial General Intelligence (KI auf menschlichem Niveau - noch nicht erreicht)
+*Lasst uns einen KI-Agenten in Aktion sehen!*
 
-**Halluzination:** Wenn KI falsche Informationen erfindet
+Ein Prompt. Ein KI-Agent. Ein komplett spielbares Snake-Spiel - live gebaut in unter 2 Minuten.
 
-**LLM:** Large Language Model (KI spezialisiert auf Sprache)
-
-**Prompt:** Die Anweisung die du der KI gibst
-
-**Token:** Texteinheit (~0,75 Wörter)
-
-**Agent:** KI die autonome Aktionen auf Ziele hin ausführt
+**Achtet auf die Agenten-Schleife:**
+Ziel verstehen > Ansatz planen > Code schreiben > Testen > Liefern
