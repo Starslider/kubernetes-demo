@@ -6,6 +6,6 @@ metadata:
 namespace: k8s-workshop
 
 resources:
-- deployment.yaml
-- service.yaml
-- httproute-grant.yaml
+- manifests/deployment.yaml
+- manifests/service.yaml
+- manifests/httproute-grant.yaml

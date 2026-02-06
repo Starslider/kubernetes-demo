@@ -7,15 +7,16 @@ RUN npm init -y && \
     npm install reveal.js@5.0.4
 
 # Copy markdown slides (English and German)
-COPY slides.md /slides/
-COPY slides-de.md /slides/
-COPY ai-slides.md /slides/
-COPY ai-slides-de.md /slides/
+COPY slides/slides.md /slides/
+COPY slides/slides-de.md /slides/
+COPY slides/ai-slides.md /slides/
+COPY slides/ai-slides-de.md /slides/
 
 # Copy HTML files and nginx config
-COPY landing.html /slides/
-COPY k8s-workshop.html /slides/
-COPY ai-workshop.html /slides/
+COPY slides/landing.html /slides/
+COPY slides/k8s-workshop.html /slides/
+COPY slides/ai-workshop.html /slides/
+COPY slides/demo-prompt.txt /slides/
 COPY nginx.conf /slides/
 
 # Production stage - serve with nginx
@@ -31,6 +32,7 @@ COPY --from=builder /slides/ai-slides-de.md /usr/share/nginx/html/
 COPY --from=builder /slides/landing.html /usr/share/nginx/html/
 COPY --from=builder /slides/k8s-workshop.html /usr/share/nginx/html/
 COPY --from=builder /slides/ai-workshop.html /usr/share/nginx/html/
+COPY --from=builder /slides/demo-prompt.txt /usr/share/nginx/html/
 
 # Copy custom nginx config for non-root operation
 COPY --from=builder /slides/nginx.conf /etc/nginx/nginx.conf
