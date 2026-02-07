@@ -272,3 +272,19 @@ Ein Prompt. Ein KI-Agent. Ein komplett spielbares Snake-Spiel - live gebaut in u
 
 **Achtet auf die Agenten-Schleife:**
 Ziel verstehen &rarr; Planen &rarr; Code schreiben &rarr; Testen &rarr; Liefern
+
+---
+
+## Bonus: Kostenloses Hosting für eure Projekte
+### Einfach online stellen - kostenlos!
+
+| Plattform | Ideal für | Gratis-Angebot |
+|-----------|-----------|----------------|
+| **Vercel** | Next.js, React, statische Seiten | Unbegrenzt Seiten, Serverless Functions |
+| **Netlify** | Statische Seiten, JAMstack | 100 GB Bandbreite/Monat |
+| **GitHub Pages** | Statische Seiten, Docs | Unbegrenzt für öffentliche Repos |
+| **Cloudflare Pages** | Jedes Frontend, globales CDN | Unbegrenzte Bandbreite |
+| **Railway** | Backend-Apps, Datenbanken | $5 Gratis-Guthaben/Monat |
+| **Fly.io** | Container, Full-Stack-Apps | 3 Shared VMs kostenlos |
+
+**Mit KI etwas gebaut? Stellt es heute online - keine Kreditkarte nötig!**

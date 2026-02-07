@@ -272,3 +272,19 @@ One prompt. One AI agent. A fully playable Snake game - built live in under 2 mi
 
 **Watch for the agent loop:**
 Understand goal &rarr; Plan &rarr; Write code &rarr; Test &rarr; Deliver
+
+---
+
+## Bonus: Free Hosting for Your Projects
+### Ship it - for free!
+
+| Platform | Best for | Free tier |
+|----------|----------|-----------|
+| **Vercel** | Next.js, React, static sites | Unlimited sites, serverless functions |
+| **Netlify** | Static sites, JAMstack | 100 GB bandwidth/month |
+| **GitHub Pages** | Static sites, docs | Unlimited for public repos |
+| **Cloudflare Pages** | Any frontend, global CDN | Unlimited bandwidth |
+| **Railway** | Backend apps, databases | $5 free credit/month |
+| **Fly.io** | Containers, full-stack apps | 3 shared VMs free |
+
+**Built something with AI? Ship it today - no credit card needed!**
