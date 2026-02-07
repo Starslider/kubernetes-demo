@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workshop Hub - Select Your Workshop</title>
+    <title>Workshop Hub</title>
     <meta name="description" content="Choose between Kubernetes Workshop and AI Agents Workshop">
     <style>
         * {
@@ -14,7 +14,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #0f0f0f;
+            color: #e0e0e0;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -23,131 +24,153 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 960px;
             width: 100%;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 60px;
-            color: white;
+            margin-bottom: 64px;
         }
 
         .header h1 {
-            font-size: 3em;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 2.4em;
+            font-weight: 600;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+            margin-bottom: 8px;
         }
 
         .header p {
-            font-size: 1.3em;
-            opacity: 0.9;
+            font-size: 1.05em;
+            color: #707070;
         }
 
         .workshops {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+            margin-bottom: 48px;
         }
 
         .workshop-card {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: pointer;
+            background: #1a1a1a;
+            border: 1px solid #262626;
+            border-radius: 12px;
+            padding: 36px;
             text-decoration: none;
             color: inherit;
             display: block;
+            transition: border-color 0.2s ease, background 0.2s ease;
         }
 
         .workshop-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+            border-color: #404040;
+            background: #1f1f1f;
         }
 
-        .workshop-icon {
-            font-size: 4em;
+        .workshop-tag {
+            display: inline-block;
+            font-size: 0.75em;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 4px 10px;
+            border-radius: 4px;
             margin-bottom: 20px;
-            display: block;
+        }
+
+        .workshop-card.k8s .workshop-tag {
+            color: #4ade80;
+            background: rgba(74, 222, 128, 0.1);
+        }
+
+        .workshop-card.ai .workshop-tag {
+            color: #818cf8;
+            background: rgba(129, 140, 248, 0.1);
         }
 
         .workshop-card h2 {
-            font-size: 2em;
-            margin-bottom: 15px;
-            color: #333;
+            font-size: 1.5em;
+            font-weight: 600;
+            color: #ffffff;
+            margin-bottom: 10px;
+            letter-spacing: -0.01em;
         }
 
-        .workshop-card p {
-            font-size: 1.1em;
+        .workshop-card .description {
+            font-size: 0.95em;
             line-height: 1.6;
-            color: #666;
-            margin-bottom: 20px;
+            color: #808080;
+            margin-bottom: 24px;
         }
 
         .workshop-topics {
             list-style: none;
-            margin-bottom: 25px;
+            margin-bottom: 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
         .workshop-topics li {
-            padding: 8px 0;
-            color: #555;
+            font-size: 0.9em;
+            color: #999;
+            padding-left: 20px;
             position: relative;
-            padding-left: 25px;
         }
 
         .workshop-topics li:before {
-            content: "✓";
+            content: ">";
             position: absolute;
             left: 0;
-            color: #667eea;
-            font-weight: bold;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .workshop-card.k8s .workshop-topics li:before {
+            color: #4ade80;
+        }
+
+        .workshop-card.ai .workshop-topics li:before {
+            color: #818cf8;
         }
 
         .btn {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 1.1em;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #e0e0e0;
+            padding: 10px 24px;
+            border-radius: 6px;
+            border: 1px solid #333;
+            background: transparent;
+            transition: border-color 0.2s ease, color 0.2s ease;
         }
 
-        .btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        .workshop-card:hover .btn {
+            color: #ffffff;
         }
 
-        .workshop-card.k8s .btn {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        .workshop-card.k8s:hover .btn {
+            border-color: #4ade80;
+            color: #4ade80;
         }
 
-        .workshop-card.ai .btn {
-            background: linear-gradient(135deg, #FF6B6B 0%, #C44569 100%);
+        .workshop-card.ai:hover .btn {
+            border-color: #818cf8;
+            color: #818cf8;
         }
 
         .footer {
             text-align: center;
-            color: white;
-            opacity: 0.8;
-            margin-top: 40px;
+            color: #404040;
+            font-size: 0.85em;
         }
 
         @media (max-width: 768px) {
             .header h1 {
-                font-size: 2em;
-            }
-
-            .header p {
-                font-size: 1.1em;
+                font-size: 1.8em;
             }
 
             .workshops {
@@ -155,11 +178,11 @@
             }
 
             .workshop-card {
-                padding: 30px;
+                padding: 28px;
             }
 
             .workshop-card h2 {
-                font-size: 1.6em;
+                font-size: 1.3em;
             }
         }
     </style>
@@ -173,9 +196,9 @@
 
         <div class="workshops">
             <a href="/k8s-workshop.html" class="workshop-card k8s">
-                <span class="workshop-icon">☸️</span>
+                <span class="workshop-tag">Infrastructure</span>
                 <h2>Kubernetes Workshop</h2>
-                <p>Master containers and orchestration from Docker basics to production-ready Kubernetes deployments.</p>
+                <p class="description">From Docker basics to production-ready Kubernetes deployments and orchestration patterns.</p>
                 <ul class="workshop-topics">
                     <li>What is Docker?</li>
                     <li>Understanding Containers</li>
@@ -183,13 +206,13 @@
                     <li>Core Concepts & Architecture</li>
                     <li>GitOps & Production Patterns</li>
                 </ul>
-                <span class="btn">Start K8s Workshop →</span>
+                <span class="btn">Start Workshop</span>
             </a>
 
             <a href="/ai-workshop.html" class="workshop-card ai">
-                <span class="workshop-icon">🤖</span>
+                <span class="workshop-tag">Artificial Intelligence</span>
                 <h2>AI Agents Workshop</h2>
-                <p>Understand the AI revolution from generative AI to autonomous agents in accessible, non-technical terms.</p>
+                <p class="description">From generative AI fundamentals to autonomous agents, explained in accessible, non-technical terms.</p>
                 <ul class="workshop-topics">
                     <li>What is Generative AI?</li>
                     <li>Understanding LLMs</li>
@@ -197,12 +220,12 @@
                     <li>Real-World Applications</li>
                     <li>Future of AI Agents</li>
                 </ul>
-                <span class="btn">Start AI Workshop →</span>
+                <span class="btn">Start Workshop</span>
             </a>
         </div>
 
         <div class="footer">
-            <p>Navigate using arrow keys • Press O for overview • Press Esc to return</p>
+            <p>Navigate slides with arrow keys &middot; Press O for overview &middot; Press Esc to return</p>
         </div>
     </div>
 </body>
