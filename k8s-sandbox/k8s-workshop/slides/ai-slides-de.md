@@ -80,15 +80,15 @@ Ihr tippt: *"Die Katze saß auf der..."*
 
 ## Die grossen Player
 
-**GPT-4o** (OpenAI) - Treibt ChatGPT an
+**GPT-5** (OpenAI) - Treibt ChatGPT an
 
-**Claude** (Anthropic) - Stark bei Logik und längeren Aufgaben
+**Claude 4.6** (Anthropic) - Stark bei Logik und komplexen Aufgaben
 
-**Gemini** (Google) - Eingebaut in Google-Produkte
+**Gemini 3** (Google) - Eingebaut in Google-Produkte
 
-**LLaMA / DeepSeek** (Meta / DeepSeek) - Open-Source
+**Llama 4 / DeepSeek R1** (Meta / DeepSeek) - Open-Source
 
-**Grok** (xAI) - Integriert in X/Twitter
+**Grok 4** (xAI) - Integriert in X/Twitter
 
 Alle sagen die wahrscheinlichsten nächsten Wörter voraus basierend auf Eingabe + Training
 
@@ -123,8 +123,8 @@ Alle sagen die wahrscheinlichsten nächsten Wörter voraus basierend auf Eingabe
 
 | Prompt | Ergebnis |
 |--------|----------|
-| "Schreib was über Vertrieb" | Generisch, vage, nutzlos |
-| "Schreib eine 3-Absatz E-Mail an B2B-Kunden zum neuen Preismodell. Professionell aber freundlich. Erwähne den 15% Frühbucher-Rabatt." | Versandfertig |
+| "Schreib mir eine Kunden-E-Mail" | Generisch, ohne Richtung, unbrauchbar |
+| "Schreib eine 3-Absatz E-Mail an unsere B2B-Kunden zum neuen Preismodell. Ton: professionell aber freundlich. Erwähne den 15% Frühbucher-Rabatt und schließe mit einem Call-to-Action für eine Demo-Buchung." | Versandfertig, markenkonform, umsetzbar |
 
 **Qualität der Ausgabe = Qualität der Eingabe**
 

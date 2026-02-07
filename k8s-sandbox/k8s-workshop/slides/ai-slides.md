@@ -80,15 +80,15 @@ You type: *"The cat sat on the..."*
 
 ## The Big Players
 
-**GPT-4o** (OpenAI) - Powers ChatGPT
+**GPT-5** (OpenAI) - Powers ChatGPT
 
-**Claude** (Anthropic) - Strong at reasoning and longer tasks
+**Claude 4.6** (Anthropic) - Strong at reasoning and complex tasks
 
-**Gemini** (Google) - Built into Google products
+**Gemini 3** (Google) - Built into Google products
 
-**LLaMA / DeepSeek** (Meta / DeepSeek) - Open-source
+**Llama 4 / DeepSeek R1** (Meta / DeepSeek) - Open-source
 
-**Grok** (xAI) - Integrated into X/Twitter
+**Grok 4** (xAI) - Integrated into X/Twitter
 
 All predict the most likely next words based on input + training
 
@@ -123,8 +123,8 @@ All predict the most likely next words based on input + training
 
 | Prompt | Result |
 |--------|--------|
-| "Write something about sales" | Generic, vague, useless |
-| "Write a 3-paragraph email to B2B clients about our new pricing. Professional but friendly. Mention the 15% early-bird discount." | Ready to send |
+| "Write me a client email" | Generic, no direction, unusable |
+| "Write a 3-paragraph email to our B2B clients announcing the new pricing. Tone: professional but warm. Mention the 15% early-bird discount and end with a call-to-action to book a demo." | Ready to send, on-brand, actionable |
 
 **Output quality = Input quality**
 
