@@ -3,7 +3,7 @@ apiVersion: v1
 data:
   serverDZ.cfg: |
       hostname="DeerIsle Experimental";
-      passwordAdmin="dayz";
+      passwordAdmin="__ADMIN_PASSWORD__";
       enableCfgGameplayFile=1
       enableWhitelist=0;
       steamQueryPort=27016;
@@ -69,7 +69,7 @@ metadata:
 apiVersion: v1
 data:
   BEServer_x64.cfg: |
-      RConPassword = "dayz";
+      RConPassword = "__RCON_PASSWORD__";
       RestrictRCon = 1;
       RConPort = 2310;
 kind: ConfigMap

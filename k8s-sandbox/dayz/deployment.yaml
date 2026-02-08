@@ -28,23 +28,54 @@ spec:
         - name: dayz-profile
           persistentVolumeClaim:
             claimName: dayz-profile-pvc
-        - name: dayz-server-cfg
+        - name: dayz-server-cfg-template
           configMap:
             name: dayz-server-cfg
             items:
             - key: serverDZ.cfg
               path: serverDZ.cfg
-        - name: dayz-beserver-cfg
+        - name: dayz-beserver-cfg-template
           configMap:
             name: dayz-beserver-cfg
             items:
             - key: BEServer_x64.cfg
               path: BEServer_x64.cfg
+        - name: dayz-server-cfg
+          emptyDir: {}
+        - name: dayz-beserver-cfg
+          emptyDir: {}
         - name: mod-downloader-script
           configMap:
             name: dayz-mod-downloader
             defaultMode: 0755
       initContainers:
+        - name: config-renderer
+          image: alpine:latest
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              sed "s/__ADMIN_PASSWORD__/$ADMIN_PASSWORD/g" /templates/server/serverDZ.cfg > /rendered/server/serverDZ.cfg
+              sed "s/__RCON_PASSWORD__/$RCON_PASSWORD/g" /templates/beserver/BEServer_x64.cfg > /rendered/beserver/BEServer_x64.cfg
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dayz-server-passwords
+                  key: ADMIN_PASSWORD
+            - name: RCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: dayz-server-passwords
+                  key: RCON_PASSWORD
+          volumeMounts:
+            - name: dayz-server-cfg-template
+              mountPath: /templates/server
+            - name: dayz-beserver-cfg-template
+              mountPath: /templates/beserver
+            - name: dayz-server-cfg
+              mountPath: /rendered/server
+            - name: dayz-beserver-cfg
+              mountPath: /rendered/beserver
         - name: mission-downloader
           image: alpine:latest
           command: ["/bin/sh", "-c"]
