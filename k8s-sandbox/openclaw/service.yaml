@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: openclaw-gateway
+  namespace: openclaw
+spec:
+  type: ClusterIP
+  selector:
+    app: openclaw
+  ports:
+  - name: gateway
+    protocol: TCP
+    port: 18789
+    targetPort: gateway

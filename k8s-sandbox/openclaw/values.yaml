@@ -1,0 +1,16 @@
+config:
+  existingSecret: openclaw-oauth2-proxy-secrets
+
+extraArgs:
+  provider: oidc
+  oidc-issuer-url: "https://authentik.dhlabs.org/application/o/openclaw/"
+  redirect-url: "https://openclaw.dhlabs.org/oauth2/callback"
+  provider-display-name: "Authentik"
+  skip-provider-button: "true"
+  cookie-secure: "true"
+  email-domain: "*"
+  pass-access-token: "true"
+  set-xauthrequest: "true"
+  skip-auth-regex: "^/oauth2/.*"
+  upstream: "http://openclaw-gateway.openclaw.svc.cluster.local:18789"
+  proxy-websockets: "true"

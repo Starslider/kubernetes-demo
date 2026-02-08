@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openclaw
+  namespace: openclaw
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: openclaw
+  template:
+    metadata:
+      labels:
+        app: openclaw
+    spec:
+      serviceAccountName: openclaw
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+      - name: openclaw
+        image: ghcr.io/openclaw-ai/openclaw:latest
+        ports:
+        - name: gateway
+          containerPort: 18789
+          protocol: TCP
+        # Port 18791 (admin control) intentionally NOT exposed.
+        # Access only via: kubectl -n openclaw port-forward deploy/openclaw 18791:18791
+        envFrom:
+        - configMapRef:
+            name: openclaw-config
+        env:
+        - name: XAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: xai-api-key
+        - name: TELEGRAM_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: telegram-token
+        - name: OPENCLAW_ENCRYPTION_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: encryption-key
+        resources:
+          requests:
+            cpu: 500m
+            memory: 2Gi
+          limits:
+            cpu: "2"
+            memory: 8Gi
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          capabilities:
+            drop:
+            - ALL
+        startupProbe:
+          httpGet:
+            path: /health
+            port: gateway
+          failureThreshold: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: gateway
+          periodSeconds: 30
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: gateway
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: openclaw-config
+          mountPath: /home/node/.openclaw
+        - name: openclaw-workspace
+          mountPath: /home/node/workspace
+        - name: tmp
+          mountPath: /tmp
+      volumes:
+      - name: openclaw-config
+        persistentVolumeClaim:
+          claimName: openclaw-config-pvc
+      - name: openclaw-workspace
+        persistentVolumeClaim:
+          claimName: openclaw-workspace-pvc
+      - name: tmp
+        emptyDir:
+          sizeLimit: 500Mi
+      # Chromium sidecar disabled - avoids SYS_ADMIN capability requirement.
+      # To enable browser automation in the future, add a sidecar container here
+      # with appropriate security context and update the CiliumNetworkPolicy egress.

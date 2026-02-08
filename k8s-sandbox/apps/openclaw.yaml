@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openclaw
+spec:
+  project: default
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/openclaw
+      targetRevision: HEAD
+      ref: values
+
+    - repoURL: https://oauth2-proxy.github.io/manifests
+      targetRevision: 8.2.1
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/openclaw/values.yaml
+      chart: oauth2-proxy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openclaw
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jsonPointers:
+        - /status

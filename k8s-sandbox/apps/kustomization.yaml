@@ -33,3 +33,4 @@ resources:
   - wonderful-rag.yaml
   - strimzi.yaml
   - postgres.yaml
+  - openclaw.yaml

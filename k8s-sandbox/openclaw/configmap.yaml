@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openclaw-config
+  namespace: openclaw
+data:
+  # Disable community skills marketplace
+  OPENCLAW_SKILLS_MARKETPLACE: "false"
+  # Disable remote skill loading / auto-install
+  OPENCLAW_REMOTE_SKILLS: "false"
+  OPENCLAW_AUTO_INSTALL_SKILLS: "false"
+  # Disable browser automation
+  OPENCLAW_BROWSER_ENABLED: "false"
+  # Disable telemetry
+  OPENCLAW_TELEMETRY: "false"

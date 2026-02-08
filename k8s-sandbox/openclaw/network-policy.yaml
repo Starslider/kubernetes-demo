@@ -1,0 +1,51 @@
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: openclaw-policy
+  namespace: openclaw
+spec:
+  endpointSelector:
+    matchLabels:
+      app: openclaw
+  ingress:
+  # Allow traffic from ingress namespace (Gateway / oauth2-proxy)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: ingress
+  # Allow intra-namespace traffic (oauth2-proxy sidecar)
+  - fromEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: openclaw
+  egress:
+  # DNS resolution via kube-dns
+  - toEndpoints:
+    - matchLabels:
+        k8s:io.kubernetes.pod.namespace: kube-system
+        k8s:k8s-app: kube-dns
+    toPorts:
+    - ports:
+      - port: "53"
+        protocol: UDP
+      - port: "53"
+        protocol: TCP
+  # xAI Grok API
+  - toFQDNs:
+    - matchName: api.x.ai
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Telegram Bot API
+  - toFQDNs:
+    - matchName: api.telegram.org
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Authentik OIDC (for oauth2-proxy token validation)
+  - toFQDNs:
+    - matchName: authentik.dhlabs.org
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
