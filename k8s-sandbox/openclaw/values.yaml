@@ -9,6 +9,7 @@ extraArgs:
   skip-provider-button: "true"
   cookie-secure: "true"
   email-domain: "*"
+  insecure-oidc-allow-unverified-email: "true"
   pass-access-token: "true"
   set-xauthrequest: "true"
   skip-auth-regex: "^/oauth2/.*"
