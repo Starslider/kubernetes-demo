@@ -82,3 +82,11 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Brave Search API (AWS Global Accelerator - static anycast)
+  - toCIDRSet:
+    - cidr: 15.197.138.111/32
+    - cidr: 3.33.153.106/32
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
