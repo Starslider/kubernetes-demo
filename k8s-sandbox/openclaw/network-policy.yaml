@@ -29,27 +29,21 @@ spec:
       - port: "53"
         protocol: TCP
   # xAI Grok API (104.18.18.0/23 covers Cloudflare range for api.x.ai)
-  - toFQDNs:
-    - matchName: api.x.ai
-    toCIDRSet:
+  - toCIDRSet:
     - cidr: 104.18.18.0/23
     toPorts:
     - ports:
       - port: "443"
         protocol: TCP
   # Telegram Bot API (149.154.160.0/20 covers Telegram's DC range)
-  - toFQDNs:
-    - matchName: api.telegram.org
-    toCIDRSet:
+  - toCIDRSet:
     - cidr: 149.154.160.0/20
     toPorts:
     - ports:
       - port: "443"
         protocol: TCP
   # Authentik OIDC (local network for oauth2-proxy token validation)
-  - toFQDNs:
-    - matchName: authentik.dhlabs.org
-    toCIDRSet:
+  - toCIDRSet:
     - cidr: 192.168.1.210/32
     toPorts:
     - ports:
