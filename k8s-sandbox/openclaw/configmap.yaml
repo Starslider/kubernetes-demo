@@ -13,3 +13,7 @@ data:
   OPENCLAW_BROWSER_ENABLED: "false"
   # Disable telemetry
   OPENCLAW_TELEMETRY: "false"
+  # Use xAI Grok as LLM provider
+  OPENCLAW_MODEL: "xai/grok"
+  # Bind gateway to all interfaces (required for k8s health probes)
+  OPENCLAW_GATEWAY_HOST: "0.0.0.0"
