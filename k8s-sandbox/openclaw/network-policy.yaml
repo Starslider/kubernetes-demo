@@ -56,3 +56,29 @@ spec:
     - ports:
       - port: "8123"
         protocol: TCP
+  # Ring API - oauth.ring.com (Cloudflare)
+  # WARNING: Ring uses AWS infrastructure with rotating IPs. These CIDRs may
+  # need updating if Ring changes providers or IP allocations.
+  - toCIDRSet:
+    - cidr: 104.17.0.0/16
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Ring API - api.ring.com, app.ring.com, fw.ring.com (AWS us-east-1)
+  - toCIDRSet:
+    - cidr: 13.217.0.0/16
+    - cidr: 35.168.0.0/13
+    - cidr: 44.209.0.0/16
+    - cidr: 52.71.0.0/16
+    - cidr: 52.200.0.0/16
+    - cidr: 54.164.0.0/16
+    - cidr: 54.237.0.0/16
+    - cidr: 98.91.0.0/16
+    - cidr: 98.95.0.0/16
+    - cidr: 100.50.0.0/16
+    - cidr: 107.20.0.0/16
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

@@ -65,6 +65,11 @@ spec:
             secretKeyRef:
               name: openclaw-secrets
               key: ha-access-token
+        - name: RING_REFRESH_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: ring-refresh-token
         resources:
           requests:
             cpu: 500m
