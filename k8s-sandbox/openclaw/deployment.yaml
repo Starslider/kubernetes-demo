@@ -51,6 +51,11 @@ spec:
             secretKeyRef:
               name: openclaw-secrets
               key: encryption-key
+        - name: OPENCLAW_GATEWAY_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: gateway-token
         resources:
           requests:
             cpu: 500m
