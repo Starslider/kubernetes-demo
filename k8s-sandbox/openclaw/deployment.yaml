@@ -38,6 +38,8 @@ spec:
         - configMapRef:
             name: openclaw-config
         env:
+        - name: PATH
+          value: "/home/node/.openclaw/mcporter/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
         - name: XAI_API_KEY
           valueFrom:
             secretKeyRef:
