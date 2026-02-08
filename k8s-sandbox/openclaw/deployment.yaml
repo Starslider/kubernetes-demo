@@ -26,6 +26,7 @@ spec:
       containers:
       - name: openclaw
         image: alpine/openclaw:latest
+        command: ["node", "dist/index.js", "gateway", "--allow-unconfigured", "--bind", "lan"]
         ports:
         - name: gateway
           containerPort: 18789
