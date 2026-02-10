@@ -104,3 +104,25 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Polymarket APIs (Cloudflare - gamma-api.polymarket.com, clob.polymarket.com)
+  - toCIDRSet:
+    - cidr: 104.18.34.0/24
+    - cidr: 172.64.153.0/24
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # Polygon RPC (polygon-rpc.com - for on-chain transactions)
+  - toCIDRSet:
+    - cidr: 208.65.177.0/24
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # PyPI (Fastly CDN - pip install packages)
+  - toCIDRSet:
+    - cidr: 151.101.0.0/16
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

@@ -39,7 +39,7 @@ spec:
             name: openclaw-config
         env:
         - name: PATH
-          value: "/home/node/.openclaw/npm-global/bin:/home/node/.openclaw/mcporter/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+          value: "/home/node/.openclaw/npm-global/bin:/home/node/.openclaw/mcporter/bin:/home/node/.openclaw/python-packages/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
         - name: NPM_CONFIG_CACHE
           value: "/tmp/.npm-cache"
         - name: XDG_CONFIG_HOME
@@ -78,6 +78,31 @@ spec:
             secretKeyRef:
               name: openclaw-secrets
               key: ring-refresh-token
+        - name: POLYMARKET_PRIVATE_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: polymarket-private-key
+        - name: POLYMARKET_FUNDER_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: polymarket-funder-address
+        - name: POLYMARKET_TELEGRAM_CHAT_ID
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: polymarket-telegram-chat-id
+        - name: POLYMARKET_DRY_RUN
+          value: "true"
+        - name: POLYMARKET_BET_SIZE
+          value: "2"
+        - name: POLYMARKET_DAILY_LIMIT
+          value: "50"
+        - name: POLYMARKET_MAX_POSITIONS
+          value: "25"
+        - name: PYTHONPATH
+          value: "/home/node/.openclaw/python-packages"
         resources:
           requests:
             cpu: 500m
