@@ -97,3 +97,17 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # ClawHub skill marketplace (Vercel - clawhub.ai)
+  - toCIDRSet:
+    - cidr: 216.150.1.0/24
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
+  # npm registry (Cloudflare - registry.npmjs.org)
+  - toCIDRSet:
+    - cidr: 104.16.0.0/20
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP
