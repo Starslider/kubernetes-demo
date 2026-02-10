@@ -46,6 +46,8 @@ spec:
           value: "/home/node/.openclaw/config"
         - name: XDG_DATA_HOME
           value: "/home/node/.openclaw/data"
+        - name: CLAWHUB_WORKDIR
+          value: "/home/node/.openclaw"
         - name: XAI_API_KEY
           valueFrom:
             secretKeyRef:
