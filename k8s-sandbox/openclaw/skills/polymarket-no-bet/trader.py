@@ -274,6 +274,11 @@ def execute_trades(
     daily_limit = daily_limit or float(os.environ.get("POLYMARKET_DAILY_LIMIT", "50"))
     max_positions = max_positions or int(os.environ.get("POLYMARKET_MAX_POSITIONS", "25"))
 
+    # Hardcoded safety caps — cannot be overridden by env vars
+    bet_size = min(bet_size, 20.0)
+    daily_limit = min(daily_limit, 200.0)
+    max_positions = min(max_positions, 100)
+
     current_spend = get_daily_spend()
     open_positions = get_open_position_count()
     results = []

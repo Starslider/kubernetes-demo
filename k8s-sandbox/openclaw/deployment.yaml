@@ -93,8 +93,13 @@ spec:
             secretKeyRef:
               name: openclaw-secrets
               key: polymarket-telegram-chat-id
+        - name: COINBASE_USDC_ADDRESS
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: coinbase-usdc-address
         - name: POLYMARKET_DRY_RUN
-          value: "true"
+          value: "false"
         - name: POLYMARKET_BET_SIZE
           value: "2"
         - name: POLYMARKET_DAILY_LIMIT

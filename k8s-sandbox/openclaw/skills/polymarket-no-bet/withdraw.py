@@ -7,6 +7,19 @@ from web3 import Web3
 POLYGON_RPC = "https://polygon-rpc.com"
 USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 
+# Allowlisted withdrawal addresses — withdrawals to any other address are blocked.
+# This prevents the AI agent from being tricked into draining funds.
+ALLOWED_WITHDRAW_ADDRESSES = [
+    "0x98311AD8BA39403215Ab0d2f8Ee5CAB87D129234",  # Self (Polymarket wallet)
+]
+
+# Add Coinbase address from env if configured
+_coinbase_addr = os.environ.get("COINBASE_USDC_ADDRESS", "")
+if _coinbase_addr:
+    ALLOWED_WITHDRAW_ADDRESSES.append(_coinbase_addr)
+
+MAX_WITHDRAW_PER_TX = 100.0  # Max $100 per withdrawal transaction
+
 ERC20_ABI = json.loads(
     '[{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],'
     '"name":"transfer","outputs":[{"name":"","type":"bool"}],'
@@ -38,6 +51,19 @@ def withdraw_usdc(destination: str, amount: float | None = None) -> dict:
     Returns:
         Result dict with tx details.
     """
+    # Validate destination against allowlist
+    allowed = [a.lower() for a in ALLOWED_WITHDRAW_ADDRESSES]
+    if destination.lower() not in allowed:
+        return {
+            "status": "error",
+            "message": f"Address {destination} is not in the withdrawal allowlist. "
+                       f"Edit ALLOWED_WITHDRAW_ADDRESSES in withdraw.py to add it.",
+        }
+
+    # Enforce per-tx limit
+    if amount is not None and amount > MAX_WITHDRAW_PER_TX:
+        return {"status": "error", "message": f"Amount ${amount:.2f} exceeds max ${MAX_WITHDRAW_PER_TX:.2f} per transaction"}
+
     private_key = os.environ["POLYMARKET_PRIVATE_KEY"]
     funder = os.environ["POLYMARKET_FUNDER_ADDRESS"]
 
@@ -57,8 +83,8 @@ def withdraw_usdc(destination: str, amount: float | None = None) -> dict:
         return {"status": "error", "message": f"Insufficient MATIC for gas ({balances['matic']:.4f})"}
 
     if amount is None:
-        send_raw = balances["usdc_raw"]
-        send_amount = balances["usdc"]
+        send_amount = min(balances["usdc"], MAX_WITHDRAW_PER_TX)
+        send_raw = int(send_amount * 1e6)
     else:
         send_raw = int(amount * 1e6)
         send_amount = amount
