@@ -10,13 +10,14 @@ Usage:
 
 import os
 import json
+import time
 from web3 import Web3
 
 # Polygon mainnet
 POLYGON_RPC = "https://polygon-rpc.com"
 
 # Polymarket contract addresses on Polygon
-USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 CTF_ADDRESS = "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
 EXCHANGE_ADDRESS = "0x4bFb41d5B3570DeFd03C39a9A4D8dE6Bd8B8982E"
 NEG_RISK_EXCHANGE_ADDRESS = "0xC5d563A36AE78145C45a50134d48A1215220f80a"
@@ -29,6 +30,20 @@ ERC20_ABI = json.loads('[{"inputs":[{"name":"spender","type":"address"},{"name":
 
 # ERC-1155 setApprovalForAll ABI
 ERC1155_ABI = json.loads('[{"inputs":[{"name":"operator","type":"address"},{"name":"approved","type":"bool"}],"name":"setApprovalForAll","outputs":[],"stateMutability":"nonpayable","type":"function"}]')
+
+
+def wait_for_receipt(w3: Web3, tx_hash, timeout: int = 180, poll_interval: int = 15):
+    """Wait for transaction receipt with retry on rate limits."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            receipt = w3.eth.get_transaction_receipt(tx_hash)
+            if receipt is not None:
+                return receipt
+        except Exception:
+            pass
+        time.sleep(poll_interval)
+    raise TimeoutError(f"TX {tx_hash.hex()} not confirmed within {timeout}s")
 
 
 def approve_all():
@@ -62,6 +77,7 @@ def approve_all():
 
     for name, spender in spenders:
         print(f"\nApproving USDC for {name}...")
+        time.sleep(10)
         tx = usdc.functions.approve(
             Web3.to_checksum_address(spender), MAX_APPROVAL
         ).build_transaction({
@@ -73,7 +89,7 @@ def approve_all():
         signed = w3.eth.account.sign_transaction(tx, private_key)
         tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
         print(f"  TX: {tx_hash.hex()}")
-        receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+        receipt = wait_for_receipt(w3, tx_hash)
         print(f"  Status: {'OK' if receipt.status == 1 else 'FAILED'}")
         nonce += 1
 
@@ -82,6 +98,7 @@ def approve_all():
 
     for name, operator in spenders:
         print(f"\nApproving CTF for {name}...")
+        time.sleep(10)
         tx = ctf.functions.setApprovalForAll(
             Web3.to_checksum_address(operator), True
         ).build_transaction({
@@ -93,7 +110,7 @@ def approve_all():
         signed = w3.eth.account.sign_transaction(tx, private_key)
         tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
         print(f"  TX: {tx_hash.hex()}")
-        receipt = w3.eth.wait_for_transaction_receipt(tx_hash, timeout=120)
+        receipt = wait_for_receipt(w3, tx_hash)
         print(f"  Status: {'OK' if receipt.status == 1 else 'FAILED'}")
         nonce += 1
 

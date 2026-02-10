@@ -5,7 +5,7 @@ import os
 from web3 import Web3
 
 POLYGON_RPC = "https://polygon-rpc.com"
-USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
 
 ERC20_ABI = json.loads(
     '[{"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],'

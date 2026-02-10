@@ -1,12 +1,28 @@
 """Polymarket market scanner — finds high-probability NO-bet candidates."""
 
+import json
+import re
 import httpx
 from datetime import datetime, timezone, timedelta
 
 GAMMA_API = "https://gamma-api.polymarket.com"
-CRYPTO_KEYWORDS = [
-    "bitcoin", "btc", "ethereum", "eth", "solana", "sol", "crypto",
-    "dogecoin", "doge", "xrp", "cardano", "ada", "bnb", "token price",
+
+# Use word-boundary patterns to avoid false positives (e.g. "eth" in "Netherlands")
+CRYPTO_PATTERNS = [
+    re.compile(r"\bbitcoin\b", re.I),
+    re.compile(r"\bbtc\b", re.I),
+    re.compile(r"\bethereum\b", re.I),
+    re.compile(r"\beth\b", re.I),
+    re.compile(r"\bsolana\b", re.I),
+    re.compile(r"\b\$sol\b", re.I),
+    re.compile(r"\bcrypto\b", re.I),
+    re.compile(r"\bcryptocurrency\b", re.I),
+    re.compile(r"\bdogecoin\b", re.I),
+    re.compile(r"\bdoge\b", re.I),
+    re.compile(r"\bxrp\b", re.I),
+    re.compile(r"\bcardano\b", re.I),
+    re.compile(r"\bbnb\b", re.I),
+    re.compile(r"\btoken price\b", re.I),
 ]
 
 
@@ -26,8 +42,8 @@ def fetch_active_markets(limit: int = 200) -> list[dict]:
 
 def is_crypto_market(market: dict) -> bool:
     """Check if market is about crypto prices (too volatile for this strategy)."""
-    question = (market.get("question", "") + " " + market.get("description", "")).lower()
-    return any(kw in question for kw in CRYPTO_KEYWORDS)
+    text = market.get("question", "") + " " + market.get("description", "")
+    return any(p.search(text) for p in CRYPTO_PATTERNS)
 
 
 def parse_resolution_date(market: dict) -> datetime | None:
@@ -62,7 +78,7 @@ def scan_markets(
         if is_crypto_market(market):
             continue
 
-        volume = float(market.get("volume", 0) or 0)
+        volume = float(market.get("volumeNum", 0) or market.get("volume", 0) or 0)
         if volume < min_volume:
             continue
 
@@ -70,24 +86,40 @@ def scan_markets(
         if resolution_date is None or resolution_date > max_end:
             continue
 
-        tokens = market.get("tokens", [])
-        if not tokens or len(tokens) < 2:
+        # Parse outcomes and prices from Gamma API format
+        outcomes_raw = market.get("outcomes", "[]")
+        prices_raw = market.get("outcomePrices", "[]")
+        token_ids_raw = market.get("clobTokenIds", "[]")
+
+        if isinstance(outcomes_raw, str):
+            outcomes = json.loads(outcomes_raw)
+        else:
+            outcomes = outcomes_raw
+        if isinstance(prices_raw, str):
+            prices = json.loads(prices_raw)
+        else:
+            prices = prices_raw
+        if isinstance(token_ids_raw, str):
+            token_ids = json.loads(token_ids_raw)
+        else:
+            token_ids = token_ids_raw
+
+        if len(outcomes) < 2 or len(prices) < 2 or len(token_ids) < 2:
             continue
 
-        yes_token = None
-        no_token = None
-        for token in tokens:
-            outcome = token.get("outcome", "").lower()
-            if outcome == "yes":
-                yes_token = token
-            elif outcome == "no":
-                no_token = token
+        yes_idx = None
+        no_idx = None
+        for i, outcome in enumerate(outcomes):
+            if outcome.lower() == "yes":
+                yes_idx = i
+            elif outcome.lower() == "no":
+                no_idx = i
 
-        if not yes_token or not no_token:
+        if yes_idx is None or no_idx is None:
             continue
 
-        yes_price = float(yes_token.get("price", 0) or 0)
-        no_price = float(no_token.get("price", 0) or 0)
+        yes_price = float(prices[yes_idx])
+        no_price = float(prices[no_idx])
 
         if yes_price < min_yes_prob:
             continue
@@ -95,8 +127,8 @@ def scan_markets(
         if no_price > max_no_price:
             continue
 
-        condition_id = market.get("conditionId") or market.get("condition_id", "")
-        no_token_id = no_token.get("token_id", "")
+        condition_id = market.get("conditionId", "")
+        no_token_id = token_ids[no_idx]
 
         candidates.append({
             "market_id": market.get("id", ""),
