@@ -90,3 +90,10 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
+  # Simmer Prediction Markets API (Railway - api.simmer.markets)
+  - toCIDRSet:
+    - cidr: 66.33.22.0/23
+    toPorts:
+    - ports:
+      - port: "443"
+        protocol: TCP

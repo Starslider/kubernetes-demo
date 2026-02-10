@@ -70,6 +70,11 @@ spec:
             secretKeyRef:
               name: openclaw-secrets
               key: ring-refresh-token
+        - name: SIMMER_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openclaw-secrets
+              key: simmer-api-key
         resources:
           requests:
             cpu: 500m
