@@ -42,6 +42,10 @@ spec:
           value: "/home/node/.openclaw/npm-global/bin:/home/node/.openclaw/mcporter/bin:/root/.bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
         - name: NPM_CONFIG_CACHE
           value: "/tmp/.npm-cache"
+        - name: XDG_CONFIG_HOME
+          value: "/home/node/.openclaw/config"
+        - name: XDG_DATA_HOME
+          value: "/home/node/.openclaw/data"
         - name: XAI_API_KEY
           valueFrom:
             secretKeyRef:
