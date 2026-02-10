@@ -60,12 +60,16 @@ def parse_resolution_date(market: dict) -> datetime | None:
 
 
 def scan_markets(
-    min_yes_prob: float = 0.90,
-    max_no_price: float = 0.12,
+    min_no_prob: float = 0.80,
+    max_no_prob: float = 0.97,
     min_volume: float = 10_000,
-    max_days_to_resolution: int = 7,
+    max_days_to_resolution: int = 30,
 ) -> list[dict]:
-    """Scan for NO-bet candidates matching our criteria.
+    """Scan for NO-bet candidates — markets where NO is highly likely.
+
+    Finds markets where the outcome is very likely NO (e.g. 80-97%),
+    then we buy NO shares to collect small safe profits on resolution.
+    Filters out NO >= 98% since profit per share is too low ($0.02 or less).
 
     Returns list of candidate dicts with market info and trading params.
     """
@@ -84,6 +88,10 @@ def scan_markets(
 
         resolution_date = parse_resolution_date(market)
         if resolution_date is None or resolution_date > max_end:
+            continue
+
+        # Skip already-expired markets
+        if resolution_date < now:
             continue
 
         # Parse outcomes and prices from Gamma API format
@@ -121,14 +129,15 @@ def scan_markets(
         yes_price = float(prices[yes_idx])
         no_price = float(prices[no_idx])
 
-        if yes_price < min_yes_prob:
-            continue
-
-        if no_price > max_no_price:
+        # We want NO to be highly likely but with enough profit margin
+        if no_price < min_no_prob or no_price > max_no_prob:
             continue
 
         condition_id = market.get("conditionId", "")
         no_token_id = token_ids[no_idx]
+
+        # Profit per share = $1 - no_price (e.g. buy at $0.88, pays $1 = $0.12 profit)
+        profit_per_share = 1.0 - no_price
 
         candidates.append({
             "market_id": market.get("id", ""),
@@ -137,13 +146,15 @@ def scan_markets(
             "yes_price": yes_price,
             "no_price": no_price,
             "no_token_id": no_token_id,
+            "profit_per_share": profit_per_share,
             "volume": volume,
             "resolution_date": resolution_date.isoformat(),
             "days_to_resolution": (resolution_date - now).days,
             "slug": market.get("slug", ""),
         })
 
-    candidates.sort(key=lambda c: c["yes_price"], reverse=True)
+    # Sort by NO probability (highest = safest bets first)
+    candidates.sort(key=lambda c: c["no_price"], reverse=True)
     return candidates
 
 
@@ -156,7 +167,8 @@ def format_candidates(candidates: list[dict]) -> str:
     for i, c in enumerate(candidates, 1):
         lines.append(
             f"{i}. {c['question']}\n"
-            f"   YES: ${c['yes_price']:.2f} | NO: ${c['no_price']:.2f} | "
+            f"   NO: {c['no_price']:.0%} (${c['no_price']:.2f}/share) | "
+            f"Profit: ${c['profit_per_share']:.2f}/share | "
             f"Vol: ${c['volume']:,.0f} | Resolves: {c['days_to_resolution']}d\n"
             f"   Token: {c['no_token_id'][:16]}..."
         )

@@ -1,6 +1,6 @@
 # Polymarket NO-Bet Strategy
 
-Automated scanner and trader for Polymarket prediction markets. Finds markets where YES is trading above 90% and places small NO bets to profit from near-certain outcomes.
+Automated scanner and trader for Polymarket prediction markets. Finds markets where NO is 80-97% likely and buys NO shares to collect small safe profits when the outcome resolves as expected. Conservative strategy: many small wins.
 
 ## Cron
 
@@ -13,6 +13,8 @@ Automated scanner and trader for Polymarket prediction markets. Finds markets wh
 - `scan` — List candidate markets (read-only, no auth needed)
 - `trade` — Scan markets and place NO bets (respects POLYMARKET_DRY_RUN)
 - `status` — Show open positions and daily spend
+- `balance` — Show wallet USDC and MATIC balances
+- `withdraw 0xAddress [amount]` — Withdraw USDC to an address
 
 ## Usage
 
@@ -21,6 +23,9 @@ cd /home/node/.openclaw/skills/polymarket-no-bet
 python3 main.py scan
 python3 main.py trade
 python3 main.py status
+python3 main.py balance
+python3 main.py withdraw 0xYourAddress
+python3 main.py withdraw 0xYourAddress 50
 ```
 
 ## Required Environment Variables
@@ -58,8 +63,9 @@ python3 main.py status
 
 ## Strategy
 
-- **Filter**: YES > 90%, NO < $0.12, volume > $10k, resolves within 7 days
-- **Skip**: Crypto price markets (too volatile)
+- **Filter**: NO probability 80-97%, volume > $10k, resolves within 30 days
+- **Skip**: Crypto price markets (too volatile), NO > 97% (too little profit)
 - **Sizing**: $2/bet default, $50/day max, 25 max positions
 - **Orders**: Limit BUY on NO side at best ask or slightly below
+- **Profit**: Buy NO at $0.88, resolves NO → pays $1.00 = $0.12 profit per share
 - **State**: Positions tracked in `/home/node/.openclaw/polymarket/positions.json`
