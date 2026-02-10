@@ -90,13 +90,6 @@ spec:
     - ports:
       - port: "443"
         protocol: TCP
-  # Simmer Prediction Markets API (Railway - api.simmer.markets)
-  - toCIDRSet:
-    - cidr: 66.33.22.0/23
-    toPorts:
-    - ports:
-      - port: "443"
-        protocol: TCP
   # ClawHub skill marketplace (Vercel - clawhub.ai)
   - toCIDRSet:
     - cidr: 216.150.1.0/24
