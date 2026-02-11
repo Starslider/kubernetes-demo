@@ -7,7 +7,7 @@ from datetime import datetime, timezone, date
 from pathlib import Path
 
 from py_clob_client.client import ClobClient
-from py_clob_client.clob_types import OrderArgs, OrderType
+from py_clob_client.clob_types import ApiCreds, OrderArgs, OrderType
 from py_clob_client.constants import POLYGON
 
 STATE_DIR = Path(os.environ.get("OPENCLAW_STATE_DIR", "/home/node/.openclaw/polymarket"))
@@ -85,16 +85,10 @@ def _get_clob_client() -> ClobClient:
     creds = _load_json(API_CREDS_FILE)
 
     if creds:
-        client = ClobClient(
-            CLOB_HOST,
-            key=private_key,
-            chain_id=CHAIN_ID,
-            funder=funder,
-            creds={
-                "apiKey": creds["apiKey"],
-                "secret": creds["secret"],
-                "passphrase": creds["passphrase"],
-            },
+        api_creds = ApiCreds(
+            api_key=creds["apiKey"],
+            api_secret=creds["secret"],
+            api_passphrase=creds["passphrase"],
         )
     else:
         client = ClobClient(
@@ -102,23 +96,23 @@ def _get_clob_client() -> ClobClient:
             key=private_key,
             chain_id=CHAIN_ID,
             funder=funder,
+            signature_type=0,  # Standard EOA wallet
         )
-        derived = client.derive_api_key()
-        creds = {
-            "apiKey": derived.api_key,
-            "secret": derived.secret,
-            "passphrase": derived.passphrase,
-        }
-        _save_json(API_CREDS_FILE, creds)
-        # Re-init with creds
-        client = ClobClient(
-            CLOB_HOST,
-            key=private_key,
-            chain_id=CHAIN_ID,
-            funder=funder,
-            creds=creds,
-        )
+        api_creds = client.create_or_derive_api_creds()
+        _save_json(API_CREDS_FILE, {
+            "apiKey": api_creds.api_key,
+            "secret": api_creds.api_secret,
+            "passphrase": api_creds.api_passphrase,
+        })
 
+    client = ClobClient(
+        CLOB_HOST,
+        key=private_key,
+        chain_id=CHAIN_ID,
+        funder=funder,
+        signature_type=0,
+        creds=api_creds,
+    )
     return client
 
 
@@ -137,30 +131,22 @@ def check_order_book(client: ClobClient, token_id: str) -> dict | None:
     if not asks:
         return None
 
-    best_ask = asks[0]
-    best_price = float(best_ask.price)
-    best_size = float(best_ask.size)
-
-    if best_price > 0.12:
+    # Find cheapest ask in our target range ($0.80-$0.97)
+    valid_asks = [
+        a for a in asks
+        if 0.80 <= float(a.price) <= 0.97 and float(a.size) >= 10
+    ]
+    if not valid_asks:
         return None
 
-    if best_size < 100:
-        return None
-
-    # Check spread
-    bids = book.bids if book.bids else []
-    if bids:
-        best_bid = float(bids[0].price)
-        spread = best_price - best_bid
-        if spread > 0.03:
-            return None
-    else:
-        spread = best_price
+    # Pick the cheapest valid ask
+    best = min(valid_asks, key=lambda a: float(a.price))
+    best_price = float(best.price)
+    best_size = float(best.size)
 
     return {
         "best_ask": best_price,
         "best_ask_size": best_size,
-        "spread": spread,
     }
 
 
