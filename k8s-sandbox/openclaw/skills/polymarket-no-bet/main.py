@@ -63,9 +63,7 @@ def cmd_trade():
 
     candidates = scan_markets()
     if not candidates:
-        msg = "No candidates found matching criteria."
-        print(msg)
-        send_telegram(f"🔍 Polymarket Scan: {msg}")
+        print("No candidates found matching criteria.")
         return
 
     print(format_candidates(candidates))
@@ -73,8 +71,8 @@ def cmd_trade():
 
     results = execute_trades(candidates, dry_run=dry_run)
 
-    # Format results
-    lines = [f"<b>Polymarket NO-Bet ({mode})</b>\n"]
+    # Print all results to stdout
+    traded = []
     for r in results:
         status_icon = {
             "placed": "✅",
@@ -84,11 +82,17 @@ def cmd_trade():
         }.get(r["status"], "❓")
 
         market_short = r["market"][:50]
-        lines.append(f"{status_icon} {market_short}\n   {r.get('message', r['status'])}")
+        line = f"{status_icon} {market_short}\n   {r.get('message', r['status'])}"
+        print(line)
 
-    output = "\n".join(lines)
-    print(output)
-    send_telegram(output)
+        # Only notify on actual trades
+        if r["status"] in ("placed", "dry_run"):
+            traded.append(line)
+
+    # Send Telegram only if we actually bought something
+    if traded:
+        msg = f"<b>Polymarket NO-Bet ({mode})</b>\n\n" + "\n".join(traded)
+        send_telegram(msg)
 
 
 def cmd_status():
