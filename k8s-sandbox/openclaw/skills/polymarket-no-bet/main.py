@@ -106,6 +106,7 @@ def cmd_balance():
     print(f"Wallet:  {funder}")
     print(f"MATIC:   {balances['matic']:.4f}")
     print(f"USDC:    ${balances['usdc']:.2f}")
+    print(f"USDC.e:  ${balances['usdc_e']:.2f}  (Polymarket)")
 
 
 def cmd_withdraw():

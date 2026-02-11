@@ -5,7 +5,8 @@ import os
 from web3 import Web3
 
 POLYGON_RPC = "https://polygon-rpc.com"
-USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"
+USDC_ADDRESS = "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"  # Native USDC
+USDC_E_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"  # Bridged USDC.e (used by Polymarket)
 
 # Allowlisted withdrawal addresses — withdrawals to any other address are blocked.
 # This prevents the AI agent from being tricked into draining funds.
@@ -30,14 +31,19 @@ ERC20_ABI = json.loads(
 
 
 def get_balances(w3: Web3, address: str) -> dict:
-    """Get MATIC and USDC balances."""
+    """Get MATIC, USDC, and USDC.e balances."""
+    checksum = Web3.to_checksum_address(address)
     usdc = w3.eth.contract(address=Web3.to_checksum_address(USDC_ADDRESS), abi=ERC20_ABI)
-    usdc_raw = usdc.functions.balanceOf(Web3.to_checksum_address(address)).call()
-    matic_raw = w3.eth.get_balance(Web3.to_checksum_address(address))
+    usdc_e = w3.eth.contract(address=Web3.to_checksum_address(USDC_E_ADDRESS), abi=ERC20_ABI)
+    usdc_raw = usdc.functions.balanceOf(checksum).call()
+    usdc_e_raw = usdc_e.functions.balanceOf(checksum).call()
+    matic_raw = w3.eth.get_balance(checksum)
     return {
         "matic": float(w3.from_wei(matic_raw, "ether")),
-        "usdc": usdc_raw / 1e6,  # USDC has 6 decimals
+        "usdc": usdc_raw / 1e6,
         "usdc_raw": usdc_raw,
+        "usdc_e": usdc_e_raw / 1e6,
+        "usdc_e_raw": usdc_e_raw,
     }
 
 
@@ -75,6 +81,7 @@ def withdraw_usdc(destination: str, amount: float | None = None) -> dict:
     print(f"Wallet: {funder}")
     print(f"MATIC:  {balances['matic']:.4f}")
     print(f"USDC:   ${balances['usdc']:.2f}")
+    print(f"USDC.e: ${balances['usdc_e']:.2f}  (Polymarket)")
 
     if balances["usdc"] < 0.01:
         return {"status": "error", "message": "No USDC to withdraw"}
