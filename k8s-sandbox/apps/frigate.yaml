@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: frigate
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: frigate
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - ApplyOutOfSyncOnly=true
+  source:
+    repoURL: https://github.com/Starslider/kubernetes-demo.git
+    path: k8s-sandbox/frigate
+    targetRevision: HEAD

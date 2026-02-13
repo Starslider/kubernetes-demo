@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frigate
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: frigate
+  template:
+    metadata:
+      labels:
+        app: frigate
+    spec:
+      containers:
+      - name: frigate
+        image: ghcr.io/blakeblackshear/frigate:0.15.1
+        ports:
+        - name: web
+          containerPort: 8971
+        - name: api
+          containerPort: 5000
+        - name: rtsp
+          containerPort: 8554
+        - name: rtmp
+          containerPort: 1935
+        volumeMounts:
+        - name: config
+          mountPath: /config
+        - name: media
+          mountPath: /media/frigate
+        - name: dshm
+          mountPath: /dev/shm
+        - name: dri
+          mountPath: /dev/dri
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
+          limits:
+            cpu: "4"
+            memory: 4Gi
+        securityContext:
+          privileged: true
+        livenessProbe:
+          httpGet:
+            path: /api/version
+            port: api
+          initialDelaySeconds: 30
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /api/version
+            port: api
+          initialDelaySeconds: 15
+          periodSeconds: 10
+      volumes:
+      - name: config
+        persistentVolumeClaim:
+          claimName: frigate-config-pvc
+      - name: media
+        persistentVolumeClaim:
+          claimName: frigate-media-pvc
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 1Gi
+      - name: dri
+        hostPath:
+          path: /dev/dri
+          type: Directory
