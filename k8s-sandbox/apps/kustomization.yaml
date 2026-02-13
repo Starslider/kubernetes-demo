@@ -34,3 +34,4 @@ resources:
   - strimzi.yaml
   - postgres.yaml
   - openclaw.yaml
+  - frigate.yaml
