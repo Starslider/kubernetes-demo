@@ -14,5 +14,5 @@ spec:
     - backendRefs:
         - kind: Service
           name: frigate
-          port: 8971
+          port: 5000
           namespace: frigate
