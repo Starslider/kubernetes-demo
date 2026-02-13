@@ -13,6 +13,6 @@ spec:
   rules:
     - backendRefs:
         - kind: Service
-          name: frigate
-          port: 5000
+          name: frigate-oauth2-proxy
+          port: 80
           namespace: frigate

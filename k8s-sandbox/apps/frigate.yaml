@@ -12,7 +12,25 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - ApplyOutOfSyncOnly=true
-  source:
-    repoURL: https://github.com/Starslider/kubernetes-demo.git
-    path: k8s-sandbox/frigate
-    targetRevision: HEAD
+  ignoreDifferences:
+    - group: external-secrets.io
+      kind: ExternalSecret
+      jqPathExpressions:
+        - '.spec.data[].remoteRef.conversionStrategy'
+        - '.spec.data[].remoteRef.decodingStrategy'
+        - '.spec.data[].remoteRef.metadataPolicy'
+        - '.spec.refreshInterval'
+        - '.spec.target.creationPolicy'
+        - '.spec.target.deletionPolicy'
+  sources:
+    - repoURL: https://github.com/Starslider/kubernetes-demo.git
+      path: k8s-sandbox/frigate
+      targetRevision: HEAD
+      ref: values
+
+    - repoURL: https://oauth2-proxy.github.io/manifests
+      targetRevision: 8.2.1
+      helm:
+        valueFiles:
+          - $values/k8s-sandbox/frigate/values.yaml
+      chart: oauth2-proxy
