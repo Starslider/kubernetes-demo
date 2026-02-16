@@ -17,6 +17,7 @@ spec:
     spec:
       containers:
         - name: dex
+          image: ghcr.io/dexidp/dex:v2.44.0
           livenessProbe:
             httpGet:
               path: /api/dex/.well-known/openid-configuration
