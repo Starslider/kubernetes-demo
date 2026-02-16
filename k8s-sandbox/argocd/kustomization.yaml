@@ -13,5 +13,6 @@ resources:
 - repo-server.yaml
 - server.yaml
 - app-controller.yaml
+- dex-server.yaml
 - monitoring
 - github-secret.yaml
