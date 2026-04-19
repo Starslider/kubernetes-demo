@@ -6,6 +6,7 @@ metadata:
 spec:
   concurrencyPolicy: Forbid
   schedule: '0 5 * * *' # Daily at 05:00
+  timeZone: Europe/Zurich
   jobTemplate:
     spec:
       backoffLimit: 2
