@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: satisfactory
+spec:
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: satisfactory
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
+  source:
+    repoURL: https://github.com/Starslider/kubernetes-demo.git
+    path: k8s-sandbox/satisfactory
+    targetRevision: HEAD

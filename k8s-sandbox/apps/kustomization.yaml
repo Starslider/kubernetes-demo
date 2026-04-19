@@ -35,3 +35,4 @@ resources:
   - postgres.yaml
   - openclaw.yaml
   - frigate.yaml
+  - satisfactory.yaml
