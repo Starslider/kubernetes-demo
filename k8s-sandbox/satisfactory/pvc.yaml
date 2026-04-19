@@ -11,3 +11,16 @@ spec:
   resources:
     requests:
       storage: 50Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  namespace: satisfactory
+  name: ssh-config-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 1Gi

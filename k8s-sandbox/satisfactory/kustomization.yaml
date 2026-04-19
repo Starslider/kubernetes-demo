@@ -6,6 +6,7 @@ metadata:
 resources:
   - deployment.yaml
   - pvc.yaml
+  - secrets.yaml
   - svc.yaml
   - cronjob.yaml
   - rbac.yaml
