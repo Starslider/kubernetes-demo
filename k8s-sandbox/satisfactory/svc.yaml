@@ -5,6 +5,10 @@ metadata:
     app: satisfactory
   name: satisfactory
   namespace: satisfactory
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: satisfactory.dhlabs.org
+    external-dns.alpha.kubernetes.io/target: starslider.internet-box.ch
+    external-dns.alpha.kubernetes.io/ttl: "60"
 spec:
   ports:
     - name: game-udp

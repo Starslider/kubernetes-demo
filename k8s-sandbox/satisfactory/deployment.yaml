@@ -69,3 +69,13 @@ spec:
             limits:
               cpu: "4"
               memory: "16Gi"
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - /home/steam/healthcheck.sh
+            initialDelaySeconds: 300
+            periodSeconds: 30
+            failureThreshold: 4
+            successThreshold: 1
