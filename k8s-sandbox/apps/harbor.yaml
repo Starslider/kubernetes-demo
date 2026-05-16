@@ -23,7 +23,7 @@ spec:
       targetRevision: HEAD
 
     - repoURL: https://helm.goharbor.io
-      targetRevision: 1.18.0
+      targetRevision: 1.19.0
       helm:
         parameters:
           - name: expose.tls.enabled

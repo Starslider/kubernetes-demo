@@ -6,7 +6,7 @@ spec:
   project: default
   sources:
     - repoURL: https://cloudnative-pg.github.io/charts
-      targetRevision: 0.27.0
+      targetRevision: 0.28.2
       chart: cloudnative-pg
       helm:
         valuesObject:
