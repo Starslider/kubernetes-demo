@@ -10,6 +10,8 @@ spec:
       chart: cloudnative-pg
       helm:
         valuesObject:
+          crds:
+            create: false
           resources:
             requests:
               cpu: 100m
@@ -28,4 +30,3 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - RespectIgnoreDifferences=true
-      - Replace=true
