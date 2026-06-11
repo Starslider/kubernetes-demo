@@ -54,7 +54,7 @@ spec:
             - name: SERVERSTREAMING
               value: "true"
             - name: SKIPUPDATE
-              value: "true"
+              value: "false"
           ports:
             - name: game-udp
               containerPort: 7777
