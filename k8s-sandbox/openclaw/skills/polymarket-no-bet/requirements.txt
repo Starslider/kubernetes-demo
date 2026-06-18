@@ -1,3 +1,0 @@
-py-clob-client
-httpx
-web3

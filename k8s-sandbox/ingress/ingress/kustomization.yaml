@@ -15,6 +15,5 @@ resources:
 - kmcp-httproute.yaml
 - k8s-workshop-httproute.yaml
 - allow-vpn-ingress.yaml
-- openclaw-httproute.yaml
 - frigate-httproute.yaml
 - unifi-httproute.yaml
