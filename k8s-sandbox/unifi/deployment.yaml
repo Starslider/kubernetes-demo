@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: unifi
+  labels:
+    app.kubernetes.io/name: unifi
+    app.kubernetes.io/component: controller
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: unifi
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: unifi
+        app.kubernetes.io/component: controller
+    spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+      containers:
+        - name: unifi
+          image: ghcr.io/jacobalberty/unifi-docker:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: SYSTEM_IP
+              value: "unifi.dhlabs.org"
+            # - name: TZ
+            #   value: "Europe/Berlin"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: https
+              containerPort: 8443
+              protocol: TCP
+            - name: stun
+              containerPort: 3478
+              protocol: UDP
+            - name: discovery
+              containerPort: 10001
+              protocol: UDP
+          volumeMounts:
+            - name: data
+              mountPath: /unifi
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: unifi-data

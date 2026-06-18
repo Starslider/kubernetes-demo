@@ -13,15 +13,7 @@ spec:
       - ServerSideApply=true
       - RespectIgnoreDifferences=true
       - ApplyOutOfSyncOnly=true
-  sources:
-    - repoURL: oci://ghcr.io/mkilchhofer/unifi-chart
-      targetRevision: 1.16.0
-      helm:
-        valueFiles:
-          - $values/k8s-sandbox/unifi/values.yaml
-      chart: unifi
-
-    - repoURL: https://github.com/Starslider/kubernetes-demo.git
-      path: k8s-sandbox/unifi
-      targetRevision: HEAD
-      ref: values
+  source:
+    repoURL: https://github.com/Starslider/kubernetes-demo.git
+    path: k8s-sandbox/unifi
+    targetRevision: HEAD

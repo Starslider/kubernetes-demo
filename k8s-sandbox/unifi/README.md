@@ -12,17 +12,13 @@ Without a controller they operate in a very limited "standalone" mode.
 
 ## Components
 
-- **Upstream**: [mkilchhofer/unifi](https://artifacthub.io/packages/helm/unifi/unifi) (fork of the popular k8s-at-home chart)
-- **Image**: `jacobalberty/unifi` (well-maintained community packaging of the official UniFi Network Application)
-- Local values + Gateway API exposure via your existing ingress gateway
+- Pure Kustomize manifests (no upstream Helm to avoid OCI auth/403 issues in ArgoCD)
+- **Image**: `ghcr.io/jacobalberty/unifi-docker:latest`
+- Gateway API + external-dns for `unifi.dhlabs.org`
 
 ## Installation / Sync
 
-The component is deployed as an ArgoCD Application (`apps/unifi.yaml`).
-
-It uses the standard multi-source pattern:
-- Upstream Helm chart (OCI)
-- Local overlay (`values.yaml` + `httproute-grant.yaml`)
+The component is deployed as a standard ArgoCD Application (`apps/unifi.yaml`) using a single source pointing to this directory. ArgoCD runs `kubectl kustomize` on it.
 
 ## Important Configuration Steps (after first deploy)
 
@@ -33,7 +29,7 @@ The setup is pre-configured to use **unifi.dhlabs.org**.
    - external-dns will automatically create the A record in Cloudflare.
 
 2. **SYSTEM_IP**:
-   - Already set to `unifi.dhlabs.org` in `values.yaml`.
+   - SYSTEM_IP is set to `unifi.dhlabs.org` inside deployment.yaml.
    - Devices will be instructed to connect using the domain name.
 
 3. Deploy / sync via ArgoCD.
@@ -52,7 +48,7 @@ The setup is pre-configured to use **unifi.dhlabs.org**.
    - Best experience: https://unifi.dhlabs.org (Gateway + wildcard Let's Encrypt cert)
    - Direct: https://unifi.dhlabs.org:8443
 
-You can optionally pin a specific LoadBalancer IP by adding a `lbipam.cilium.io/ips` annotation in `values.yaml`.
+You can optionally pin a specific LoadBalancer IP by editing the annotations in service.yaml (Cilium lbipam) or adding loadBalancerIP.
 
 ## Ports (exposed via LoadBalancer)
 
@@ -79,14 +75,14 @@ Example dashboards are available on Grafana.com for Unpoller.
 ## Upgrades
 
 1. Backup first (UI or export the PVC).
-2. Update `targetRevision` in `apps/unifi.yaml` and/or image tag in `values.yaml`.
+2. Update the image tag in deployment.yaml and/or `targetRevision` in `apps/unifi.yaml`.
 3. Let ArgoCD sync.
 4. Verify devices are still connected after upgrade.
 
 ## References
 
 - jacobalberty/unifi-docker: https://github.com/jacobalberty/unifi-docker
-- Chart: https://github.com/mkilchhofer/unifi-chart
+- Image: https://github.com/jacobalberty/unifi-docker
 - UniFi Network Application releases: https://ui.com/download/releases/network-server
 
 ## Notes specific to this homelab

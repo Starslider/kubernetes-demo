@@ -1,45 +1,24 @@
-# UniFi Network Controller (Network Application) - Helm values override
-# Upstream chart: mkilchhofer/unifi (oci://ghcr.io/mkilchhofer/unifi-chart/unifi)
+# UniFi Controller Configuration Reference
 #
-# This provides centralized management for UniFi switches, APs, etc.
-# Your 2.5Gb switches require this for full features (VLANs, LAG, monitoring, firmware, etc.).
-
-image:
-  repository: ghcr.io/jacobalberty/unifi-docker
-  # tag: ""   # defaults to chart appVersion (good for latest stable)
-  pullPolicy: IfNotPresent
-
-# Use a single unified LoadBalancer service exposing all UniFi ports.
-# This is the easiest for device adoption (one stable IP/DNS for inform, discovery, STUN, UI).
-unifiedService:
-  enabled: true
-  type: LoadBalancer
-  # Request a specific stable IP using Cilium LB IPAM (recommended).
-  # You can leave loadBalancerIP empty and let Cilium assign, or pin one.
-  loadBalancerIP: ""
-  annotations:
-    # This tells external-dns (Cloudflare) to create/update the DNS record
-    external-dns.alpha.kubernetes.io/hostname: unifi.dhlabs.org
-    external-dns.alpha.kubernetes.io/ttl: "60"
-    # Optional Cilium IPAM annotation to request a specific IP from your pool:
-    # lbipam.cilium.io/ips: "10.0.20.50"
-  externalTrafficPolicy: Local   # recommended for preserving client source in many cases
-
-# Persistence is required. Contains the UniFi config + embedded MongoDB data.
-persistence:
-  enabled: true
-  accessMode: ReadWriteOnce
-  size: 10Gi
-  # storageClass: ""   # set explicitly only if you need a non-default StorageClass
-  skipuninstall: true
-
-# SYSTEM_IP tells the controller (and devices) what hostname/IP to use for the inform URL.
-# We set it to the DNS name so devices use https://unifi.dhlabs.org:8443/inform
-extraEnvVars:
-  - name: SYSTEM_IP
-    value: "unifi.dhlabs.org"
-  # - name: TZ
-  #   value: "Europe/Berlin"
+# This file is no longer used for Helm (we switched to pure Kustomize to avoid
+# OCI chart access issues with ArgoCD + ghcr.io).
+#
+# The actual configuration lives in:
+# - deployment.yaml
+# - service.yaml
+# - pvc.yaml
+#
+# Key settings are hardcoded for unifi.dhlabs.org:
+# - SYSTEM_IP=unifi.dhlabs.org (for device inform URLs)
+# - external-dns annotation on the Service
+# - LoadBalancer service with required ports
+#
+# To customize:
+# - Edit deployment.yaml for image, resources, env, etc.
+# - Edit service.yaml for annotations or additional ports
+# - Edit pvc.yaml for storage size / storageClass
+#
+# After changes: ArgoCD will sync the kustomize overlay.
 
 # We manage ingress ourselves via Gateway API
 ingress:
