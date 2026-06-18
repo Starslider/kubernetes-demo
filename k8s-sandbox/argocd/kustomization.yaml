@@ -16,3 +16,4 @@ resources:
 - dex-server.yaml
 - monitoring
 - github-secret.yaml
+- argocd-dex-external-secret.yaml
