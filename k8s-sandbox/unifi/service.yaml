@@ -4,11 +4,12 @@ metadata:
   name: unifi
   labels:
     app.kubernetes.io/name: unifi
-  # Note: Do NOT add external-dns hostname here.
-  # The domain unifi.dhlabs.org is handled by the ingress-gateway
-  # via its wildcard external-dns configuration + the HTTPRoute.
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: unifi.dhlabs.org
+    external-dns.alpha.kubernetes.io/ttl: "60"
 spec:
-  type: ClusterIP
+  type: LoadBalancer
+  externalTrafficPolicy: Local
   ports:
     - name: http
       port: 8080

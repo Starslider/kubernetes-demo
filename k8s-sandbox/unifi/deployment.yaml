@@ -29,6 +29,8 @@ spec:
           env:
             - name: SYSTEM_IP
               value: "unifi.dhlabs.org"
+            - name: CERT_IS_CHAIN
+              value: "true"
             # - name: TZ
             #   value: "Europe/Berlin"
           ports:
@@ -47,6 +49,12 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /unifi
+            - name: tls
+              mountPath: /unifi/cert/cert.pem
+              subPath: tls.crt
+            - name: tls
+              mountPath: /unifi/cert/privkey.pem
+              subPath: tls.key
           resources:
             requests:
               cpu: 500m
@@ -58,3 +66,6 @@ spec:
         - name: data
           persistentVolumeClaim:
             claimName: unifi-data
+        - name: tls
+          secret:
+            secretName: dhlabs-wildcard

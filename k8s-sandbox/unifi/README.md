@@ -14,7 +14,10 @@ Without a controller they operate in a very limited "standalone" mode.
 
 - Pure Kustomize manifests (no upstream Helm to avoid OCI auth/403 issues in ArgoCD)
 - **Image**: `ghcr.io/jacobalberty/unifi-docker:latest`
-- Gateway API + external-dns for `unifi.dhlabs.org`
+- LoadBalancer service + external-dns for `unifi.dhlabs.org`
+- cert-manager wildcard cert mounted into the controller so it serves a valid LE cert directly
+  (Cilium 1.19 Gateway API does not implement BackendTLSPolicy, so the controller is exposed
+  directly via a LoadBalancer rather than routed through the shared HTTPS gateway).
 
 ## Installation / Sync
 
@@ -45,8 +48,8 @@ The setup is pre-configured to use **unifi.dhlabs.org**.
    - Or via the UniFi UI once you can reach it.
 
 6. Access the UI:
-   - Best experience: https://unifi.dhlabs.org (Gateway + wildcard Let's Encrypt cert)
-   - Direct: https://unifi.dhlabs.org:8443
+   - https://unifi.dhlabs.org:8443 (UniFi serves the wildcard Let's Encrypt cert directly
+     via the `dhlabs-wildcard` Certificate mounted at `/unifi/cert/`)
 
 You can optionally pin a specific LoadBalancer IP by editing the annotations in service.yaml (Cilium lbipam) or adding loadBalancerIP.
 
@@ -88,6 +91,7 @@ Example dashboards are available on Grafana.com for Unpoller.
 ## Notes specific to this homelab
 
 - Uses your Cilium BGP LoadBalancer for a stable IP.
-- Exposed using the same Gateway API + HTTPRoute + ReferenceGrant pattern as other apps.
+- Exposed directly via LoadBalancer (not through the shared HTTPS Gateway), because the
+  UniFi controller insists on terminating TLS itself and Cilium 1.19 has no BackendTLSPolicy
+  support to re-originate TLS to the backend.
 - Namespace: `unifi`
-- Follows the exact multi-source + kustomize + apps directory convention used by minio, authentik, cyberchef, etc.

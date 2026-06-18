@@ -16,4 +16,3 @@ resources:
 - k8s-workshop-httproute.yaml
 - allow-vpn-ingress.yaml
 - frigate-httproute.yaml
-- unifi-httproute.yaml
