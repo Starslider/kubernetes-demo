@@ -14,5 +14,5 @@ spec:
     - backendRefs:
         - kind: Service
           name: unifi
-          port: 8443
+          port: 8080
           namespace: unifi
