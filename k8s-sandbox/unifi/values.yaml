@@ -1,0 +1,95 @@
+# UniFi Network Controller (Network Application) - Helm values override
+# Upstream chart: mkilchhofer/unifi (oci://ghcr.io/mkilchhofer/unifi-chart/unifi)
+#
+# This provides centralized management for UniFi switches, APs, etc.
+# Your 2.5Gb switches require this for full features (VLANs, LAG, monitoring, firmware, etc.).
+
+image:
+  repository: ghcr.io/jacobalberty/unifi-docker
+  # tag: ""   # defaults to chart appVersion (good for latest stable)
+  pullPolicy: IfNotPresent
+
+# Use a single unified LoadBalancer service exposing all UniFi ports.
+# This is the easiest for device adoption (one stable IP/DNS for inform, discovery, STUN, UI).
+unifiedService:
+  enabled: true
+  type: LoadBalancer
+  # Request a specific stable IP using Cilium LB IPAM (recommended).
+  # You can leave loadBalancerIP empty and let Cilium assign, or pin one.
+  loadBalancerIP: ""
+  annotations:
+    # This tells external-dns (Cloudflare) to create/update the DNS record
+    external-dns.alpha.kubernetes.io/hostname: unifi.dhlabs.org
+    external-dns.alpha.kubernetes.io/ttl: "60"
+    # Optional Cilium IPAM annotation to request a specific IP from your pool:
+    # lbipam.cilium.io/ips: "10.0.20.50"
+  externalTrafficPolicy: Local   # recommended for preserving client source in many cases
+
+# Persistence is required. Contains the UniFi config + embedded MongoDB data.
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 10Gi
+  # storageClass: ""   # set explicitly only if you need a non-default StorageClass
+  skipuninstall: true
+
+# SYSTEM_IP tells the controller (and devices) what hostname/IP to use for the inform URL.
+# We set it to the DNS name so devices use https://unifi.dhlabs.org:8443/inform
+extraEnvVars:
+  - name: SYSTEM_IP
+    value: "unifi.dhlabs.org"
+  # - name: TZ
+  #   value: "Europe/Berlin"
+
+# We manage ingress ourselves via Gateway API
+ingress:
+  main:
+    enabled: false
+
+# Sensible resource requests for a small-to-medium UniFi deployment
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: "2"
+    memory: 2Gi
+
+# Non-root where supported
+podSecurityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+  fsGroupChangePolicy: OnRootMismatch
+
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+# === Important notes for unifi.dhlabs.org ===
+
+# 1. external-dns will automatically create a DNS A record for unifi.dhlabs.org
+#    pointing to the LoadBalancer IP (because of the annotation above).
+
+# 2. SYSTEM_IP is set via extraEnvVars to "unifi.dhlabs.org".
+#    Devices will be told to use https://unifi.dhlabs.org:8443/inform
+
+# 3. Adoption command for switches (run via SSH on the switch or through the UI):
+#      set-inform https://unifi.dhlabs.org:8443/inform
+
+# 4. Browser access:
+#    - Preferred (with proper Let's Encrypt cert): https://unifi.dhlabs.org
+#      (routed through your Gateway + wildcard cert)
+#    - Direct (controller's own cert): https://unifi.dhlabs.org:8443
+
+# 5. After deploying, verify:
+#      kubectl -n unifi get svc unifi -o wide
+#      dig unifi.dhlabs.org   # should return the LB IP
+
+# Additional operational notes:
+# - Unified LB service exposes 8080/TCP, 8443/TCP, plus UDP ports for discovery & STUN.
+# - Make sure your switches can reach the LB IP (or the domain) on these ports.
+# - Enable scheduled backups from inside the UniFi web UI.
+# - For nice metrics in Grafana, deploy Unpoller as a companion.
+#
+# Always take a controller backup before upgrading the image or chart version.

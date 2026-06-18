@@ -17,3 +17,4 @@ resources:
 - allow-vpn-ingress.yaml
 - openclaw-httproute.yaml
 - frigate-httproute.yaml
+- unifi-httproute.yaml
