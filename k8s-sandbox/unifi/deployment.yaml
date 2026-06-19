@@ -54,6 +54,12 @@ spec:
               hostPort: 11084
               hostIP: 127.0.0.1
           volumeMounts:
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+            - name: run-tmpfs
+              mountPath: /run
+            - name: tmp-tmpfs
+              mountPath: /tmp
             - name: unifi-os-server-data
               mountPath: /persistent
               subPath: persistent
@@ -75,11 +81,18 @@ spec:
             - name: unifi-os-server-data
               mountPath: /etc/rabbitmq/ssl
               subPath: rabbitmq
+          startupProbe:
+            httpGet:
+              path: /api/ping
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            timeoutSeconds: 5
+            failureThreshold: 40
           livenessProbe:
             httpGet:
               path: /api/ping
               port: 80
-            initialDelaySeconds: 10
             periodSeconds: 60
             timeoutSeconds: 5
             successThreshold: 1
@@ -92,6 +105,16 @@ spec:
               cpu: "4"
               memory: 4Gi
       volumes:
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+            type: Directory
+        - name: run-tmpfs
+          emptyDir:
+            medium: Memory
+        - name: tmp-tmpfs
+          emptyDir:
+            medium: Memory
         - name: unifi-os-server-data
           persistentVolumeClaim:
             claimName: unifi-os-server-pvc
