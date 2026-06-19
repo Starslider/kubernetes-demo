@@ -83,6 +83,16 @@ spec:
           volumeMounts:
             - name: cgroup
               mountPath: /sys/fs/cgroup
+            - name: tmp-run
+              mountPath: /run
+            - name: tmp-run-lock
+              mountPath: /run/lock
+            - name: tmp-tmp
+              mountPath: /tmp
+            - name: tmp-journal
+              mountPath: /var/lib/journal
+            - name: tmp-unifi
+              mountPath: /var/opt/unifi/tmp
             - name: unifi-os-server-data
               mountPath: /persistent
               subPath: persistent
@@ -132,6 +142,22 @@ spec:
           hostPath:
             path: /sys/fs/cgroup
             type: Directory
+        - name: tmp-run
+          emptyDir:
+            medium: Memory
+        - name: tmp-run-lock
+          emptyDir:
+            medium: Memory
+        - name: tmp-tmp
+          emptyDir:
+            medium: Memory
+        - name: tmp-journal
+          emptyDir:
+            medium: Memory
+        - name: tmp-unifi
+          emptyDir:
+            medium: Memory
+            sizeLimit: 64Mi
         - name: unifi-os-server-data
           hostPath:
             path: /srv/unifi-os-server
