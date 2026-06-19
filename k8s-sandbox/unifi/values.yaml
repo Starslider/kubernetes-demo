@@ -1,7 +1,6 @@
-# UniFi Controller Configuration Reference
+# UniFi OS Server Configuration Reference
 #
-# This file is no longer used for Helm (we switched to pure Kustomize to avoid
-# OCI chart access issues with ArgoCD + ghcr.io).
+# This file is a reference only (pure Kustomize deployment, no Helm).
 #
 # The actual configuration lives in:
 # - deployment.yaml
@@ -9,7 +8,7 @@
 # - pvc.yaml
 #
 # Key settings are hardcoded for unifi.dhlabs.org:
-# - SYSTEM_IP=unifi.dhlabs.org (for device inform URLs)
+# - UOS_SYSTEM_IP=unifi.dhlabs.org (for device inform URLs)
 # - external-dns annotation on the Service
 # - LoadBalancer service with required ports
 #
@@ -20,55 +19,41 @@
 #
 # After changes: ArgoCD will sync the kustomize overlay.
 
-# We manage ingress ourselves via Gateway API
-ingress:
-  main:
-    enabled: false
-
-# Sensible resource requests for a small-to-medium UniFi deployment
+# Sensible resource requests for UniFi OS Server (systemd-based, heavier than legacy app)
 resources:
   requests:
     cpu: 500m
-    memory: 1Gi
-  limits:
-    cpu: "2"
     memory: 2Gi
+  limits:
+    cpu: "4"
+    memory: 4Gi
 
-# Non-root where supported
-podSecurityContext:
-  runAsUser: 999
-  runAsGroup: 999
-  fsGroup: 999
-  fsGroupChangePolicy: OnRootMismatch
-
+# UniFi OS Server requires privileged mode for cgroup/systemd
 securityContext:
-  runAsNonRoot: true
-  allowPrivilegeEscalation: false
+  privileged: true
 
 # === Important notes for unifi.dhlabs.org ===
 
 # 1. external-dns will automatically create a DNS A record for unifi.dhlabs.org
 #    pointing to the LoadBalancer IP (because of the annotation above).
 
-# 2. SYSTEM_IP is set via extraEnvVars to "unifi.dhlabs.org".
-#    Devices will be told to use https://unifi.dhlabs.org:8443/inform
+# 2. UOS_SYSTEM_IP is set to "unifi.dhlabs.org".
+#    Devices will be told to use http://unifi.dhlabs.org:8080/inform
 
-# 3. Adoption command for switches (run via SSH on the switch or through the UI):
-#      set-inform https://unifi.dhlabs.org:8443/inform
+# 3. Adoption command for switches (run via SSH on the switch):
+#      set-inform http://unifi.dhlabs.org:8080/inform
 
 # 4. Browser access:
-#    - Preferred (with proper Let's Encrypt cert): https://unifi.dhlabs.org
-#      (routed through your Gateway + wildcard cert)
-#    - Direct (controller's own cert): https://unifi.dhlabs.org:8443
+#    https://unifi.dhlabs.org:11443
 
 # 5. After deploying, verify:
 #      kubectl -n unifi get svc unifi -o wide
 #      dig unifi.dhlabs.org   # should return the LB IP
 
 # Additional operational notes:
-# - Unified LB service exposes 8080/TCP, 8443/TCP, plus UDP ports for discovery & STUN.
+# - LoadBalancer exposes 11443/TCP, 8080/TCP, 3478/UDP, 10003/UDP.
 # - Make sure your switches can reach the LB IP (or the domain) on these ports.
 # - Enable scheduled backups from inside the UniFi web UI.
 # - For nice metrics in Grafana, deploy Unpoller as a companion.
 #
-# Always take a controller backup before upgrading the image or chart version.
+# Always take a controller backup before upgrading the image version.

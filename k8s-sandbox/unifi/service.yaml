@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: unifi
   labels:
-    app.kubernetes.io/name: unifi
+    app.kubernetes.io/name: unifi-os-server
   annotations:
     external-dns.alpha.kubernetes.io/hostname: unifi.dhlabs.org
     external-dns.alpha.kubernetes.io/ttl: "60"
@@ -11,21 +11,21 @@ spec:
   type: LoadBalancer
   externalTrafficPolicy: Cluster
   ports:
-    - name: http
-      port: 8080
-      targetPort: http
+    - name: webui
+      port: 11443
+      targetPort: webui
       protocol: TCP
-    - name: https
-      port: 8443
-      targetPort: https
+    - name: communication
+      port: 8080
+      targetPort: communication
       protocol: TCP
     - name: stun
       port: 3478
       targetPort: stun
       protocol: UDP
     - name: discovery
-      port: 10001
+      port: 10003
       targetPort: discovery
       protocol: UDP
   selector:
-    app.kubernetes.io/name: unifi
+    app: unifi-os-server

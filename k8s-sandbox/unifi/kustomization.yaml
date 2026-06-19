@@ -6,7 +6,6 @@ metadata:
 namespace: unifi
 
 resources:
-- certificate.yaml
 - pvc.yaml
 - deployment.yaml
 - service.yaml
