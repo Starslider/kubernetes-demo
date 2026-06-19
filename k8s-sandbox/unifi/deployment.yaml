@@ -20,6 +20,14 @@ spec:
     spec:
       nodeSelector:
         kubernetes.io/hostname: arch-kubernetes-node0
+      initContainers:
+        - name: ensure-journal-dir
+          image: busybox:1.37
+          command: ["sh", "-c", "mkdir -p /var/log/journal && chmod 2755 /var/log/journal"]
+          volumeMounts:
+            - name: unifi-os-server-data
+              mountPath: /var/log
+              subPath: log
       containers:
         - name: journal-tail
           image: ghcr.io/lemker/unifi-os-server:v1.3.0
