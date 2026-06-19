@@ -19,36 +19,29 @@ spec:
         app: unifi-os-server
     spec:
       initContainers:
-        - name: ensure-journal-dir
+        - name: install-le-cert
           image: busybox:1.37
-          command: ["sh", "-c", "mkdir -p /var/log/journal && chmod 2755 /var/log/journal"]
-          volumeMounts:
-            - name: unifi-os-server-data
-              mountPath: /var/log
-              subPath: log
-      containers:
-        - name: journal-tail
-          image: ghcr.io/lemker/unifi-os-server:v1.3.0
-          imagePullPolicy: IfNotPresent
-          command: ["/bin/bash", "-c"]
-          args:
+          command:
+            - sh
+            - -c
             - |
-              echo "[journal-tail] waiting for /var/log/journal..."
-              while [ ! -d /var/log/journal ] || [ -z "$(ls -A /var/log/journal 2>/dev/null)" ]; do
-                sleep 2
-              done
-              echo "[journal-tail] streaming journal"
-              exec journalctl -fam --no-pager -D /var/log/journal
+              set -e
+              DST=/data/unifi-core/config
+              mkdir -p "$DST"
+              cp /le-cert/tls.crt "$DST/unifi-core.crt"
+              cp /le-cert/tls.key "$DST/unifi-core.key"
+              cp /le-cert/tls.key "$DST/unifi-core-direct.key"
+              chmod 644 "$DST/unifi-core.crt"
+              chmod 600 "$DST/unifi-core.key" "$DST/unifi-core-direct.key"
+              echo "[install-le-cert] cert installed: $(openssl x509 -in $DST/unifi-core.crt -noout -subject -enddate 2>/dev/null || md5sum $DST/unifi-core.crt)"
           volumeMounts:
+            - name: le-cert
+              mountPath: /le-cert
+              readOnly: true
             - name: unifi-os-server-data
-              mountPath: /var/log
-              subPath: log
-          resources:
-            requests:
-              cpu: 10m
-              memory: 32Mi
-            limits:
-              memory: 128Mi
+              mountPath: /data
+              subPath: data
+      containers:
         - name: unifi-os-server
           image: ghcr.io/lemker/unifi-os-server:v1.3.0
           imagePullPolicy: IfNotPresent
@@ -134,6 +127,9 @@ spec:
               cpu: "4"
               memory: 4Gi
       volumes:
+        - name: le-cert
+          secret:
+            secretName: unifi-tls
         - name: tmp-run
           emptyDir:
             medium: Memory

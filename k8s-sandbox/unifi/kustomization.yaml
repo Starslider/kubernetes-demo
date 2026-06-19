@@ -7,6 +7,7 @@ namespace: unifi
 
 resources:
 - pvc.yaml
+- certificate.yaml
 - deployment.yaml
 - service.yaml
 - httproute-grant.yaml
