@@ -13,8 +13,8 @@ This directory contains the configuration and ArgoCD integration for **UniFi OS 
   - **TLSRoute** (passthrough): `https://unifi.dhlabs.org` → `unifi-os-server-webui-svc:443`
   - **TCPRoute**: port `8080` → device/application communication (inform)
   - **UDPRoute**: port `3478` (STUN), port `10003` (discovery)
-- Privileged deployment (required for UniFi OS systemd services)
-- `unifi-os-server-pvc` (32Gi, `nfs` storage class)
+- Privileged deployment with host cgroup mount (required for UniFi OS systemd services)
+- Local data on `hostPath` at `/srv/unifi-os-server` on `arch-kubernetes-node0` (MongoDB does not run reliably on NFS)
 
 ## Installation / Sync
 
