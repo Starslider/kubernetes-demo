@@ -30,9 +30,7 @@ resources:
   - flatcar.yaml
   - ollama.yaml
   - elasticsearch-rag.yaml
-  - strimzi.yaml
   - postgres.yaml
-  - frigate.yaml
   - satisfactory.yaml
   - unifi.yaml
   - reloader.yaml

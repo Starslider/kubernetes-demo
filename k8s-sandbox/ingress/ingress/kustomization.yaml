@@ -17,4 +17,3 @@ resources:
 - kmcp-httproute.yaml
 - k8s-workshop-httproute.yaml
 - allow-vpn-ingress.yaml
-- frigate-httproute.yaml
