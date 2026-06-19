@@ -6,6 +6,7 @@ reloader:
   deployment:
     image:
       name: ghcr.io/stakater/reloader
+      tag: v1.4.16
     resources:
       requests:
         cpu: 10m
