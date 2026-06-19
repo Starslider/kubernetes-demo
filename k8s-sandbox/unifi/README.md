@@ -10,7 +10,7 @@ This directory contains the configuration and ArgoCD integration for **UniFi OS 
 - **Image**: `ghcr.io/lemker/unifi-os-server:v1.3.0`
 - Upstream ClusterIP [services](https://github.com/lemker/unifi-os-server/blob/main/kubernetes/service.yaml)
 - Exposed via the shared Cilium Gateway (`k8s-sandbox/ingress`):
-  - **TLSRoute** (passthrough): `https://unifi.dhlabs.org` → `unifi-os-server-webui-svc:443`
+  - **HTTPRoute**: `https://unifi.dhlabs.org` → `unifi-os-server-webui-svc:80` (TLS terminated by gateway with `dhlabs-wildcard`)
   - **TCPRoute**: port `8080` → device/application communication (inform)
   - **UDPRoute**: port `3478` (STUN), port `10003` (discovery)
 - Privileged deployment with host cgroup mount (required for UniFi OS systemd services)
@@ -21,7 +21,7 @@ This directory contains the configuration and ArgoCD integration for **UniFi OS 
 Deployed via two ArgoCD Applications:
 
 - `apps/unifi.yaml` — deployment + services in `unifi` namespace
-- `apps/ingress.yaml` — TLS/TCP/UDP routes in `ingress` namespace
+- `apps/ingress.yaml` — HTTP/TCP/UDP routes in `ingress` namespace
 
 DNS for `unifi.dhlabs.org` is handled by the gateway wildcard (`*.dhlabs.org` → `192.168.1.210`).
 

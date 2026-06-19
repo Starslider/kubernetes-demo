@@ -1,19 +1,19 @@
 apiVersion: gateway.networking.k8s.io/v1
-kind: TLSRoute
+kind: HTTPRoute
 metadata:
-  name: unifi-backend
+  name: unifi
 spec:
   parentRefs:
     - group: gateway.networking.k8s.io
       kind: Gateway
       name: ingress-gateway
       namespace: ingress
-      sectionName: unifi-tls
+      sectionName: https
   hostnames:
     - unifi.dhlabs.org
   rules:
     - backendRefs:
         - kind: Service
           name: unifi-os-server-webui-svc
-          port: 443
+          port: 80
           namespace: unifi

@@ -17,15 +17,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-    - name: unifi-tls
-      hostname: unifi.dhlabs.org
-      port: 443
-      protocol: TLS
-      tls:
-        mode: Passthrough
-      allowedRoutes:
-        namespaces:
-          from: All
     - name: unifi-communication
       port: 8080
       protocol: TCP
