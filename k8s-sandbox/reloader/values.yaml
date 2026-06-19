@@ -3,6 +3,8 @@ reloader:
   reloadOnCreate: true
   syncAfterRestart: true
   readOnlyRootFileSystem: true
+  ignoreJobs: true
+  ignoreCronJobs: true
   deployment:
     image:
       name: ghcr.io/stakater/reloader
