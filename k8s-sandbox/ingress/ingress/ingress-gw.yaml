@@ -17,24 +17,6 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-    - name: unifi-communication
-      port: 8080
-      protocol: TCP
-      allowedRoutes:
-        namespaces:
-          from: All
-    - name: unifi-stun
-      port: 3478
-      protocol: UDP
-      allowedRoutes:
-        namespaces:
-          from: All
-    - name: unifi-discovery
-      port: 10003
-      protocol: UDP
-      allowedRoutes:
-        namespaces:
-          from: All
   infrastructure:
     annotations:
       external-dns.alpha.kubernetes.io/hostname: '*.dhlabs.org, dhlabs.org'

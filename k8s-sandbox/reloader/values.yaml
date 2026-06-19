@@ -4,6 +4,8 @@ reloader:
   syncAfterRestart: true
   readOnlyRootFileSystem: true
   deployment:
+    image:
+      name: ghcr.io/stakater/reloader
     resources:
       requests:
         cpu: 10m

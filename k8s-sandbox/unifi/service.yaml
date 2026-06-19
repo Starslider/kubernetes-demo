@@ -12,6 +12,18 @@ spec:
       port: 443
       protocol: TCP
       targetPort: 443
+    - name: inform
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    - name: stun
+      port: 3478
+      protocol: UDP
+      targetPort: 3478
+    - name: discovery
+      port: 10003
+      protocol: UDP
+      targetPort: 10003
   selector:
     app: unifi-os-server
 
