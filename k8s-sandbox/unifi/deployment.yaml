@@ -6,6 +6,8 @@ metadata:
     app: unifi-os-server
     app.kubernetes.io/name: unifi-os-server
     app.kubernetes.io/component: controller
+  annotations:
+    secret.reloader.stakater.com/reload: unifi-tls
 spec:
   replicas: 1
   strategy:

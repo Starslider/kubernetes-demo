@@ -36,3 +36,4 @@ resources:
   - frigate.yaml
   - satisfactory.yaml
   - unifi.yaml
+  - reloader.yaml
