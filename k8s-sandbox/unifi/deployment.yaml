@@ -17,9 +17,9 @@ spec:
     metadata:
       labels:
         app: unifi-os-server
-        app.kubernetes.io/name: unifi-os-server
-        app.kubernetes.io/component: controller
     spec:
+      nodeSelector:
+        kubernetes.io/hostname: arch-kubernetes-node0
       containers:
         - name: unifi-os-server
           image: ghcr.io/lemker/unifi-os-server:v1.3.0
@@ -50,16 +50,9 @@ spec:
             - name: discovery
               containerPort: 10003
               protocol: UDP
-            - containerPort: 11084
-              hostPort: 11084
-              hostIP: 127.0.0.1
           volumeMounts:
             - name: cgroup
               mountPath: /sys/fs/cgroup
-            - name: run-tmpfs
-              mountPath: /run
-            - name: tmp-tmpfs
-              mountPath: /tmp
             - name: unifi-os-server-data
               mountPath: /persistent
               subPath: persistent
@@ -109,12 +102,7 @@ spec:
           hostPath:
             path: /sys/fs/cgroup
             type: Directory
-        - name: run-tmpfs
-          emptyDir:
-            medium: Memory
-        - name: tmp-tmpfs
-          emptyDir:
-            medium: Memory
         - name: unifi-os-server-data
-          persistentVolumeClaim:
-            claimName: unifi-os-server-pvc
+          hostPath:
+            path: /srv/unifi-os-server
+            type: DirectoryOrCreate

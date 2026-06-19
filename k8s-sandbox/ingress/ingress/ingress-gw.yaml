@@ -6,7 +6,7 @@ spec:
   gatewayClassName: cilium
   listeners:
     - name: https
-      hostname: "*.dhlabs.org"   
+      hostname: "*.dhlabs.org"
       port: 443
       protocol: HTTPS
       tls:
@@ -14,6 +14,33 @@ spec:
         certificateRefs:
           - name: dhlabs-wildcard
             namespace: ingress
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: unifi-tls
+      hostname: unifi.dhlabs.org
+      port: 443
+      protocol: TLS
+      tls:
+        mode: Passthrough
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: unifi-communication
+      port: 8080
+      protocol: TCP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: unifi-stun
+      port: 3478
+      protocol: UDP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: unifi-discovery
+      port: 10003
+      protocol: UDP
       allowedRoutes:
         namespaces:
           from: All

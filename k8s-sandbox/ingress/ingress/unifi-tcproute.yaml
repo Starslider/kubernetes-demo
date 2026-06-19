@@ -1,0 +1,17 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: TCPRoute
+metadata:
+  name: unifi-communication
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: ingress-gateway
+      namespace: ingress
+      sectionName: unifi-communication
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: unifi-os-server-communication-svc
+          port: 8080
+          namespace: unifi

@@ -1,0 +1,20 @@
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: unifi-backend
+  annotations:
+    link.argocd.argoproj.io/external-link: https://unifi.dhlabs.org/
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: TLSRoute
+      namespace: ingress
+    - group: gateway.networking.k8s.io
+      kind: TCPRoute
+      namespace: ingress
+    - group: gateway.networking.k8s.io
+      kind: UDPRoute
+      namespace: ingress
+  to:
+    - group: ""
+      kind: Service

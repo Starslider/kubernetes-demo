@@ -1,0 +1,36 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: UDPRoute
+metadata:
+  name: unifi-stun
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: ingress-gateway
+      namespace: ingress
+      sectionName: unifi-stun
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: unifi-os-server-stun-svc
+          port: 3478
+          namespace: unifi
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: UDPRoute
+metadata:
+  name: unifi-discovery
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: ingress-gateway
+      namespace: ingress
+      sectionName: unifi-discovery
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: unifi-os-server-discovery-svc
+          port: 10003
+          namespace: unifi
