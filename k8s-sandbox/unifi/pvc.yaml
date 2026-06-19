@@ -3,9 +3,9 @@ kind: PersistentVolumeClaim
 metadata:
   name: unifi-os-server-pvc
 spec:
+  storageClassName: nfs
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 32Gi
-  # storageClassName: ""  # uncomment and set if you need a specific class (e.g. your nfs or longhorn class)
