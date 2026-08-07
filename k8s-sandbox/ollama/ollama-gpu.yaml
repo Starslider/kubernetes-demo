@@ -1,0 +1,119 @@
+# Standalone Ollama on gpu-worker-3090.
+# The operator Model CR mounts the shared NFS models store RO, but this WSL node
+# cannot complete NFS mounts (TCP:2049 open, mount hangs) and cannot reach
+# other nodes' pod IPs/ClusterIPs via the local bridge CNI. Local hostPath works.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-gpu
+  namespace: ollama-operator-system
+  labels:
+    app: ollama-gpu
+    app.kubernetes.io/name: ollama-gpu
+    app.kubernetes.io/part-of: ollama
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ollama-gpu
+  template:
+    metadata:
+      labels:
+        app: ollama-gpu
+        # Keep label used by ollama-model-qwen3-6-27b Service
+        model.ollama.ayaka.io: qwen3-6-27b
+    spec:
+      runtimeClassName: nvidia
+      # Bridge CNI pods cannot resolve/reach the public internet or NFS reliably.
+      # hostNetwork uses the WSL host stack (DNS + egress) and exposes :11434 on 192.168.1.150.
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        kubernetes.io/hostname: gpu-worker-3090
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      # Pull once into hostPath; main container serves the same store.
+      initContainers:
+        - name: pull-model
+          image: ollama/ollama:0.32.6
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              ollama serve &
+              pid=$!
+              for i in $(seq 1 90); do
+                if ollama list >/dev/null 2>&1; then break; fi
+                sleep 1
+              done
+              # Skip pull if already present (hostPath persists across restarts)
+              if ollama list | grep -q 'qwen3.6:27b'; then
+                echo "qwen3.6:27b already present"
+              else
+                echo "Pulling qwen3.6:27b (~17GB)..."
+                ollama pull qwen3.6:27b
+              fi
+              kill "$pid" || true
+              wait "$pid" || true
+              echo "Pull complete"
+          resources:
+            requests:
+              cpu: "1"
+              memory: 1Gi
+            limits:
+              cpu: "4"
+              memory: 4Gi
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+      containers:
+        - name: server
+          image: ollama/ollama:0.32.6
+          args: ["serve"]
+          env:
+            - name: OLLAMA_HOST
+              value: "0.0.0.0"
+            # Prefer GPU; keep system RAM footprint modest on ~7Gi WSL
+            - name: OLLAMA_MAX_LOADED_MODELS
+              value: "1"
+          ports:
+            - name: ollama
+              containerPort: 11434
+              protocol: TCP
+          resources:
+            requests:
+              cpu: "2"
+              memory: 2Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "6"
+              memory: 6Gi
+              nvidia.com/gpu: "1"
+          readinessProbe:
+            httpGet:
+              path: /api/tags
+              port: ollama
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 30
+          livenessProbe:
+            httpGet:
+              path: /api/tags
+              port: ollama
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            failureThreshold: 10
+          volumeMounts:
+            - name: models
+              mountPath: /root/.ollama
+      volumes:
+        - name: models
+          hostPath:
+            path: /var/lib/ollama-models
+            type: DirectoryOrCreate
+
