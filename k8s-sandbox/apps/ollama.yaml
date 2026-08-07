@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: ollama
+  namespace: argocd
 spec:
   project: default
   destination:
@@ -11,16 +12,15 @@ spec:
     syncOptions:
       - ServerSideApply=true
   sources:
-    # Pin operator release. kustomize image rewrite fixes removed
-    # gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0 (404 / ImagePullBackOff).
+    # Pin operator release. gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0 was
+    # removed from GCR (404 / ImagePullBackOff). Rewrite via kustomize images
+    # (Argo expects NAME=NEW:TAG strings, not maps).
     - repoURL: https://github.com/nekomeowww/ollama-operator.git
       path: config/default
       targetRevision: v0.10.10
       kustomize:
         images:
-          - name: gcr.io/kubebuilder/kube-rbac-proxy
-            newName: quay.io/brancz/kube-rbac-proxy
-            newTag: v0.18.1
+          - gcr.io/kubebuilder/kube-rbac-proxy=quay.io/brancz/kube-rbac-proxy:v0.18.1
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/ollama
       targetRevision: HEAD
