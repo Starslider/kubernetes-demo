@@ -12,8 +12,8 @@
 #   image: qwen3.6:27b
 #   runtimeClassName: nvidia
 #   resources:
-#     requests: { cpu: "2", memory: 2Gi, nvidia.com/gpu: "1" }
-#     limits:   { cpu: "6", memory: 6Gi, nvidia.com/gpu: "1" }
+#     requests: { cpu: "2", memory: 3Gi, nvidia.com/gpu: "1" }
+#     limits:   { cpu: "6", memory: 9Gi, nvidia.com/gpu: "1" }
 #   podTemplate:
 #     spec:
 #       nodeSelector: { kubernetes.io/hostname: gpu-worker-3090 }
@@ -25,9 +25,9 @@ metadata:
 data:
   README: |
     GPU inference: Deployment ollama-gpu (not operator Model CR).
-    Service: ollama-model-qwen3-6-27b:11434 (LAN often via hostNetwork 192.168.1.150:11434).
-    Model: qwen3.6:27b on hostPath /var/lib/ollama-models
-    Node labels required: networking.home/cilium=skip, accelerator=nvidia-rtx-3090,
+    Endpoint: http://192.168.1.150:11434 (hostNetwork); Service: ollama-model-qwen3-6-27b:11434.
+    Default model: qwen3.6:27b on hostPath /var/lib/ollama-models (RTX 3090 24Gi VRAM).
+    Host memory: ~12Gi WSL — pod request 3Gi / limit 9Gi; context 8192; keep-alive 30m.
+    Node labels: networking.home/cilium=skip, accelerator=nvidia-rtx-3090,
       node.kubernetes.io/gpu=true, nvidia.com/gpu.present=true
-    Pattern: runtimeClassName=nvidia + nvidia.com/gpu resources + nodeSelector/affinity
-
+    Pattern: runtimeClassName=nvidia + nvidia.com/gpu + nodeSelector/affinity

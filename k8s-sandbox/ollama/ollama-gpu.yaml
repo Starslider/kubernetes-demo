@@ -1,10 +1,12 @@
 # Standalone Ollama on gpu-worker-3090 (WSL GPU, Cilium-free).
 #
-# Node must keep networking.home/cilium=skip (host bridge CNI + kube-proxy only).
-# Operator Model CR is unsuitable here: NFS store mount hangs; ClusterIP to other
-# nodes is broken without Cilium mesh. Local hostPath + hostNetwork works.
+# Host: ~12Gi WSL memory + RTX 3090 (24Gi VRAM).
+# - Leave ~3Gi for WSL/kubelet/system; pod limit ≤9Gi so cgroup OOMs first.
+# - Weights mostly on GPU VRAM; system RAM covers overhead + KV cache.
+# - Default model: qwen3.6:27b (~17GB Q4) — fits 3090 VRAM with moderated context.
 #
 # GPU pattern: runtimeClassName nvidia + nvidia.com/gpu + nodeSelector/affinity.
+# Node must keep networking.home/cilium=skip (host bridge CNI + kube-proxy only).
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,7 +51,6 @@ spec:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
-
       # Pull once into hostPath; main container serves the same store.
       initContainers:
         - name: pull-model
@@ -77,11 +78,11 @@ spec:
               echo "Pull complete"
           resources:
             requests:
-              cpu: "1"
+              cpu: "500m"
               memory: 1Gi
             limits:
-              cpu: "4"
-              memory: 4Gi
+              cpu: "2"
+              memory: 2Gi
           volumeMounts:
             - name: models
               mountPath: /root/.ollama
@@ -92,8 +93,16 @@ spec:
           env:
             - name: OLLAMA_HOST
               value: "0.0.0.0"
-            # Prefer GPU; keep system RAM footprint modest on ~7Gi WSL
             - name: OLLAMA_MAX_LOADED_MODELS
+              value: "1"
+            - name: OLLAMA_NUM_PARALLEL
+              value: "1"
+            # Moderated KV cache for ~12Gi system RAM (weights stay on GPU)
+            - name: OLLAMA_CONTEXT_LENGTH
+              value: "8192"
+            - name: OLLAMA_KEEP_ALIVE
+              value: "30m"
+            - name: OLLAMA_FLASH_ATTENTION
               value: "1"
           ports:
             - name: ollama
@@ -102,26 +111,29 @@ spec:
           resources:
             requests:
               cpu: "2"
-              memory: 2Gi
+              memory: 3Gi
               nvidia.com/gpu: "1"
             limits:
               cpu: "6"
-              memory: 6Gi
+              # Cap below ~12Gi host so the pod dies before the WSL VM
+              memory: 9Gi
               nvidia.com/gpu: "1"
           readinessProbe:
             httpGet:
               path: /api/tags
               port: ollama
-            initialDelaySeconds: 5
+            initialDelaySeconds: 10
             periodSeconds: 10
+            timeoutSeconds: 5
             failureThreshold: 30
           livenessProbe:
             httpGet:
               path: /api/tags
               port: ollama
-            initialDelaySeconds: 15
-            periodSeconds: 20
-            failureThreshold: 10
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 5
           volumeMounts:
             - name: models
               mountPath: /root/.ollama
@@ -130,4 +142,3 @@ spec:
           hostPath:
             path: /var/lib/ollama-models
             type: DirectoryOrCreate
-

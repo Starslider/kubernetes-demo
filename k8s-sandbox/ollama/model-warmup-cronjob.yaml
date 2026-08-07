@@ -20,15 +20,17 @@ spec:
                 - -c
                 - |
                   set -e
-                  # Prefer the GPU model service if present; fall back to image store.
+                  # Prefer hostNetwork LAN endpoint; ClusterIP may not work from other nodes
                   ENDPOINT="http://ollama-models-store.ollama-operator-system:11434"
-                  SVC=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
-                    http://ollama-model-qwen3-6-27b.ollama-operator-system:11434/api/tags || true)
-                  if [ "$SVC" = "200" ]; then
+                  if curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+                    http://192.168.1.150:11434/api/tags | grep -q 200; then
+                    ENDPOINT="http://192.168.1.150:11434"
+                  elif curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+                    http://ollama-model-qwen3-6-27b.ollama-operator-system:11434/api/tags | grep -q 200; then
                     ENDPOINT="http://ollama-model-qwen3-6-27b.ollama-operator-system:11434"
                   fi
                   curl -s -X POST "${ENDPOINT}/api/generate" \
                     -H "Content-Type: application/json" \
-                    -d '{"model":"qwen3.6:27b","prompt":"ping","stream":false}' \
-                    --max-time 120 > /dev/null && echo "Model warmed up via ${ENDPOINT}"
+                    -d '{"model":"qwen3.6:27b","prompt":"ping","stream":false,"options":{"num_ctx":2048,"num_predict":8}}' \
+                    --max-time 180 > /dev/null && echo "Model warmed up via ${ENDPOINT}"
           restartPolicy: OnFailure
