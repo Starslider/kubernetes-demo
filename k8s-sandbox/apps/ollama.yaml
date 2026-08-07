@@ -11,11 +11,16 @@ spec:
     syncOptions:
       - ServerSideApply=true
   sources:
-    # Latest operator release (v0.10.10 as of 2025-10). Floating HEAD reintroduces
-    # the broken gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0 sidecar.
+    # Pin operator release. kustomize image rewrite fixes removed
+    # gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0 (404 / ImagePullBackOff).
     - repoURL: https://github.com/nekomeowww/ollama-operator.git
       path: config/default
       targetRevision: v0.10.10
+      kustomize:
+        images:
+          - name: gcr.io/kubebuilder/kube-rbac-proxy
+            newName: quay.io/brancz/kube-rbac-proxy
+            newTag: v0.18.1
     - repoURL: https://github.com/Starslider/kubernetes-demo.git
       path: k8s-sandbox/ollama
       targetRevision: HEAD

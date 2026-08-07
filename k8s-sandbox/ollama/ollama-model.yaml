@@ -22,9 +22,8 @@ spec:
       cpu: "6"
       memory: 28Gi
       nvidia.com/gpu: "1"
-  # podTemplate merges with operator defaults; container "server" image is
-  # rewritten to ollama/ollama by the operator, then our model-server-image
-  # patch pins the Deployment to ollama/ollama:0.32.6.
+  # podTemplate merges with operator defaults; server image is set to
+  # ollama/ollama by the operator (floating tag tracks latest release).
   podTemplate:
     spec:
       nodeSelector:
@@ -35,5 +34,5 @@ spec:
           effect: NoSchedule
       containers:
         - name: server
-          image: ollama/ollama:0.32.6
+          image: ollama/ollama
 

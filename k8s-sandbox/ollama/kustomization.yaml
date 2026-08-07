@@ -3,12 +3,11 @@ kind: Kustomization
 metadata:
   name: ollama
 
+# Do NOT include partial Deployment/StatefulSet "patch" manifests here.
+# Multi-source ArgoCD + ServerSideApply treats them as full desired objects
+# and clears immutable fields (selector/labels) → SyncFailed + RepeatedResourceWarning.
 resources:
   - runtimeclass-nvidia.yaml
-  - operator-image-patch.yaml
-  - ollama-store-image-patch.yaml
   - ollama-model.yaml
   - ollama-model-service.yaml
-  - model-server-image-patch.yaml
   - model-warmup-cronjob.yaml
-
