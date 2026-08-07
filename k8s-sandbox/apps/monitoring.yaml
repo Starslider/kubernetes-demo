@@ -56,6 +56,26 @@ spec:
             enabled: false
           kubeEtcd:
             enabled: false
+          # WSL GPU (cilium=skip): hostNetwork metrics are noisy (duplicate WSL
+          # bind-mount filesystems) and not worth the RAM vs Ollama. Skip those nodes.
+          prometheus-node-exporter:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: networking.home/cilium
+                          operator: NotIn
+                          values:
+                            - skip
+                        - key: eks.amazonaws.com/compute-type
+                          operator: NotIn
+                          values:
+                            - fargate
+                        - key: type
+                          operator: NotIn
+                          values:
+                            - virtual-kubelet
           vmagent:
             spec:
               resources:

@@ -2,18 +2,31 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: promtail
+  namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
     targetRevision: 6.17.1
+    chart: promtail
     helm:
       parameters:
         - name: serviceMonitor.enabled
-          value: 'true'
+          value: "true"
         - name: config.clients[0].url
-          value: 'http://loki:3100/loki/api/v1/push'
-    chart: promtail
+          value: "http://loki:3100/loki/api/v1/push"
+      values: |
+        # WSL GPU (and other cilium=skip nodes) cannot reach Loki ClusterIP /
+        # CoreDNS over the host bridge CNI — push only fails and burns RAM.
+        affinity:
+          nodeAffinity:
+            requiredDuringSchedulingIgnoredDuringExecution:
+              nodeSelectorTerms:
+                - matchExpressions:
+                    - key: networking.home/cilium
+                      operator: NotIn
+                      values:
+                        - skip
   destination:
     server: https://kubernetes.default.svc
     namespace: loki

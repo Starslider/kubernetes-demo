@@ -2,11 +2,13 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: loki
+  namespace: argocd
 spec:
   project: default
   source:
     repoURL: https://grafana.github.io/helm-charts
     targetRevision: 6.49.0
+    chart: loki
     helm:
       valuesObject:
         # Single binary mode with filesystem storage
@@ -30,7 +32,6 @@ spec:
           limits_config:
             retention_period: 30d
             max_cache_freshness_per_query: 10m
-        # Disable dependencies we manage separately
         minio:
           enabled: false
         monitoring:
@@ -40,7 +41,6 @@ spec:
               installOperator: false
           serviceMonitor:
             enabled: true
-        # Single binary deployment
         deploymentMode: SingleBinary
         singleBinary:
           replicas: 1
@@ -54,27 +54,34 @@ spec:
             limits:
               cpu: 1500m
               memory: 2Gi
-        # Disable scalable components
         backend:
           replicas: 0
         read:
           replicas: 0
         write:
           replicas: 0
-        # Disable gateway - use direct service access
         gateway:
           enabled: false
-        # Disable network policies that might block traffic
         networkPolicy:
           enabled: false
-        # Enable caches for better performance
         chunksCache:
           enabled: true
           allocatedMemory: 512
         resultsCache:
           enabled: true
           allocatedMemory: 512
-    chart: loki
+        # Canary cannot reach Loki from WSL bridge CNI (no cluster DNS/mesh).
+        # Keep canary on real Cilium nodes only.
+        lokiCanary:
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: networking.home/cilium
+                        operator: NotIn
+                        values:
+                          - skip
   destination:
     server: https://kubernetes.default.svc
     namespace: loki
@@ -83,3 +90,4 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
       - ApplyOutOfSyncOnly=true
+

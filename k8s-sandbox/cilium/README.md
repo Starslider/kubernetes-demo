@@ -80,6 +80,19 @@ If node is **NotReady** or pods hang:
 
 Cross-node pod networking from WSL is **limited** (no full Cilium mesh). GPU apps often use `hostNetwork: true` for egress/DNS (see Ollama).
 
+## Observability DaemonSets on WSL
+
+Same kill switch: **do not** schedule these on `networking.home/cilium=skip` nodes
+(they need cluster DNS / Loki / scrape paths the bridge CNI cannot provide):
+
+| Component | Why skip on WSL |
+|-----------|-----------------|
+| **Promtail** | Cannot push to `loki:3100` (DNS/ClusterIP timeout) |
+| **Loki canary** | Cannot reach Loki service |
+| **prometheus-node-exporter** | Noisy WSL filesystem metrics; restarts under NotReady; RAM better left for GPU |
+
+Loki **server**, Grafana, VictoriaMetrics stay on real Linux nodes only.
+
 ## GPU workloads
 
 Pattern used by `k8s-sandbox/ollama/ollama-gpu.yaml`:
