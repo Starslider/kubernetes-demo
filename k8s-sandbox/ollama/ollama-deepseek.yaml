@@ -1,3 +1,5 @@
+# Deprecated sample — superseded by ollama-model.yaml (qwen3.6:27b on gpu-worker-3090).
+# Kept only as historical reference; not included in kustomization.
 apiVersion: ollama.ayaka.io/v1
 kind: Model
 metadata:

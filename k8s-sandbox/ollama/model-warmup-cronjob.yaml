@@ -4,23 +4,31 @@ metadata:
   name: ollama-model-warmup
   namespace: ollama-operator-system
 spec:
-  schedule: "*/5 * * * *"  # Every 5 minutes
+  schedule: "*/15 * * * *"
   successfulJobsHistoryLimit: 1
   failedJobsHistoryLimit: 1
   jobTemplate:
     spec:
-      backoffLimit: 2  # Retry twice on failure
+      backoffLimit: 2
       template:
         spec:
           containers:
-          - name: warmup
-            image: curlimages/curl:latest
-            command:
-            - /bin/sh
-            - -c
-            - |
-              curl -s -X POST http://ollama-models-store.ollama-operator-system:11434/api/generate \
-                -H "Content-Type: application/json" \
-                -d '{"model":"qwen2.5:3b","prompt":"ping","stream":false}' \
-                --max-time 30 > /dev/null && echo "Model warmed up successfully"
+            - name: warmup
+              image: curlimages/curl:latest
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  # Prefer the GPU model service if present; fall back to image store.
+                  ENDPOINT="http://ollama-models-store.ollama-operator-system:11434"
+                  SVC=$(curl -s -o /dev/null -w "%{http_code}" --max-time 3 \
+                    http://ollama-model-qwen3-6-27b.ollama-operator-system:11434/api/tags || true)
+                  if [ "$SVC" = "200" ]; then
+                    ENDPOINT="http://ollama-model-qwen3-6-27b.ollama-operator-system:11434"
+                  fi
+                  curl -s -X POST "${ENDPOINT}/api/generate" \
+                    -H "Content-Type: application/json" \
+                    -d '{"model":"qwen3.6:27b","prompt":"ping","stream":false}' \
+                    --max-time 120 > /dev/null && echo "Model warmed up via ${ENDPOINT}"
           restartPolicy: OnFailure

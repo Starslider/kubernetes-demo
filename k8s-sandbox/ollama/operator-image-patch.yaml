@@ -1,0 +1,19 @@
+# Pin operator + fix removed gcr.io/kubebuilder/kube-rbac-proxy:v0.15.0
+# (gcr image 404s; use quay.io/brancz mirror which is still published).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-operator-controller-manager
+  namespace: ollama-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  template:
+    spec:
+      containers:
+        - name: kube-rbac-proxy
+          image: quay.io/brancz/kube-rbac-proxy:v0.18.1
+          imagePullPolicy: IfNotPresent
+        - name: manager
+          image: ghcr.io/nekomeowww/ollama-operator:0.10.10
+          imagePullPolicy: IfNotPresent

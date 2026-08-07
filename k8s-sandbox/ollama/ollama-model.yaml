@@ -1,6 +1,39 @@
+# Strongest practical OSS LLM for a single RTX 3090 (24GB VRAM).
+# qwen3.6:27b ~17GB Q4, 256K context, vision/tools/thinking — leaves room for KV cache.
+# qwen3.6:35b (~24GB) and qwen3:32b (~20GB) are tighter; 35b risks OOM under long context.
 apiVersion: ollama.ayaka.io/v1
 kind: Model
 metadata:
-  name: qwen2-5
+  name: qwen3-6-27b
+  namespace: ollama-operator-system
+  labels:
+    app.kubernetes.io/name: qwen3-6-27b
+    app.kubernetes.io/part-of: ollama
 spec:
-  image: qwen2.5:3b
+  image: qwen3.6:27b
+  replicas: 1
+  runtimeClassName: nvidia
+  resources:
+    requests:
+      cpu: "2"
+      memory: 8Gi
+      nvidia.com/gpu: "1"
+    limits:
+      cpu: "6"
+      memory: 28Gi
+      nvidia.com/gpu: "1"
+  # podTemplate merges with operator defaults; container "server" image is
+  # rewritten to ollama/ollama by the operator, then our model-server-image
+  # patch pins the Deployment to ollama/ollama:0.32.6.
+  podTemplate:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: gpu-worker-3090
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: server
+          image: ollama/ollama:0.32.6
+

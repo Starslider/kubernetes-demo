@@ -1,0 +1,18 @@
+# Stable ClusterIP for the GPU model (operator services use a random ollama-srv-* name).
+apiVersion: v1
+kind: Service
+metadata:
+  name: ollama-model-qwen3-6-27b
+  namespace: ollama-operator-system
+  labels:
+    app: ollama-model-qwen3-6-27b
+    model.ollama.ayaka.io: qwen3-6-27b
+spec:
+  type: ClusterIP
+  selector:
+    model.ollama.ayaka.io: qwen3-6-27b
+  ports:
+    - name: ollama
+      port: 11434
+      targetPort: 11434
+      protocol: TCP

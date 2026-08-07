@@ -1,0 +1,19 @@
+# Operator hardcodes image "ollama/ollama" (floating latest) on create.
+# This SSA patch pins the model inference Deployment to a fixed Ollama release.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ollama-model-qwen3-6-27b
+  namespace: ollama-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  template:
+    metadata:
+      annotations:
+        ollama.ayaka.io/image-pin: ollama/ollama:0.32.6
+    spec:
+      containers:
+        - name: server
+          image: ollama/ollama:0.32.6
+          imagePullPolicy: IfNotPresent

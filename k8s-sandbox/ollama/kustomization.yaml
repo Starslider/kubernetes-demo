@@ -3,6 +3,12 @@ kind: Kustomization
 metadata:
   name: ollama
 
-# resources:
-# - ollama-model.yaml
-# - model-warmup-cronjob.yaml
+resources:
+  - runtimeclass-nvidia.yaml
+  - operator-image-patch.yaml
+  - ollama-store-image-patch.yaml
+  - ollama-model.yaml
+  - ollama-model-service.yaml
+  - model-server-image-patch.yaml
+  - model-warmup-cronjob.yaml
+

@@ -1,0 +1,19 @@
+# Pin the shared Ollama image store to the current stable Ollama release.
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ollama-models-store
+  namespace: ollama-operator-system
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  template:
+    metadata:
+      annotations:
+        # Force rollout when pin changes
+        ollama.ayaka.io/image-pin: ollama/ollama:0.32.6
+    spec:
+      containers:
+        - name: server
+          image: ollama/ollama:0.32.6
+          imagePullPolicy: IfNotPresent
