@@ -86,17 +86,12 @@ This repository provides a complete setup guide and configuration for deploying 
   <sub>Secrets Management</sub>
 </td>
 <td align="center">
-  <img src="https://goharbor.io/img/logos/harbor-icon-color.png" width="40" height="40"/><br/>
-  Harbor<br/>
-  <sub>Registry</sub>
-</td>
-</tr>
-<tr>
-<td align="center">
   <img src="https://avatars.githubusercontent.com/u/45487711" width="40" height="40"/><br/>
   n8n<br/>
   <sub>Automation</sub>
 </td>
+</tr>
+<tr>
 <td align="center">
   <img src="https://raw.githubusercontent.com/kubernetes-sigs/external-dns/master/docs/img/external-dns.png" width="40" height="40"/><br/>
   External DNS<br/>

@@ -20,7 +20,6 @@ resources:
   - home-assistant.yaml
   #- awx.yaml
   - authentik.yaml
-  - harbor.yaml
   - 1password.yaml
   - external-secrets.yaml
   - dayz.yaml
@@ -29,7 +28,6 @@ resources:
   - k8s-workshop.yaml
   - flatcar.yaml
   - ollama.yaml
-  - elasticsearch-rag.yaml
   - postgres.yaml
   - satisfactory.yaml
   - unifi.yaml

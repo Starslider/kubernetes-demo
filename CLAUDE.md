@@ -139,7 +139,7 @@ kubectl -n cert-manager logs deployment/cert-manager
   - `external-dns/` - Automated DNS management
   - `ingress/` - Gateway API and HTTPRoutes
   - `postgres/` - CloudNativePG HA database
-  - `harbor/`, `minio/`, `awx/`, `home-assistant/`, etc. - Application components
+  - `minio/`, `awx/`, `home-assistant/`, etc. - Application components
 
 - `flatcar/` - Flatcar Linux specific installation guides
 - `scripts/` - Validation and utility scripts

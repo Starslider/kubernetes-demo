@@ -16,7 +16,6 @@ This directory contains Kubernetes manifests for various applications deployed i
 - **external-dns**: DNS management for services
 - **external-secrets**: Secrets management from external sources
 - **gateway-api**: Gateway API implementation
-- **harbor**: Container registry
 - **home-assistant**: Home automation platform
 - **ingress**: Ingress controller configuration
 - **loki**: Log aggregation system
