@@ -7,3 +7,4 @@ resources:
 - httproute-grant.yaml
 - IPAddressPool.yaml
 - bgpconf.yaml
+- wsl-gpu-nodeconfig.yaml

@@ -24,6 +24,10 @@ metadata:
   namespace: ollama-operator-system
 data:
   README: |
-    GPU inference runs as Deployment ollama-gpu (ollama-gpu.yaml), not Model CR.
-    Service: ollama-model-qwen3-6-27b:11434
+    GPU inference: Deployment ollama-gpu (not operator Model CR).
+    Service: ollama-model-qwen3-6-27b:11434 (LAN often via hostNetwork 192.168.1.150:11434).
     Model: qwen3.6:27b on hostPath /var/lib/ollama-models
+    Node labels required: networking.home/cilium=skip, accelerator=nvidia-rtx-3090,
+      node.kubernetes.io/gpu=true, nvidia.com/gpu.present=true
+    Pattern: runtimeClassName=nvidia + nvidia.com/gpu resources + nodeSelector/affinity
+

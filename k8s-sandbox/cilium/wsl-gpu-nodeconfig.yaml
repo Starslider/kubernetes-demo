@@ -1,0 +1,52 @@
+# OPTIONAL / LAB-ONLY — do not enable Cilium on WSL by default.
+#
+# Decision (2026-08): gpu-worker-3090 stays Cilium-free permanently for now.
+# Host has ~8 Gi physical RAM; agent + BPF maps fight Ollama; mirrored eth0
+# datapath experiments killed host TCP. Soft profile is kept only if we ever
+# re-open a controlled lab enable — not for production join.
+#
+# Labels on the WSL GPU node (bootstrap MUST set these):
+#   networking.home/cilium=skip         → DaemonSet affinity excludes agent+envoy
+#   networking.home/cni-profile=wsl     → this NodeConfig would apply IF agent ran
+#   accelerator=nvidia-rtx-3090
+#   node.kubernetes.io/gpu=true
+#   nvidia.com/gpu.present=true
+#
+# Do NOT remove networking.home/cilium=skip without an explicit lab plan and
+# console monitoring. See README.md.
+apiVersion: cilium.io/v2
+kind: CiliumNodeConfig
+metadata:
+  name: wsl-gpu-soft
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: cilium
+    app.kubernetes.io/part-of: networking
+    networking.home/profile: wsl
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+    networking.home/status: optional-lab-only
+spec:
+  nodeSelector:
+    matchLabels:
+      networking.home/cni-profile: wsl
+  defaults:
+    # --- Never attach host-device BPF features on mirrored eth* ---
+    enable-runtime-device-detection: "false"
+    devices: ""
+    enable-tcx: "false"
+    enable-host-legacy-routing: "true"
+    enable-bpf-masquerade: "false"
+    enable-host-firewall: "false"
+    enable-bandwidth-manager: "false"
+    enable-l2-announcements: "false"
+    enable-l2-neigh-discovery: "false"
+    enable-l2-pod-announcements: "false"
+    enable-bgp-control-plane: "false"
+    kube-proxy-replacement: "false"
+    bpf-lb-sock: "false"
+    enable-health-check-nodeport: "false"
+    enable-ipv4-masquerade: "true"
+    enable-l7-proxy: "false"
+    routing-mode: "tunnel"
+    tunnel-protocol: "vxlan"

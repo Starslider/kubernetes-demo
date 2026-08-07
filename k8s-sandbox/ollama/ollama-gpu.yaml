@@ -1,7 +1,10 @@
-# Standalone Ollama on gpu-worker-3090.
-# The operator Model CR mounts the shared NFS models store RO, but this WSL node
-# cannot complete NFS mounts (TCP:2049 open, mount hangs) and cannot reach
-# other nodes' pod IPs/ClusterIPs via the local bridge CNI. Local hostPath works.
+# Standalone Ollama on gpu-worker-3090 (WSL GPU, Cilium-free).
+#
+# Node must keep networking.home/cilium=skip (host bridge CNI + kube-proxy only).
+# Operator Model CR is unsuitable here: NFS store mount hangs; ClusterIP to other
+# nodes is broken without Cilium mesh. Local hostPath + hostNetwork works.
+#
+# GPU pattern: runtimeClassName nvidia + nvidia.com/gpu + nodeSelector/affinity.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -22,20 +25,31 @@ spec:
     metadata:
       labels:
         app: ollama-gpu
-        # Keep label used by ollama-model-qwen3-6-27b Service
         model.ollama.ayaka.io: qwen3-6-27b
     spec:
       runtimeClassName: nvidia
-      # Bridge CNI pods cannot resolve/reach the public internet or NFS reliably.
-      # hostNetwork uses the WSL host stack (DNS + egress) and exposes :11434 on 192.168.1.150.
+      # Bridge CNI: use host stack for DNS/registry pull and LAN :11434.
       hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      dnsPolicy: Default
       nodeSelector:
         kubernetes.io/hostname: gpu-worker-3090
+        accelerator: nvidia-rtx-3090
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/gpu
+                    operator: In
+                    values: ["true"]
+                  - key: nvidia.com/gpu.present
+                    operator: In
+                    values: ["true"]
       tolerations:
         - key: nvidia.com/gpu
           operator: Exists
           effect: NoSchedule
+
       # Pull once into hostPath; main container serves the same store.
       initContainers:
         - name: pull-model

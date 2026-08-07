@@ -2,6 +2,7 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: cilium
+  namespace: argocd
 spec:
   project: default
   syncPolicy:
@@ -24,30 +25,80 @@ spec:
       targetRevision: 1.19.4
       chart: cilium
       helm:
-        parameters:
-          # IPAM: Use 10.244.0.0/16 to avoid conflict with VPN subnet 10.0.1.0/24
-          - name: ipam.operator.clusterPoolIPv4PodCIDRList
-            value: '10.244.0.0/16'
-          - name: gatewayAPI.enabled
-            value: 'true'
-          - name: kubeProxyReplacement
-            value: 'true'
-          - name: nodePort.enabled
-            value: 'true'
-          - name: hubble.relay.enabled
-            value: 'true'
-          - name: hubble.ui.enabled
-            value: 'true'
-          - name: l2announcements.enabled
-            value: 'true'
-          - name: bgpControlPlane.enabled
-            value: 'true'
-          - name: prometheus.enabled
-            value: 'true'
-          - name: hubble.metrics.enableOpenMetrics
-            value: 'true'
-          - name: hubble.metrics.enabled
-            value: '{dns,drop,tcp,flow,port-distribution,icmp,httpV2:exemplars=true;labelsContext=source_ip\,source_namespace\,source_workload\,destination_ip\,destination_namespace\,destination_workload\,traffic_direction}'
+        # Prefer values over dotted parameters so affinity keeps podAntiAffinity
+        # while adding the permanent WSL kill switch (label, not hostname).
+        values: |
+          # API by node IP — safer if ClusterIP datapath is mid-change (cluster-wide).
+          k8sServiceHost: "192.168.1.30"
+          k8sServicePort: "6443"
+
+          # Real Linux nodes (Arch / Flatcar): full feature set. Do NOT weaken
+          # KPR / tcx / tunnel / L2 globally for the WSL GPU box.
+          ipam:
+            operator:
+              clusterPoolIPv4PodCIDRList:
+                - "10.244.0.0/16"
+          gatewayAPI:
+            enabled: true
+          kubeProxyReplacement: true
+          nodePort:
+            enabled: true
+          hubble:
+            relay:
+              enabled: true
+            ui:
+              enabled: true
+            metrics:
+              enableOpenMetrics: true
+              enabled:
+                - dns
+                - drop
+                - tcp
+                - flow
+                - port-distribution
+                - icmp
+                - "httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction"
+          l2announcements:
+            enabled: true
+          bgpControlPlane:
+            enabled: true
+          prometheus:
+            enabled: true
+
+          # Permanent kill switch for WSL GPU (and any future non-Cilium nodes):
+          #   kubectl label node <name> networking.home/cilium=skip --overwrite
+          # Agents never schedule there; kube-proxy keeps serving services.
+          # Do NOT use kubernetes.io/hostname NotIn — labels scale and survive renames.
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                  - matchExpressions:
+                      - key: networking.home/cilium
+                        operator: NotIn
+                        values:
+                          - skip
+            podAntiAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      k8s-app: cilium
+                  topologyKey: kubernetes.io/hostname
+
+          envoy:
+            affinity:
+              nodeAffinity:
+                requiredDuringSchedulingIgnoredDuringExecution:
+                  nodeSelectorTerms:
+                    - matchExpressions:
+                        - key: networking.home/cilium
+                          operator: NotIn
+                          values:
+                            - skip
+                        - key: cilium.io/no-schedule
+                          operator: NotIn
+                          values:
+                            - "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: kube-system

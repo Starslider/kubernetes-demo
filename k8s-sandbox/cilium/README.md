@@ -1,29 +1,132 @@
 # Cilium Configuration
 
-This directory contains the configuration for Cilium, a networking and security solution for Kubernetes.
+Local Cilium CRs (BGP, LB pools, Gateway grants, optional WSL NodeConfig).  
+Agent/operator come from multi-source ArgoCD app `k8s-sandbox/apps/cilium.yaml` (Helm **1.19.4** + this path).
 
-**Version**: 1.14.4 (Latest stable)
-**GitHub**: [cilium/cilium](https://github.com/cilium/cilium)
-**Documentation**: [Cilium Documentation](https://docs.cilium.io/en/stable/)
+## Decision: WSL GPU stays Cilium-free
+
+**`gpu-worker-3090` (Ubuntu on WSL2) permanently does not run the Cilium agent** for now.
+
+| Why | Detail |
+|-----|--------|
+| Host RAM | Physical box ~**8 Gi**; WSL sees ~5–7 Gi allocatable. Agent + maps fight Ollama. |
+| Mirrored `eth0` | Cilium host datapath on that NIC killed kubelet TCP → NotReady / “logs gone”. |
+| Soft profile | `wsl-gpu-nodeconfig.yaml` was **not** proven safe; kept optional only. |
+
+**In scope for GitOps:** label kill switch, optional NodeConfig CR, docs, GPU workload patterns.  
+**Out of scope:** `.wslconfig`, Windows firewall, WSL keepalive, host `/etc/cni/net.d` files.
+
+## Cluster-wide posture (real Linux nodes)
+
+Do **not** change cluster-wide KPR / tcx / tunnel / L2 for one WSL box. Arch + Flatcar keep:
+
+- `kubeProxyReplacement=true`, VXLAN tunnel, Hubble, Gateway API, L2, BGP  
+- Pod CIDR `10.244.0.0/16`  
+- `k8sServiceHost=192.168.1.30` / `k8sServicePort=6443`
+
+## Kill switch (label affinity)
+
+Helm sets **nodeAffinity** so agent **and** envoy never land on:
+
+```text
+networking.home/cilium=skip
+```
+
+Prefer **label** over `kubernetes.io/hostname NotIn` (survives renames; multi-node).  
+Any live hostname `NotIn` patches are obsolete once Argo has synced this affinity.
+
+| Action | Command |
+|--------|---------|
+| Ensure quarantine | `kubectl label node gpu-worker-3090 networking.home/cilium=skip --overwrite` |
+| (Lab only) allow schedule | `kubectl label node gpu-worker-3090 networking.home/cilium-` |
+
+**kube-proxy** has **no** skip affinity — it must keep running on WSL nodes for Services while KPR is off *for that node only* (no agent = no KPR on that host). Do not add exclusion to the kube-proxy DaemonSet.
+
+## Bootstrap labels (required when joining the GPU node)
+
+Set these on **first join** (or immediately after):
+
+```bash
+kubectl label node gpu-worker-3090 \
+  networking.home/cilium=skip \
+  networking.home/cni-profile=wsl \
+  accelerator=nvidia-rtx-3090 \
+  node.kubernetes.io/gpu=true \
+  nvidia.com/gpu.present=true \
+  --overwrite
+```
+
+| Label | Purpose |
+|-------|---------|
+| `networking.home/cilium=skip` | **Required** — Cilium agent + envoy never schedule |
+| `networking.home/cni-profile=wsl` | Marks host-managed bridge CNI; optional NodeConfig selector |
+| `accelerator=nvidia-rtx-3090` | GPU scheduling |
+| `node.kubernetes.io/gpu=true` | Convenience selector |
+| `nvidia.com/gpu.present=true` | Device-plugin / inventory |
+
+## Host CNI runbook (WSL bridge — host-managed)
+
+CNI on this node is **not** Cilium. Bridge is installed/maintained on the host (out of GitOps).
+
+If node is **NotReady** or pods hang:
+
+1. Confirm WSL is running (Windows keepalive / log in if needed).  
+2. On the node: kubelet + containerd active; `kubectl get node gpu-worker-3090`.  
+3. Check `/etc/cni/net.d`: **bridge-only**.  
+   - **Bad:** orphan `05-cilium.conflist` / `05-cilium.conf` **without** a healthy agent → delete Cilium CNI files, leave bridge.  
+   - **Good:** local bridge (e.g. `10.244.99.0/24`) only.  
+4. Confirm labels still include `networking.home/cilium=skip`.  
+5. kube-proxy pod Running on the node.
+
+Cross-node pod networking from WSL is **limited** (no full Cilium mesh). GPU apps often use `hostNetwork: true` for egress/DNS (see Ollama).
+
+## GPU workloads
+
+Pattern used by `k8s-sandbox/ollama/ollama-gpu.yaml`:
+
+```yaml
+spec:
+  runtimeClassName: nvidia
+  # Often required on WSL bridge CNI for public DNS / registry pull:
+  # hostNetwork: true
+  # dnsPolicy: Default
+  nodeSelector:
+    kubernetes.io/hostname: gpu-worker-3090
+    # or: accelerator: nvidia-rtx-3090
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  containers:
+    - name: app
+      resources:
+        requests:
+          nvidia.com/gpu: "1"
+        limits:
+          nvidia.com/gpu: "1"
+```
+
+Keep system memory requests modest (~2 Gi); weights live in 24 Gi VRAM.
+
+## Optional lab NodeConfig
+
+`wsl-gpu-nodeconfig.yaml` applies **only if** an agent runs on a node with `cni-profile=wsl`.  
+Default posture: **agent never runs** (`cilium=skip`). Do not remove the skip label without an explicit lab procedure and a console independent of kubectl.
 
 ## Components
 
-- **bgpconf.yaml**: BGP configuration for network routing
-- **httproute-grant.yaml**: Gateway API route configuration
-- **IPAddressPool.yaml**: IP address pool configuration for services
-- **kustomization.yaml**: Kustomize configuration for deployment
-
-## Network Configuration
-
-Cilium is configured to provide:
-- Container networking
-- Network policy enforcement
-- Load balancing
-- BGP integration for external connectivity
+| File | Purpose |
+|------|---------|
+| `bgpconf.yaml` | BGP CRs (control-plane) |
+| `IPAddressPool.yaml` | LB pool + L2 policy |
+| `httproute-grant.yaml` | Gateway grants |
+| `wsl-gpu-nodeconfig.yaml` | Optional soft profile (lab only) |
+| `kustomization.yaml` | Bundles CRs for Argo |
 
 ## Usage
 
-Modify the configuration files and let ArgoCD sync the changes, or apply manually:
 ```bash
-kubectl apply -k .
+kubectl kustomize k8s-sandbox/cilium
+kubectl apply -k k8s-sandbox/cilium
+# Helm agent: Argo app "cilium" (apps/cilium.yaml)
 ```
