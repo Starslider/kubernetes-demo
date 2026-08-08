@@ -42,7 +42,7 @@ Any live hostname `NotIn` patches are obsolete once Argo has synced this affinit
 
 **kube-proxy** has **no** skip affinity — it must keep running on WSL nodes for Services while KPR is off *for that node only* (no agent = no KPR on that host). Do not add exclusion to the kube-proxy DaemonSet.
 
-## Bootstrap labels (required when joining the GPU node)
+## Bootstrap labels + taint (required when joining the GPU node)
 
 Set these on **first join** (or immediately after):
 
@@ -54,6 +54,9 @@ kubectl label node gpu-worker-3090 \
   node.kubernetes.io/gpu=true \
   nvidia.com/gpu.present=true \
   --overwrite
+
+# Only Ollama (and GPU system DaemonSets) may schedule here
+kubectl taint node gpu-worker-3090 nvidia.com/gpu=true:NoSchedule --overwrite
 ```
 
 | Label | Purpose |
@@ -64,6 +67,12 @@ kubectl label node gpu-worker-3090 \
 | `node.kubernetes.io/gpu=true` | Convenience selector |
 | `nvidia.com/gpu.present=true` | Device-plugin / inventory |
 
+| Taint | Purpose |
+|-------|---------|
+| `nvidia.com/gpu=true:NoSchedule` | **Required** — blocks all non-GPU workloads (Postgres, Argo, apps, …). Only pods that tolerate `nvidia.com/gpu` may schedule (Ollama + nvidia-device-plugin). |
+
+**Allowed on this node:** `ollama-gpu`, `nvidia-device-plugin`, `kube-proxy` (bridge CNI needs kube-proxy).  
+**Not allowed:** any other application pods, node-exporter, promtail, CNPG instances, etc.
 ## Host CNI runbook (WSL bridge — host-managed)
 
 CNI on this node is **not** Cilium. Bridge is installed/maintained on the host (out of GitOps).
@@ -93,7 +102,10 @@ Same kill switch: **do not** schedule these on `networking.home/cilium=skip` nod
 
 Loki **server**, Grafana, VictoriaMetrics stay on real Linux nodes only.
 
-## GPU workloads
+## GPU workloads (Ollama only)
+
+The node is tainted `nvidia.com/gpu=true:NoSchedule`. **Only Ollama** should run
+application pods here — every GPU workload **must** tolerate that taint.
 
 Pattern used by `k8s-sandbox/ollama/ollama-gpu.yaml`:
 
@@ -119,8 +131,8 @@ spec:
           nvidia.com/gpu: "1"
 ```
 
+Do **not** add this toleration to non-GPU apps (Postgres, monitoring sidecars, etc.).
 Keep system memory requests modest (~2 Gi); weights live in 24 Gi VRAM.
-
 ## Optional lab NodeConfig
 
 `wsl-gpu-nodeconfig.yaml` applies **only if** an agent runs on a node with `cni-profile=wsl`.  

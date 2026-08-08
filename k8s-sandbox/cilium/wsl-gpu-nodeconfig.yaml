@@ -12,6 +12,9 @@
 #   node.kubernetes.io/gpu=true
 #   nvidia.com/gpu.present=true
 #
+# Taint (bootstrap MUST set):
+#   nvidia.com/gpu=true:NoSchedule      → only Ollama (+ GPU system DSes) schedule
+#
 # Do NOT remove networking.home/cilium=skip without an explicit lab plan and
 # console monitoring. See README.md.
 apiVersion: cilium.io/v2

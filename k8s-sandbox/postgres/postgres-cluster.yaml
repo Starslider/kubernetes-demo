@@ -8,6 +8,19 @@ metadata:
 spec:
   instances: 3
 
+  # Never schedule on the WSL GPU node (tainted + no reliable NFS/CNI).
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: node.kubernetes.io/gpu
+                operator: NotIn
+                values: ["true"]
+              - key: networking.home/cilium
+                operator: NotIn
+                values: ["skip"]
+
   postgresql:
     parameters:
       max_connections: "200"
