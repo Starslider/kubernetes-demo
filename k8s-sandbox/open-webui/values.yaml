@@ -51,11 +51,19 @@ resources:
     cpu: "2"
     memory: 2Gi
 
+# Don't probe api.openai.com (causes log "Connection error" and wasted timeouts).
+openaiBaseApiUrl: ""
+openaiApiKey: ""
+
 extraEnvVars:
   - name: WEBUI_URL
     value: "https://chat.dhlabs.org"
   # First account created becomes admin; tighten later if needed.
   - name: ENABLE_SIGNUP
     value: "true"
+  # qwen3.6:27b is a *thinking* model: with think=true, message.content is often
+  # empty until reasoning finishes (UI can look stuck). Prefer think=false for chat,
+  # or enable "Reasoning" display in Open WebUI. See Admin → Models → Advanced params:
+  #   think = false
   - name: DEFAULT_MODELS
     value: "qwen3.6:27b"
