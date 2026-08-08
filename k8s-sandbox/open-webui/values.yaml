@@ -4,9 +4,8 @@
 fullnameOverride: open-webui
 replicaCount: 1
 
-# Slim image (~1–1.5GB) — enough for chat against external Ollama; full image is 3–4GB+.
-image:
-  useSlim: true
+# Full image already cached on flatcar-worker-02 (~1.7GiB). Slim is not worth a second GHCR pull.
+# image.useSlim: false (default)
 
 # Use existing cluster Ollama; do not install chart's bundled Ollama/Pipelines.
 ollama:
