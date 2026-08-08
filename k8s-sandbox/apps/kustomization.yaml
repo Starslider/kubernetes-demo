@@ -28,6 +28,7 @@ resources:
   - k8s-workshop.yaml
   - flatcar.yaml
   - ollama.yaml
+  - open-webui.yaml
   - postgres.yaml
   - satisfactory.yaml
   - unifi.yaml

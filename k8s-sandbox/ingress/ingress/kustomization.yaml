@@ -15,4 +15,5 @@ resources:
 - authentik-httproute.yaml
 - kmcp-httproute.yaml
 - k8s-workshop-httproute.yaml
+- open-webui-httproute.yaml
 - allow-vpn-ingress.yaml
