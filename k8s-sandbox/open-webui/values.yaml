@@ -4,6 +4,10 @@
 fullnameOverride: open-webui
 replicaCount: 1
 
+# Slim image (~1–1.5GB) — enough for chat against external Ollama; full image is 3–4GB+.
+image:
+  useSlim: true
+
 # Use existing cluster Ollama; do not install chart's bundled Ollama/Pipelines.
 ollama:
   enabled: false
