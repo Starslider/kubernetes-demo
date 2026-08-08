@@ -1,12 +1,15 @@
 # Standalone Ollama on gpu-worker-3090 (WSL GPU, Cilium-free).
 #
-# Host: ~12Gi WSL memory + RTX 3090 (24Gi VRAM).
-# - Leave ~3Gi for WSL/kubelet/system; pod limit ≤9Gi so cgroup OOMs first.
+# Host: ~10Gi WSL (.wslconfig memory=10GB, swap=2GB) + RTX 3090 (24Gi VRAM).
+# - Do NOT use a 9Gi limit — that OOM-kills the whole WSL distro on this host.
+# - Safe pod sizing: request 2Gi / limit 6Gi (leave ~4Gi for WSL/kubelet/system).
 # - Weights mostly on GPU VRAM; system RAM covers overhead + KV cache.
 # - Default model: qwen3.6:27b (~17GB Q4) — fits 3090 VRAM with moderated context.
 #
 # GPU pattern: runtimeClassName nvidia + nvidia.com/gpu + nodeSelector/affinity.
 # Node must keep networking.home/cilium=skip (host bridge CNI + kube-proxy only).
+# Node taint workload=gpu:PreferNoSchedule keeps random apps off this host.
+# nvidia.com/gpu NoSchedule is also present for device-plugin scheduling.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -97,7 +100,7 @@ spec:
               value: "1"
             - name: OLLAMA_NUM_PARALLEL
               value: "1"
-            # Moderated KV cache for ~12Gi system RAM (weights stay on GPU)
+            # Moderated KV cache for ~10Gi WSL (weights stay on GPU)
             - name: OLLAMA_CONTEXT_LENGTH
               value: "8192"
             - name: OLLAMA_KEEP_ALIVE
@@ -110,13 +113,13 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: "2"
-              memory: 3Gi
+              cpu: "1"
+              memory: 2Gi
               nvidia.com/gpu: "1"
             limits:
-              cpu: "6"
-              # Cap below ~12Gi host so the pod dies before the WSL VM
-              memory: 9Gi
+              cpu: "4"
+              # NOT 9Gi — WSL only has ~10Gi total; 9Gi OOMs the whole distro
+              memory: 6Gi
               nvidia.com/gpu: "1"
           readinessProbe:
             httpGet:
