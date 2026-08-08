@@ -40,18 +40,25 @@ securityContext:
 # 2. UOS_SYSTEM_IP is set to "unifi.dhlabs.org".
 #    Devices will be told to use http://unifi.dhlabs.org:8080/inform
 
-# 3. Adoption command for switches (run via SSH on the switch):
+# 3. Adoption command for switches:
+#    For new/pending devices that fail adoption ("cannot reach"), use the
+#    direct LoadBalancer IP first:
+#      set-inform http://192.168.1.213:8080/inform
+#
+#    After adoption succeeds, switch to the stable hostname:
 #      set-inform http://unifi.dhlabs.org:8080/inform
+#
+#    Apply via the UniFi mobile app, web UI, or SSH on the device.
 
 # 4. Browser access:
-#    https://unifi.dhlabs.org:11443
+#    https://unifi.dhlabs.org
 
 # 5. After deploying, verify:
-#      kubectl -n unifi get svc unifi -o wide
+#      kubectl -n unifi get svc unifi-os-server-webui-svc -o wide
 #      dig unifi.dhlabs.org   # should return the LB IP
 
 # Additional operational notes:
-# - LoadBalancer exposes 11443/TCP, 8080/TCP, 3478/UDP, 10003/UDP.
+# - LoadBalancer exposes 443/TCP, 8080/TCP, 3478/UDP, 10003/UDP.
 # - Make sure your switches can reach the LB IP (or the domain) on these ports.
 # - Enable scheduled backups from inside the UniFi web UI.
 # - For nice metrics in Grafana, deploy Unpoller as a companion.

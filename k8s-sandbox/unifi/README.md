@@ -8,40 +8,55 @@ This directory contains the configuration and ArgoCD integration for **UniFi OS 
 
 - Pure Kustomize manifests based on [lemker/unifi-os-server](https://github.com/lemker/unifi-os-server)
 - **Image**: `ghcr.io/lemker/unifi-os-server:v1.3.0`
-- Upstream ClusterIP [services](https://github.com/lemker/unifi-os-server/blob/main/kubernetes/service.yaml)
-- Exposed via the shared Cilium Gateway (`k8s-sandbox/ingress`):
-  - **HTTPRoute**: `https://unifi.dhlabs.org` → `unifi-os-server-webui-svc:80` (TLS terminated by gateway with `dhlabs-wildcard`)
-  - **TCPRoute**: port `8080` → device/application communication (inform)
-  - **UDPRoute**: port `3478` (STUN), port `10003` (discovery)
-- Privileged deployment with host cgroup mount (required for UniFi OS systemd services)
-- Local data on `hostPath` at `/srv/unifi-os-server` on `arch-kubernetes-node0` (MongoDB does not run reliably on NFS)
+- A unified LoadBalancer service exposes the web UI, inform, STUN, and discovery ports
+- `external-dns` publishes `unifi.dhlabs.org` for the LoadBalancer
+- The dedicated `unifi-tls` Let's Encrypt certificate is mounted into UniFi OS Server
+- Privileged deployment with systemd-related temporary filesystems
+- Persistent data in the NFS-backed `unifi-os-server-pvc`
 
 ## Installation / Sync
 
-Deployed via two ArgoCD Applications:
+Deployed via `apps/unifi.yaml` in the `unifi` namespace.
 
-- `apps/unifi.yaml` — deployment + services in `unifi` namespace
-- `apps/ingress.yaml` — HTTP/TCP/UDP routes in `ingress` namespace
-
-DNS for `unifi.dhlabs.org` is handled by the gateway wildcard (`*.dhlabs.org` → `192.168.1.210`).
+DNS for `unifi.dhlabs.org` is managed by `external-dns` and points directly to the LoadBalancer.
 
 ## After first deploy
 
-1. Sync both `unifi` and `ingress` apps in ArgoCD.
+1. Sync the `unifi` app in ArgoCD.
 2. First boot takes several minutes while PostgreSQL and UniFi OS services start.
-3. Open **https://unifi.dhlabs.org** and accept the UniFi self-signed certificate (TLS passthrough).
-4. Adopt devices: `set-inform http://unifi.dhlabs.org:8080/inform`
+3. Open **https://unifi.dhlabs.org**.
+4. Adopt devices:
+   - For a new switch, or a device that is pending adoption but reports "cannot reach",
+     start with the direct LoadBalancer IP over HTTP:
+     ```text
+     set-inform http://192.168.1.213:8080/inform
+     ```
+     This isolates DNS, certificate, and return-path issues during initial provisioning.
+   - Once the device is adopted and connected, switch to the stable hostname:
+     ```text
+     set-inform http://unifi.dhlabs.org:8080/inform
+     ```
+   - Apply the command through the UniFi mobile app, the web UI, or SSH on the device.
 
-## Ports (via ingress gateway at 192.168.1.210)
+## Ports (via LoadBalancer at 192.168.1.213)
 
 | Port | Protocol | Purpose |
 |------|----------|---------|
-| 443 | TCP | Web UI + API (TLS passthrough) |
+| 443 | TCP | Web UI + API |
 | 8080 | TCP | Device inform / communication |
 | 3478 | UDP | STUN |
 | 10003 | UDP | Device discovery |
 
-Additional upstream services (RTP, hotspot, syslog, etc.) are defined but not routed through the gateway by default. Add TCP/UDP listeners and routes in `k8s-sandbox/ingress/ingress/` if needed.
+Additional upstream services (RTP, hotspot, syslog, etc.) are defined as ClusterIP services but are not exposed through the LoadBalancer by default.
+
+## Troubleshooting adoption
+
+- A device showing as pending has reached the controller at least once.
+- If adoption fails, use `set-inform http://192.168.1.213:8080/inform` to bypass DNS and TLS while testing.
+- Confirm the device can reach the LoadBalancer on TCP port 8080.
+- Check controller logs with `kubectl -n unifi logs deploy/unifi-os-server`.
+- The UniFi mobile app is often the easiest way to configure a first device because it has direct LAN access.
+- After adoption succeeds, use `set-inform http://unifi.dhlabs.org:8080/inform` for the stable hostname.
 
 ## References
 
