@@ -3,13 +3,14 @@
 # WHY NOT vLLM HERE:
 # - gpu-worker-3090 is WSL2; vLLM V1 fails with "UVA is not available"
 # - BF16 Muse (~60GB) cannot fit 24GB VRAM
-# - Proven working path on 3090: llama.cpp GGUF kquant-17gb + DFlash draft
-#   (OpenAI-compatible API still on :8000 for Open WebUI)
+# - Working path: llama.cpp GGUF kquant-17gb + DFlash draft
+#   OpenAI-compatible API on :8000 for Open WebUI
 #
 # Caching strategy:
-# 1) hostPath model cache /var/lib/vllm/models (GGUF files persist)
-# 2) prompt prefix / slot reuse via llama-server defaults + warmup cron
-# 3) weights stay GPU-resident (-ngl 99 / -ngld 99); warmup keeps process hot
+# 1) hostPath model cache /var/lib/vllm/gguf-models (GGUF files persist)
+# 2) GPU residency (-ngl 99 / -ngld 99); warmup CronJob keeps process hot
+# 3) Init uses curl streaming (low RAM) — NOT python/huggingface_hub
+#    (pip+hf hub OOMs on this ~10Gi WSL host under small limits)
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -20,12 +21,14 @@ metadata:
     app: vllm-muse-glimmer
 data:
   HF_REPO: "meta-models/Muse-Glimmer-30B-GGUF"
+  HF_BASE: "https://huggingface.co/meta-models/Muse-Glimmer-30B-GGUF/resolve/main"
   MODEL_FILE: "muse-glimmer-30B-kquant-17gb.gguf"
   DRAFT_FILE: "dflash-kquant.gguf"
   MMPROJ_FILE: "mmproj-kquant.gguf"
   SERVED_MODEL_NAME: "muse-glimmer"
-  # Context: 32k is comfortable on 3090 with kquant-17gb + dflash + mmproj
-  CONTEXT_SIZE: "32768"
+  # 8k: safe day-0 fit for kquant-17gb + dflash + mmproj on 24GB
+  # Raise toward 16k/32k after health checks if VRAM headroom allows
+  CONTEXT_SIZE: "8192"
   PORT: "8000"
 ---
 apiVersion: apps/v1
@@ -52,6 +55,8 @@ spec:
       runtimeClassName: nvidia
       hostNetwork: true
       dnsPolicy: Default
+      # Downloads can take a long time (~20GB over WAN)
+      terminationGracePeriodSeconds: 60
       nodeSelector:
         kubernetes.io/hostname: gpu-worker-3090
         accelerator: nvidia-rtx-3090
@@ -74,47 +79,69 @@ spec:
           operator: Equal
           value: gpu
           effect: PreferNoSchedule
-      # Lightweight download of GGUF files only (streamed to disk; low host RAM)
+      # Stream GGUFs with curl (resume-capable, ~tens of MiB RAM).
+      # python+huggingface_hub was OOMKilled at 1.5Gi on this host.
+      # Run as root so hostPath /var/lib/vllm/gguf-models is writable.
       initContainers:
         - name: prefetch-gguf
-          image: python:3.12-slim
+          image: alpine:3.20
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -e
-              pip install -q --no-cache-dir "huggingface_hub>=0.26.0"
-              export HF_HOME=/cache/hf
-              mkdir -p /models /cache/hf
+              set -eu
+              apk add --no-cache curl ca-certificates >/dev/null
               cd /models
-              need_dl=0
-              for f in "$MODEL_FILE" "$DRAFT_FILE" "$MMPROJ_FILE"; do
-                if [ ! -s "$f" ]; then need_dl=1; fi
-              done
-              if [ "$need_dl" = "1" ]; then
-                echo "Downloading GGUF files from $HF_REPO ..."
-                hf download "$HF_REPO" \
-                  "$MODEL_FILE" "$DRAFT_FILE" "$MMPROJ_FILE" \
-                  --local-dir /models
-              else
-                echo "GGUF files already present"
-              fi
+              download_one() {
+                f="$1"
+                min_bytes="$2"
+                url="${HF_BASE}/${f}"
+                if [ -f "$f" ]; then
+                  sz=$(stat -c%s "$f" 2>/dev/null || stat -f%z "$f")
+                  if [ "$sz" -ge "$min_bytes" ]; then
+                    echo "OK present: $f ($sz bytes)"
+                    return 0
+                  fi
+                  echo "Incomplete $f ($sz < $min_bytes) — re-downloading"
+                  rm -f "$f" "${f}.partial"
+                fi
+                echo "Downloading $f (min $min_bytes bytes) ..."
+                # -L follow HF CDN redirects; -C - resume; stream to .partial
+                curl -fL --retry 15 --retry-delay 5 --retry-all-errors \
+                  -C - \
+                  --connect-timeout 30 \
+                  --progress-bar \
+                  -o "${f}.partial" \
+                  "$url"
+                mv -f "${f}.partial" "$f"
+                sz=$(stat -c%s "$f")
+                echo "Done $f ($sz bytes)"
+                if [ "$sz" -lt "$min_bytes" ]; then
+                  echo "ERROR: $f too small ($sz < $min_bytes)"
+                  exit 1
+                fi
+              }
+              # Expected sizes (approx): main ~16.76Gi, draft ~1.6Gi, mmproj ~1.4Gi
+              download_one "$MODEL_FILE" 10000000000
+              download_one "$DRAFT_FILE" 500000000
+              download_one "$MMPROJ_FILE" 500000000
+              echo "All GGUF files ready:"
               ls -lh /models
-              du -sh /models
           envFrom:
             - configMapRef:
                 name: vllm-muse-glimmer-config
           volumeMounts:
             - name: models
               mountPath: /models
-            - name: hf-cache
-              mountPath: /cache/hf
           resources:
             requests:
-              cpu: 200m
-              memory: 512Mi
+              cpu: 100m
+              memory: 64Mi
             limits:
               cpu: "1"
-              memory: 1536Mi
+              memory: 256Mi
       containers:
         - name: llama-server
           image: ghcr.io/ggml-org/llama.cpp:server-cuda
@@ -122,9 +149,15 @@ spec:
           command: ["/bin/sh", "-c"]
           args:
             - |
-              set -e
+              set -eu
               nvidia-smi || true
               ls -lh /models
+              for f in "$MODEL_FILE" "$DRAFT_FILE" "$MMPROJ_FILE"; do
+                if [ ! -s "/models/$f" ]; then
+                  echo "ERROR: missing model file /models/$f"
+                  exit 1
+                fi
+              done
               exec /app/llama-server \
                 -m "/models/${MODEL_FILE}" \
                 --mmproj "/models/${MMPROJ_FILE}" \
@@ -160,7 +193,7 @@ spec:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 40
@@ -168,7 +201,7 @@ spec:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 180
+            initialDelaySeconds: 300
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 10
@@ -191,10 +224,6 @@ spec:
         - name: models
           hostPath:
             path: /var/lib/vllm/gguf-models
-            type: DirectoryOrCreate
-        - name: hf-cache
-          hostPath:
-            path: /var/lib/vllm/hf-cache
             type: DirectoryOrCreate
         - name: dshm
           emptyDir:

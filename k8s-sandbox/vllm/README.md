@@ -6,7 +6,7 @@
 |------------|--------|
 | `gpu-worker-3090` is **WSL2** | vLLM V1 crashes: **`UVA is not available`** |
 | RTX 3090 **24GB** | BF16 Muse (~60GB) cannot load in vLLM |
-| Host RAM ~**10Gi** | Heavy HF init downloads get **OOMKilled** |
+| Host RAM ~**10Gi** | `python`+`huggingface_hub` init was **OOMKilled** — use **curl** streaming |
 
 Working path used by the community on a single 3090:
 
@@ -18,16 +18,17 @@ Still exposes an **OpenAI-compatible** API on `http://192.168.1.150:8000/v1`.
 
 | File | Role |
 |------|------|
-| `muse-glimmer-30B-kquant-17gb.gguf` | Main model (~17GB) |
-| `dflash-kquant.gguf` | DFlash speculative draft |
-| `mmproj-kquant.gguf` | Vision projector |
+| `muse-glimmer-30B-kquant-17gb.gguf` | Main model (~16.8GB) |
+| `dflash-kquant.gguf` | DFlash speculative draft (~1.6GB) |
+| `mmproj-kquant.gguf` | Vision projector (~1.4GB) |
 
 Source: `meta-models/Muse-Glimmer-30B-GGUF`  
-Disk: `/var/lib/vllm/gguf-models` on the GPU node
+Disk: `/var/lib/vllm/gguf-models` on the GPU node  
+Context default: **8192** (raise after VRAM headroom check)
 
 ## Caching strategy
 
-1. **Disk** — GGUF files on hostPath (no re-download after first pull)
+1. **Disk** — GGUF files on hostPath; init streams with **curl** (resume, low RAM)
 2. **GPU residency** — all layers + draft on GPU (`-ngl 99`, `-ngld 99`)
 3. **Warmup CronJob** — `/health` + short chat every 10 minutes
 4. **Continuous batching** — `--cont-batching` for multi-turn agent prompts
