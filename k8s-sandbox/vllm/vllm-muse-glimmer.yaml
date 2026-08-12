@@ -1,41 +1,25 @@
-# vLLM · Muse Glimmer 30B + DFlash on gpu-worker-3090 (RTX 3090 24GB)
+# vLLM · Muse Glimmer 30B + DFlash on gpu-worker-3090 (RTX 3090 24GB VRAM / ~10Gi host RAM)
 #
-# Host notes (same as prior Ollama GPU node):
-# - WSL2 host has ~10Gi system RAM — keep pod memory limit ≤6Gi
-# - Weights live on hostPath (1TB disk) + GPU VRAM
-# - hostNetwork for LAN access + Open WebUI (192.168.1.150:8000)
+# Host constraints (WSL GPU node):
+# - System RAM ~10Gi — keep pod limit ≤6Gi (same envelope as former Ollama)
+# - Do NOT run heavy huggingface downloads in a 4Gi init (OOMKills)
+# - Models cached on hostPath /var/lib/vllm/hf-cache (already has BF16 + draft ~69G)
 #
-# Caching strategy:
-# 1) HF hub cache on hostPath /var/lib/vllm/hf-cache (persistent across restarts)
-# 2) vLLM automatic prefix caching (--enable-prefix-caching)
-# 3) Keep-alive via CronJob warmup (prefix + short completion)
-# 4) Optional: VLLM_USAGE_STATS disabled
+# VRAM: BF16 target ~60GB does not fit 24GB. We load with --dtype auto and rely on
+# muse-glimmer image; if still OOM, QUANT_FLAGS enables bitsandbytes 4bit path.
 #
-# DFlash speculative decoding (block diffusion draft head):
-#   target:  meta-models/Muse-Glimmer-30B
-#   draft:   meta-models/Muse-Glimmer-30B-assistant
-#
-# 3090 fit: BF16 target (~60GB) will NOT fit. We serve with reduced max-model-len
-# and high gpu-memory-utilization; if the muse-glimmer image supports it, prefer
-# loading a compressed checkpoint via MODEL_ID override.
-# Override with env MODEL_ID / DRAFT_ID on the Deployment if needed.
+# Caching:
+# 1) hostPath HF cache (persistent)
+# 2) --enable-prefix-caching
+# 3) warmup CronJob every 10m
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: Namespace
 metadata:
-  name: vllm-hf-cache
-  namespace: vllm
+  name: vllm
   labels:
-    app: vllm-muse-glimmer
-spec:
-  accessModes: ["ReadWriteOnce"]
-  storageClassName: nfs
-  resources:
-    requests:
-      storage: 150Gi
+    app.kubernetes.io/name: vllm
 ---
-# hostPath is primary on the GPU node (fast local disk). PVC is optional shared
-# mirror for backups; Deployment uses hostPath for HF_HOME.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -44,18 +28,19 @@ metadata:
   labels:
     app: vllm-muse-glimmer
 data:
-  # 3090 24GB: BF16 (~60GB) does not fit. Use Unsloth bnb-4bit target + Meta DFlash draft.
-  MODEL_ID: "unsloth/Muse-Glimmer-30B-unsloth-bnb-4bit"
+  # Prefer official Meta weights already on disk; 4bit override if needed via QUANT_FLAGS
+  MODEL_ID: "meta-models/Muse-Glimmer-30B"
   DRAFT_ID: "meta-models/Muse-Glimmer-30B-assistant"
   SERVED_MODEL_NAME: "muse-glimmer"
-  # Keep context modest so 4bit weights + DFlash draft + KV fit in 24GB
   MAX_MODEL_LEN: "4096"
-  MAX_NUM_SEQS: "4"
-  MAX_NUM_BATCHED_TOKENS: "4096"
-  # Leave headroom for desktop/display processes on the WSL GPU host
-  GPU_MEMORY_UTILIZATION: "0.90"
-  # Speculative DFlash (15 slots fixed by draft architecture)
+  MAX_NUM_SEQS: "2"
+  MAX_NUM_BATCHED_TOKENS: "2048"
+  GPU_MEMORY_UTILIZATION: "0.88"
+  # DFlash
   SPECULATIVE_CONFIG: '{"method":"dflash","model":"meta-models/Muse-Glimmer-30B-assistant","num_speculative_tokens":15}'
+  # Leave empty for BF16; set to "--quantization bitsandbytes --load-format bitsandbytes" for 4bit
+  # and MODEL_ID=unsloth/Muse-Glimmer-30B-unsloth-bnb-4bit
+  QUANT_FLAGS: ""
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -64,8 +49,6 @@ metadata:
   namespace: vllm
   labels:
     app: vllm-muse-glimmer
-    app.kubernetes.io/name: vllm-muse-glimmer
-    app.kubernetes.io/part-of: muse-glimmer
 spec:
   replicas: 1
   strategy:
@@ -103,58 +86,55 @@ spec:
           operator: Equal
           value: gpu
           effect: PreferNoSchedule
-      # Prefetch models into HF cache (disk) before serving
+      # Lightweight cache check only — never re-download in init (host RAM too small)
       initContainers:
-        - name: prefetch-models
-          image: python:3.12-slim
+        - name: check-cache
+          image: busybox:1.37
           command:
             - /bin/sh
             - -c
             - |
               set -e
-              pip install -q --no-cache-dir "huggingface_hub>=0.26.0"
-              export HF_HOME=/root/.cache/huggingface
-              export HUGGINGFACE_HUB_CACHE=$HF_HOME/hub
-              mkdir -p "$HUGGINGFACE_HUB_CACHE"
-              echo "Prefetching target: $MODEL_ID"
-              hf download "$MODEL_ID"
-              echo "Prefetching DFlash draft: $DRAFT_ID"
-              hf download "$DRAFT_ID"
-              echo "Prefetch complete. Cache:"
-              du -sh "$HF_HOME" || true
-          envFrom:
-            - configMapRef:
-                name: vllm-muse-glimmer-config
-          env:
-            - name: HF_HUB_ENABLE_HF_TRANSFER
-              value: "0"
+              CACHE=/root/.cache/huggingface/hub
+              echo "Cache tree:"
+              ls -la "$CACHE" || true
+              if [ ! -d "$CACHE/models--meta-models--Muse-Glimmer-30B" ]; then
+                echo "ERROR: target model not in hostPath cache. Pre-seed /var/lib/vllm/hf-cache on the node."
+                exit 1
+              fi
+              if [ ! -d "$CACHE/models--meta-models--Muse-Glimmer-30B-assistant" ]; then
+                echo "ERROR: DFlash draft not in cache."
+                exit 1
+              fi
+              echo "Cache OK (target + DFlash draft present)"
+              du -sh /root/.cache/huggingface || true
           volumeMounts:
             - name: hf-cache
               mountPath: /root/.cache/huggingface
           resources:
             requests:
-              cpu: 500m
-              memory: 1Gi
+              cpu: 10m
+              memory: 32Mi
             limits:
-              cpu: "2"
-              memory: 4Gi
+              cpu: 100m
+              memory: 64Mi
       containers:
         - name: vllm
           image: vllm/vllm-openai:muse-glimmer
           imagePullPolicy: IfNotPresent
-          # Shell so ConfigMap env vars expand (vLLM entrypoint does not).
           command: ["/bin/sh", "-c"]
           args:
             - |
               set -e
+              # Free any leftover GPU contexts
+              nvidia-smi || true
               exec vllm serve "${MODEL_ID}" \
                 --host 0.0.0.0 \
                 --port 8000 \
                 --served-model-name "${SERVED_MODEL_NAME}" \
                 --tensor-parallel-size 1 \
                 --dtype auto \
-                --quantization bitsandbytes \
-                --load-format bitsandbytes \
+                ${QUANT_FLAGS} \
                 --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION}" \
                 --max-model-len "${MAX_MODEL_LEN}" \
                 --max-num-seqs "${MAX_NUM_SEQS}" \
@@ -165,7 +145,8 @@ spec:
                 --reasoning-parser muse_glimmer \
                 --generation-config auto \
                 --speculative-config "${SPECULATIVE_CONFIG}" \
-                --download-dir /root/.cache/huggingface/hub
+                --download-dir /root/.cache/huggingface/hub \
+                --enforce-eager
           envFrom:
             - configMapRef:
                 name: vllm-muse-glimmer-config
@@ -174,11 +155,10 @@ spec:
               value: /root/.cache/huggingface
             - name: HUGGINGFACE_HUB_CACHE
               value: /root/.cache/huggingface/hub
-            - name: VLLM_USAGE_SOURCE
-              value: production
             - name: VLLM_NO_USAGE_STATS
               value: "1"
-            # Expand shell vars in args (vLLM image entrypoint is tini+python)
+            - name: PYTORCH_CUDA_ALLOC_CONF
+              value: expandable_segments:True
             - name: NVIDIA_VISIBLE_DEVICES
               value: all
             - name: NVIDIA_DRIVER_CAPABILITIES
@@ -191,25 +171,26 @@ spec:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 60
-            periodSeconds: 15
+            initialDelaySeconds: 120
+            periodSeconds: 20
             timeoutSeconds: 10
-            failureThreshold: 40
+            failureThreshold: 60
           livenessProbe:
             httpGet:
               path: /health
               port: http
-            initialDelaySeconds: 180
+            initialDelaySeconds: 300
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 10
           resources:
             requests:
-              cpu: "2"
+              cpu: "1"
               memory: 2Gi
               nvidia.com/gpu: "1"
             limits:
-              cpu: "6"
+              # Match prior Ollama envelope on this 10Gi WSL host
+              cpu: "4"
               memory: 6Gi
               nvidia.com/gpu: "1"
           volumeMounts:
@@ -225,7 +206,7 @@ spec:
         - name: dshm
           emptyDir:
             medium: Memory
-            sizeLimit: 2Gi
+            sizeLimit: 1Gi
 ---
 apiVersion: v1
 kind: Service
@@ -243,7 +224,6 @@ spec:
       port: 8000
       targetPort: http
 ---
-# Friendly alias used by Open WebUI / agents
 apiVersion: v1
 kind: Service
 metadata:
