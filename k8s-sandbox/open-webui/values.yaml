@@ -1,13 +1,14 @@
-# Open WebUI → vLLM Muse Glimmer on gpu-worker-3090 (hostNetwork :8000)
+# Open WebUI → llama.cpp Muse Glimmer on gpu-worker-3090 (hostNetwork :8000)
 # Chart: https://helm.openwebui.com  (open-webui/open-webui)
 
 fullnameOverride: open-webui
 replicaCount: 1
 
-# Use cluster vLLM (OpenAI-compatible); do not install chart Ollama.
+# Do not install chart Ollama; backend is OpenAI-compatible llama-server.
 ollama:
   enabled: false
 
+# Empty list so chart does not inject OLLAMA_BASE_URLS to a dead :11434
 ollamaUrls: []
 
 pipelines:
@@ -45,10 +46,11 @@ resources:
     cpu: "2"
     memory: 2Gi
 
-# OpenAI-compatible API (vLLM)
+# OpenAI-compatible API (llama.cpp / former vLLM port)
 openaiBaseApiUrl: "http://192.168.1.150:8000/v1"
 openaiApiKey: "sk-local"
 
+# Avoid env keys the chart already injects (ENABLE_OLLAMA_API caused ComparisonError)
 extraEnvVars:
   - name: WEBUI_URL
     value: "https://chat.dhlabs.org"
@@ -62,6 +64,3 @@ extraEnvVars:
     value: "sk-local"
   - name: DEFAULT_MODELS
     value: "muse-glimmer"
-  # Disable stale Ollama connection attempts
-  - name: ENABLE_OLLAMA_API
-    value: "false"
