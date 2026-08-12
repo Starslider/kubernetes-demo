@@ -1,0 +1,258 @@
+# vLLM · Muse Glimmer 30B + DFlash on gpu-worker-3090 (RTX 3090 24GB)
+#
+# Host notes (same as prior Ollama GPU node):
+# - WSL2 host has ~10Gi system RAM — keep pod memory limit ≤6Gi
+# - Weights live on hostPath (1TB disk) + GPU VRAM
+# - hostNetwork for LAN access + Open WebUI (192.168.1.150:8000)
+#
+# Caching strategy:
+# 1) HF hub cache on hostPath /var/lib/vllm/hf-cache (persistent across restarts)
+# 2) vLLM automatic prefix caching (--enable-prefix-caching)
+# 3) Keep-alive via CronJob warmup (prefix + short completion)
+# 4) Optional: VLLM_USAGE_STATS disabled
+#
+# DFlash speculative decoding (block diffusion draft head):
+#   target:  meta-models/Muse-Glimmer-30B
+#   draft:   meta-models/Muse-Glimmer-30B-assistant
+#
+# 3090 fit: BF16 target (~60GB) will NOT fit. We serve with reduced max-model-len
+# and high gpu-memory-utilization; if the muse-glimmer image supports it, prefer
+# loading a compressed checkpoint via MODEL_ID override.
+# Override with env MODEL_ID / DRAFT_ID on the Deployment if needed.
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vllm-hf-cache
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+spec:
+  accessModes: ["ReadWriteOnce"]
+  storageClassName: nfs
+  resources:
+    requests:
+      storage: 150Gi
+---
+# hostPath is primary on the GPU node (fast local disk). PVC is optional shared
+# mirror for backups; Deployment uses hostPath for HF_HOME.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-muse-glimmer-config
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+data:
+  # Official Meta weights + DFlash draft head
+  MODEL_ID: "meta-models/Muse-Glimmer-30B"
+  DRAFT_ID: "meta-models/Muse-Glimmer-30B-assistant"
+  SERVED_MODEL_NAME: "muse-glimmer"
+  # Context: keep modest on 24GB so DFlash + KV fit after weights
+  MAX_MODEL_LEN: "8192"
+  MAX_NUM_SEQS: "8"
+  MAX_NUM_BATCHED_TOKENS: "8192"
+  GPU_MEMORY_UTILIZATION: "0.95"
+  # Speculative DFlash (15 slots fixed by draft architecture)
+  SPECULATIVE_CONFIG: '{"method":"dflash","model":"meta-models/Muse-Glimmer-30B-assistant","num_speculative_tokens":15}'
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-muse-glimmer
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+    app.kubernetes.io/name: vllm-muse-glimmer
+    app.kubernetes.io/part-of: muse-glimmer
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vllm-muse-glimmer
+  template:
+    metadata:
+      labels:
+        app: vllm-muse-glimmer
+    spec:
+      runtimeClassName: nvidia
+      hostNetwork: true
+      dnsPolicy: Default
+      nodeSelector:
+        kubernetes.io/hostname: gpu-worker-3090
+        accelerator: nvidia-rtx-3090
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: node.kubernetes.io/gpu
+                    operator: In
+                    values: ["true"]
+                  - key: nvidia.com/gpu.present
+                    operator: In
+                    values: ["true"]
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+        - key: workload
+          operator: Equal
+          value: gpu
+          effect: PreferNoSchedule
+      # Prefetch models into HF cache (disk) before serving
+      initContainers:
+        - name: prefetch-models
+          image: python:3.12-slim
+          command:
+            - /bin/sh
+            - -c
+            - |
+              set -e
+              pip install -q --no-cache-dir "huggingface_hub>=0.26.0"
+              export HF_HOME=/root/.cache/huggingface
+              export HUGGINGFACE_HUB_CACHE=$HF_HOME/hub
+              mkdir -p "$HUGGINGFACE_HUB_CACHE"
+              echo "Prefetching target: $MODEL_ID"
+              hf download "$MODEL_ID"
+              echo "Prefetching DFlash draft: $DRAFT_ID"
+              hf download "$DRAFT_ID"
+              echo "Prefetch complete. Cache:"
+              du -sh "$HF_HOME" || true
+          envFrom:
+            - configMapRef:
+                name: vllm-muse-glimmer-config
+          env:
+            - name: HF_HUB_ENABLE_HF_TRANSFER
+              value: "0"
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 4Gi
+      containers:
+        - name: vllm
+          image: vllm/vllm-openai:muse-glimmer
+          imagePullPolicy: IfNotPresent
+          # Shell so ConfigMap env vars expand (vLLM entrypoint does not).
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              set -e
+              exec vllm serve "${MODEL_ID}" \
+                --host 0.0.0.0 \
+                --port 8000 \
+                --served-model-name "${SERVED_MODEL_NAME}" \
+                --tensor-parallel-size 1 \
+                --dtype auto \
+                --gpu-memory-utilization "${GPU_MEMORY_UTILIZATION}" \
+                --max-model-len "${MAX_MODEL_LEN}" \
+                --max-num-seqs "${MAX_NUM_SEQS}" \
+                --max-num-batched-tokens "${MAX_NUM_BATCHED_TOKENS}" \
+                --enable-prefix-caching \
+                --enable-auto-tool-choice \
+                --tool-call-parser muse_glimmer \
+                --reasoning-parser muse_glimmer \
+                --generation-config auto \
+                --speculative-config "${SPECULATIVE_CONFIG}" \
+                --download-dir /root/.cache/huggingface/hub
+          envFrom:
+            - configMapRef:
+                name: vllm-muse-glimmer-config
+          env:
+            - name: HF_HOME
+              value: /root/.cache/huggingface
+            - name: HUGGINGFACE_HUB_CACHE
+              value: /root/.cache/huggingface/hub
+            - name: VLLM_USAGE_SOURCE
+              value: production
+            - name: VLLM_NO_USAGE_STATS
+              value: "1"
+            # Expand shell vars in args (vLLM image entrypoint is tini+python)
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: all
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: compute,utility
+          ports:
+            - name: http
+              containerPort: 8000
+              hostPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 40
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 180
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 10
+          resources:
+            requests:
+              cpu: "2"
+              memory: 2Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "6"
+              memory: 6Gi
+              nvidia.com/gpu: "1"
+          volumeMounts:
+            - name: hf-cache
+              mountPath: /root/.cache/huggingface
+            - name: dshm
+              mountPath: /dev/shm
+      volumes:
+        - name: hf-cache
+          hostPath:
+            path: /var/lib/vllm/hf-cache
+            type: DirectoryOrCreate
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm-muse-glimmer
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+spec:
+  type: ClusterIP
+  selector:
+    app: vllm-muse-glimmer
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http
+---
+# Friendly alias used by Open WebUI / agents
+apiVersion: v1
+kind: Service
+metadata:
+  name: muse-glimmer
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+spec:
+  type: ClusterIP
+  selector:
+    app: vllm-muse-glimmer
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

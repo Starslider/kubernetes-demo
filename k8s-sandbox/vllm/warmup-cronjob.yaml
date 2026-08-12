@@ -1,0 +1,59 @@
+# Keep model + prefix cache warm (DFlash stays resident).
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: vllm-muse-glimmer-warmup
+  namespace: vllm
+  labels:
+    app: vllm-muse-glimmer
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 2
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 300
+      backoffLimit: 1
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: warmup
+              image: curlimages/curl:8.12.1
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  set -e
+                  BASE="${VLLM_URL:-http://192.168.1.150:8000}"
+                  echo "Warmup health: $BASE/health"
+                  curl -sf --max-time 20 "$BASE/health" >/dev/null
+                  echo "Warmup models"
+                  curl -sf --max-time 20 "$BASE/v1/models" | head -c 400
+                  echo
+                  # Short completion — primes weights + prefix cache
+                  curl -sf --max-time 120 "$BASE/v1/chat/completions" \
+                    -H 'Content-Type: application/json' \
+                    -d '{
+                      "model": "muse-glimmer",
+                      "max_tokens": 16,
+                      "temperature": 1.0,
+                      "top_p": 0.95,
+                      "messages": [
+                        {"role": "system", "content": "Reasoning strength: low"},
+                        {"role": "user", "content": "Reply with the single word: pong"}
+                      ]
+                    }' | head -c 800
+                  echo
+                  echo "Warmup OK"
+              env:
+                - name: VLLM_URL
+                  value: "http://192.168.1.150:8000"
+              resources:
+                requests:
+                  cpu: 50m
+                  memory: 64Mi
+                limits:
+                  cpu: 200m
+                  memory: 128Mi

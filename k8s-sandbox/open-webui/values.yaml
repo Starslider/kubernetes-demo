@@ -1,19 +1,14 @@
-# Open WebUI → external Ollama on gpu-worker-3090 (hostNetwork).
+# Open WebUI → vLLM Muse Glimmer on gpu-worker-3090 (hostNetwork :8000)
 # Chart: https://helm.openwebui.com  (open-webui/open-webui)
 
 fullnameOverride: open-webui
 replicaCount: 1
 
-# image.useSlim: false (default) — full image ~1.7GiB from GHCR
-# Note: flatcar-worker-02 may go DiskPressure after large pulls; leave unschedulable free.
-
-# Use existing cluster Ollama; do not install chart's bundled Ollama/Pipelines.
+# Use cluster vLLM (OpenAI-compatible); do not install chart Ollama.
 ollama:
   enabled: false
 
-ollamaUrls:
-  # LAN hostNetwork endpoint (works across nodes; ClusterIP to GPU node is flaky)
-  - "http://192.168.1.150:11434"
+ollamaUrls: []
 
 pipelines:
   enabled: false
@@ -21,7 +16,6 @@ pipelines:
 tika:
   enabled: false
 
-# Single replica: in-memory websocket manager (no Redis subchart).
 websocket:
   enabled: true
   manager: ""
@@ -51,19 +45,23 @@ resources:
     cpu: "2"
     memory: 2Gi
 
-# Don't probe api.openai.com (causes log "Connection error" and wasted timeouts).
-openaiBaseApiUrl: ""
-openaiApiKey: ""
+# OpenAI-compatible API (vLLM)
+openaiBaseApiUrl: "http://192.168.1.150:8000/v1"
+openaiApiKey: "sk-local"
 
 extraEnvVars:
   - name: WEBUI_URL
     value: "https://chat.dhlabs.org"
-  # First account created becomes admin; tighten later if needed.
   - name: ENABLE_SIGNUP
     value: "true"
-  # qwen3.6:27b is a *thinking* model: with think=true, message.content is often
-  # empty until reasoning finishes (UI can look stuck). Prefer think=false for chat,
-  # or enable "Reasoning" display in Open WebUI. See Admin → Models → Advanced params:
-  #   think = false
+  - name: ENABLE_OPENAI_API
+    value: "true"
+  - name: OPENAI_API_BASE_URLS
+    value: "http://192.168.1.150:8000/v1"
+  - name: OPENAI_API_KEYS
+    value: "sk-local"
   - name: DEFAULT_MODELS
-    value: "qwen3.6:27b"
+    value: "muse-glimmer"
+  # Disable stale Ollama connection attempts
+  - name: ENABLE_OLLAMA_API
+    value: "false"
