@@ -4,6 +4,9 @@ data:
   server.dex.server.strict.tls: "false"
   server.dex.server.plaintext: "true"
   server.insecure: "true"
+  # Allow embedding in HA Muse Chat iframe (and other same-site dashboards).
+  # Empty disables default X-Frame-Options: sameorigin / frame-ancestors 'self'.
+  server.x.frame.options: ""
   dex.server: "http://argocd-dex-server:5556"
   server.repo.server.timeout.seconds: "180"
   controller.status.processors: "80"
