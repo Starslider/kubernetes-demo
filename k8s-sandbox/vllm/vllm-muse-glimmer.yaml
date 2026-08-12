@@ -13,6 +13,7 @@
 # 2) --enable-prefix-caching
 # 3) warmup CronJob every 10m
 ---
+
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -35,6 +36,7 @@ data:
   # and MODEL_ID=unsloth/Muse-Glimmer-30B-unsloth-bnb-4bit
   QUANT_FLAGS: ""
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -201,6 +203,7 @@ spec:
             medium: Memory
             sizeLimit: 1Gi
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
@@ -217,6 +220,7 @@ spec:
       port: 8000
       targetPort: http
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
