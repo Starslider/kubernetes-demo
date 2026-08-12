@@ -33,7 +33,7 @@ spec:
                   curl -sf --max-time 20 "$BASE/v1/models" | head -c 400
                   echo
                   # Short completion — primes weights + prefix cache
-                  curl -sf --max-time 120 "$BASE/v1/chat/completions" \
+                  curl -sf --max-time 180 "$BASE/v1/chat/completions" \
                     -H 'Content-Type: application/json' \
                     -d '{
                       "model": "muse-glimmer",
@@ -41,7 +41,6 @@ spec:
                       "temperature": 1.0,
                       "top_p": 0.95,
                       "messages": [
-                        {"role": "system", "content": "Reasoning strength: low"},
                         {"role": "user", "content": "Reply with the single word: pong"}
                       ]
                     }' | head -c 800
