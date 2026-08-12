@@ -14,13 +14,6 @@
 # 3) warmup CronJob every 10m
 ---
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: vllm
-  labels:
-    app.kubernetes.io/name: vllm
----
-apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vllm-muse-glimmer-config
