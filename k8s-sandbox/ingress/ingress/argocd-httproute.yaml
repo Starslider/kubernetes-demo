@@ -12,15 +12,15 @@ spec:
     - "argocd.dhlabs.org"
   rules:
     - filters:
-        # ArgoCD defaults to X-Frame-Options: sameorigin which blocks HA iframes.
-        # Strip/replace so Muse Chat dashboard can embed the UI.
+        # Allow embedding in Home Assistant (and any other dashboard).
+        # ArgoCD still requires login; this only relaxes clickjacking headers.
         - type: ResponseHeaderModifier
           responseHeaderModifier:
             remove:
               - "X-Frame-Options"
             set:
               - name: Content-Security-Policy
-                value: "frame-ancestors 'self' https://starslider.internet-box.ch http://192.168.1.10:8123 https://*.internet-box.ch"
+                value: "frame-ancestors *"
       backendRefs:
         - kind: Service
           name: argocd-server
