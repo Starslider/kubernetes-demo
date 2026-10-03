@@ -1,5 +1,7 @@
 provider:
   name: cloudflare
+# Chart 1.23.0 schema requires this explicitly (was the chart's implicit default)
+policy: upsert-only
 env:
   - name: CF_API_TOKEN
     valueFrom:
