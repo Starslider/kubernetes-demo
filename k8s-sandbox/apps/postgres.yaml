@@ -10,8 +10,10 @@ spec:
       chart: cloudnative-pg
       helm:
         valuesObject:
+          # Chart-managed CRDs: CNPG 1.30 requires the new DatabaseRole CRD,
+          # so out-of-band CRD management no longer works.
           crds:
-            create: false
+            create: true
           resources:
             requests:
               cpu: 100m
